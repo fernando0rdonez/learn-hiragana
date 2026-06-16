@@ -33,7 +33,9 @@ export type CharStatus = "untested" | "developing" | "weak" | "mastered";
 
 export type SessionMode = "recognition" | "production" | "both";
 
+export type QuizMode = "recognition" | "production" | "word";
+
 export interface QueueItem {
   char: CharWithRow;
-  mode: "recognition" | "production";
+  mode: QuizMode;
 }

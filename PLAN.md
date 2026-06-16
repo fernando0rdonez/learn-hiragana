@@ -122,7 +122,7 @@ Item key format: `"{mode}:{content}"` — e.g. `recognition:あ`, `production:�
 
 ---
 
-## Phase 5 — Words mode `[ ]`
+## Phase 5 — Words mode `[x]`
 
 **Goal:** Practice reading complete hiragana words (user reads kana word, types romaji).
 

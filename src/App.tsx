@@ -3,11 +3,12 @@ import { Check, X, RotateCcw, BarChart3, Play, Trash2, ArrowLeft } from "lucide-
 import type {
   CharWithRow, CharData,
   ProgressItems, ItemProgress,
-  CharStatus, SessionMode, QueueItem,
+  CharStatus, SessionMode, QueueItem, QuizMode,
 } from "./types";
 import { loadProgress, saveProgress } from "./storage";
 import { advanceBox, buildSessionQueue } from "./leitner";
 import { getConfusablePairs, CONFUSED_PAIRS } from "./confusedPairs";
+import { WORDS, getAvailableWords } from "./words";
 import ProductionCard from "./components/ProductionCard";
 
 // ── Data ───────────────────────────────────────────────────────────────────
@@ -40,9 +41,9 @@ interface Feedback {
 
 interface MissedItem {
   kana: string;
-  mode: "recognition" | "production";
-  given: string;    // recognition: typed romaji · production: selected kana
-  expected: string; // recognition: correct romaji · production: correct kana
+  mode: QuizMode;
+  given: string;    // recognition/word: typed romaji · production: selected kana
+  expected: string; // recognition/word: correct romaji · production: correct kana
 }
 
 // ── Pure helpers ───────────────────────────────────────────────────────────
@@ -127,6 +128,14 @@ function getChoices(kana: string, pool: CharWithRow[]): CharWithRow[] {
   return result;
 }
 
+function findQueueChar(kana: string, mode: QuizMode): CharWithRow | undefined {
+  if (mode === "word") {
+    const w = WORDS.find((entry) => entry.kana === kana);
+    return w ? { kana: w.kana, romaji: w.romaji, row: "word" } : undefined;
+  }
+  return ALL_CHARS.find((c) => c.kana === kana);
+}
+
 function charStatus(items: ProgressItems, kana: string): CharStatus {
   const p = items[`recognition:${kana}`];
   if (!p || p.attempts === 0) return "untested";
@@ -161,7 +170,7 @@ export default function HiraganaTrainer() {
   const sessionPoolRef  = useRef<CharWithRow[]>([]);
   const sessionIndexRef = useRef(0);
 
-  const [currentMode, setCurrentMode]   = useState<"recognition" | "production">("recognition");
+  const [currentMode, setCurrentMode]   = useState<QuizMode>("recognition");
   const [correctCount, setCorrectCount] = useState(0);
   const [missedList, setMissedList]     = useState<MissedItem[]>([]);
   const [current, setCurrent]           = useState<CharWithRow | null>(null);
@@ -226,6 +235,10 @@ export default function HiraganaTrainer() {
     return { accuracy, tested, total: chars.length, mastered };
   }
 
+  function isRowReady(rowId: string): boolean {
+    return selectedRows.has(rowId) || rowStats(rowId).mastered;
+  }
+
   // ── Queue management ──────────────────────────────────────────────────────
 
   function updateQueue(q: QueueItem[]) {
@@ -278,6 +291,26 @@ export default function HiraganaTrainer() {
     setView("quiz");
   }
 
+  function startWordSession(pool: CharWithRow[], length: number) {
+    const today = toISODate();
+    const queue: QueueItem[] = buildSessionQueue(pool, progress, "word", length, today)
+      .map((char): QueueItem => ({ char, mode: "word" }));
+    if (queue.length === 0) return;
+
+    sessionIndexRef.current = 0;
+    sessionPoolRef.current  = pool;
+    updateQueue(queue);
+    setMissedList([]);
+    setCorrectCount(0);
+    setSelectedOption(null);
+    setInput("");
+    setFeedback(null);
+
+    setCurrent(queue[0].char);
+    setCurrentMode("word");
+    setView("quiz");
+  }
+
   // ── Answer handlers ───────────────────────────────────────────────────────
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -294,10 +327,11 @@ export default function HiraganaTrainer() {
     }
 
     const cur      = current;
+    const mode     = currentMode;
     const accepted = [cur.romaji, ...(cur.accept ?? [])];
     const isCorrect = accepted.includes(normalize(input));
 
-    const key   = `recognition:${cur.kana}`;
+    const key   = `${mode}:${cur.kana}`;
     const today = toISODate();
     const prevP = progress[key] ?? { box: 0, nextDue: today, attempts: 0, correct: 0 };
     const { box, nextDue } = advanceBox(prevP, isCorrect, today);
@@ -312,9 +346,9 @@ export default function HiraganaTrainer() {
       sessionIndexRef.current += 1;
       setTimeout(() => goNext(), 600);
     } else {
-      const newQueue: QueueItem[] = [...sessionQueueRef.current, { char: cur, mode: "recognition" }];
+      const newQueue: QueueItem[] = [...sessionQueueRef.current, { char: cur, mode }];
       updateQueue(newQueue);
-      setMissedList((prev) => [...prev, { kana: cur.kana, mode: "recognition", given: input.trim() || "(vacío)", expected: cur.romaji }]);
+      setMissedList((prev) => [...prev, { kana: cur.kana, mode, given: input.trim() || "(vacío)", expected: cur.romaji }]);
       setFeedback({ status: "wrong", expected: cur.romaji });
     }
   }
@@ -362,14 +396,13 @@ export default function HiraganaTrainer() {
       const key = `${m.mode}:${m.kana}`;
       if (!seen.has(key)) {
         seen.add(key);
-        const char = ALL_CHARS.find((c) => c.kana === m.kana);
+        const char = findQueueChar(m.kana, m.mode);
         if (char) queue.push({ char, mode: m.mode });
       }
     }
     if (queue.length === 0) return;
 
-    const uniqueKanas = [...new Set(queue.map((i) => i.char.kana))];
-    const pool = ALL_CHARS.filter((c) => uniqueKanas.includes(c.kana));
+    const pool = [...new Map(queue.map((i) => [i.char.kana, i.char])).values()];
 
     sessionIndexRef.current = 0;
     sessionPoolRef.current  = pool;
@@ -409,6 +442,11 @@ export default function HiraganaTrainer() {
   const poolForPairs    = ALL_CHARS.filter((c) => pairKanaSet.has(c.kana));
   const availablePairItems = buildQueueItems(poolForPairs, "recognition", poolForPairs.length * 2, progress, today);
   const nothingDuePairs = poolForPairs.length > 0 && availablePairItems.length === 0;
+
+  const wordPool: CharWithRow[] = getAvailableWords(isRowReady)
+    .map((w): CharWithRow => ({ kana: w.kana, romaji: w.romaji, row: "word" }));
+  const availableWordItems = buildSessionQueue(wordPool, progress, "word", wordPool.length * 2, today);
+  const nothingDueWords     = wordPool.length > 0 && availableWordItems.length === 0;
 
   const queueLen    = sessionQueue.length;
   const questionNum = sessionIndexRef.current + 1;
@@ -535,6 +573,38 @@ export default function HiraganaTrainer() {
               </button>
             </div>
 
+            {/* Words */}
+            <div className="mt-6">
+              <span className="text-sm font-medium text-stone-600">Palabras</span>
+              <p className="text-xs text-stone-400 mt-1">
+                Disponibles según las filas elegidas (o ya dominadas): {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
+              </p>
+              {wordPool.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {wordPool.map((w) => (
+                    <span key={w.kana} className="text-sm bg-white border border-stone-200 rounded-lg px-2 py-1" style={{ fontFamily: "'Shippori Mincho', serif" }}>
+                      {w.kana}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {nothingDueWords && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
+                  Nada por repasar hoy en estas palabras.
+                </p>
+              )}
+
+              <button
+                disabled={availableWordItems.length === 0}
+                onClick={() => startWordSession(wordPool, availableWordItems.length)}
+                className="w-full mt-3 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+              >
+                <Play size={18} /> Comenzar sesión de palabras
+                {availableWordItems.length > 0 && ` (${availableWordItems.length})`}
+              </button>
+            </div>
+
             {/* Session length */}
             <div className="mt-6">
               <span className="text-sm font-medium text-stone-600">Largo de la sesión</span>
@@ -608,12 +678,12 @@ export default function HiraganaTrainer() {
               <div className="h-full bg-indigo-700 transition-all" style={{ width: `${((questionNum - 1) / queueLen) * 100}%` }} />
             </div>
 
-            {currentMode === "recognition" ? (
-              /* ── Recognition: kana → romaji ── */
+            {currentMode !== "production" ? (
+              /* ── Recognition / word: kana → romaji ── */
               <>
                 <div
                   key={current.kana + "-rec"}
-                  className="text-9xl mb-10 select-none"
+                  className={`mb-10 select-none ${currentMode === "word" ? "text-6xl" : "text-9xl"}`}
                   style={{ fontFamily: "'Shippori Mincho', serif" }}
                 >
                   {current.kana}
@@ -697,8 +767,8 @@ export default function HiraganaTrainer() {
                   {[...new Map(missedList.map((m) => [`${m.mode}:${m.kana}`, m])).values()].map((m) => (
                     <div key={`${m.mode}:${m.kana}`} className="flex items-center justify-between gap-2 text-sm bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
                       <span className="text-xl shrink-0" style={{ fontFamily: "'Shippori Mincho', serif" }}>{m.kana}</span>
-                      <span className="text-stone-400 text-xs shrink-0">{m.mode === "recognition" ? "→ romaji" : "→ kana"}</span>
-                      <span className="text-stone-500 truncate">{m.mode === "recognition" ? "escribiste" : "elegiste"} "{m.given}"</span>
+                      <span className="text-stone-400 text-xs shrink-0">{m.mode === "production" ? "→ kana" : "→ romaji"}</span>
+                      <span className="text-stone-500 truncate">{m.mode === "production" ? "elegiste" : "escribiste"} "{m.given}"</span>
                       <span className="text-rose-700 font-medium shrink-0">era "{m.expected}"</span>
                     </div>
                   ))}
