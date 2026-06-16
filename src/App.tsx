@@ -191,7 +191,7 @@ export default function HiraganaTrainer() {
   useEffect(() => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@500;700&display=swap";
     document.head.appendChild(link);
     const data = loadProgress();
     setProgress(data.items);
@@ -518,7 +518,7 @@ export default function HiraganaTrainer() {
                     className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
                   >
                     <div className="flex items-baseline justify-between">
-                      <span className="text-2xl" style={{ fontFamily: "'Shippori Mincho', serif" }}>{row.chars[0].kana}</span>
+                      <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
                       {stats.mastered ? (
                         <Check size={16} className="text-emerald-600" />
                       ) : stats.accuracy !== null ? (
@@ -570,7 +570,7 @@ export default function HiraganaTrainer() {
                       key={idx}
                       onClick={() => togglePair(idx)}
                       className={`rounded-lg border-2 py-3 text-lg transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                      style={{ fontFamily: "'Shippori Mincho', serif" }}
+                      style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
                     >
                       {group.join("/")}
                     </button>
@@ -603,7 +603,7 @@ export default function HiraganaTrainer() {
               {wordPool.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {wordPool.map((w) => (
-                    <span key={w.kana} className="text-sm bg-white border border-stone-200 rounded-lg px-2 py-1" style={{ fontFamily: "'Shippori Mincho', serif" }}>
+                    <span key={w.kana} className="text-sm bg-white border border-stone-200 rounded-lg px-2 py-1" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
                       {w.kana}
                     </span>
                   ))}
@@ -705,7 +705,7 @@ export default function HiraganaTrainer() {
                 <div
                   key={current.kana + "-rec"}
                   className={`mb-10 select-none ${currentMode === "word" ? "text-6xl" : "text-9xl"}`}
-                  style={{ fontFamily: "'Shippori Mincho', serif" }}
+                  style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
                 >
                   {current.kana}
                 </div>
@@ -788,7 +788,7 @@ export default function HiraganaTrainer() {
                 <div className="mt-2 space-y-1">
                   {[...new Map(missedList.map((m) => [`${m.mode}:${m.kana}`, m])).values()].map((m) => (
                     <div key={`${m.mode}:${m.kana}`} className="flex items-center justify-between gap-2 text-sm bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
-                      <span className="text-xl shrink-0" style={{ fontFamily: "'Shippori Mincho', serif" }}>{m.kana}</span>
+                      <span className="text-xl shrink-0" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{m.kana}</span>
                       <span className="text-stone-400 text-xs shrink-0">{m.mode === "production" ? "→ kana" : "→ romaji"}</span>
                       <span className="text-stone-500 truncate">{m.mode === "production" ? "elegiste" : "escribiste"} "{m.given}"</span>
                       <span className="text-rose-700 font-medium shrink-0">
@@ -839,7 +839,7 @@ export default function HiraganaTrainer() {
                     const status = charStatus(progress, ch.kana);
                     return (
                       <div key={ch.kana} className={`w-12 h-14 rounded-lg border flex flex-col items-center justify-center ${STATUS_STYLE[status]}`}>
-                        <span className="text-lg" style={{ fontFamily: "'Shippori Mincho', serif" }}>{ch.kana}</span>
+                        <span className="text-lg" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{ch.kana}</span>
                         <span className="text-[10px]">{ch.romaji}</span>
                       </div>
                     );

@@ -46,7 +46,7 @@ export default function ProductionCard({
               disabled={!!feedback}
               onClick={() => onSelect(ch.kana)}
               className={`h-20 rounded-xl border-2 text-5xl font-medium transition-colors disabled:cursor-default ${cls}`}
-              style={{ fontFamily: "'Shippori Mincho', serif" }}
+              style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
             >
               {ch.kana}
             </button>
