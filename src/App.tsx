@@ -34,7 +34,7 @@ const ALL_CHARS: CharWithRow[] = ROWS.flatMap((row) =>
 
 // ── Local types ────────────────────────────────────────────────────────────
 
-type ViewName = "setup" | "quiz" | "summary" | "stats";
+type ViewName = "setup" | "quiz" | "preview" | "summary" | "stats";
 
 interface Feedback {
   status: "correct" | "wrong";
@@ -168,6 +168,8 @@ export default function HiraganaTrainer() {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
   const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
+  const [previewRows, setPreviewRows] = useState<{ id: string; title: string; chars: CharData[] }[]>([]);
+  const pendingStartRef = useRef<(() => void) | null>(null);
 
   // Session state
   const [sessionQueue, setSessionQueue]   = useState<QueueItem[]>([]);
@@ -277,6 +279,28 @@ export default function HiraganaTrainer() {
   }
 
   // ── Session start ─────────────────────────────────────────────────────────
+
+  function getNewRows(pool: CharWithRow[]): { id: string; title: string; chars: CharData[] }[] {
+    const rowIdsInPool = new Set(pool.map((c) => c.row));
+    return ROWS.filter((row) =>
+      rowIdsInPool.has(row.id) &&
+      row.chars.every((ch) => {
+        const p = progress[`recognition:${ch.kana}`];
+        return !p || p.attempts === 0;
+      })
+    );
+  }
+
+  function launchSession(pool: CharWithRow[], startFn: () => void) {
+    const newRows = getNewRows(pool);
+    if (newRows.length === 0) {
+      startFn();
+      return;
+    }
+    setPreviewRows(newRows);
+    pendingStartRef.current = startFn;
+    setView("preview");
+  }
 
   function startSession(pool: CharWithRow[], length: number, mode: SessionMode = sessionMode) {
     const today = toISODate();
@@ -597,7 +621,7 @@ export default function HiraganaTrainer() {
 
             <button
               disabled={availableItems.length === 0}
-              onClick={() => startSession(poolForSelected, sessionLength === "all" ? availableItems.length : Math.min(sessionLength, availableItems.length))}
+              onClick={() => launchSession(poolForSelected, () => startSession(poolForSelected, sessionLength === "all" ? availableItems.length : Math.min(sessionLength, availableItems.length)))}
               className="w-full mt-4 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
             >
               <Play size={18} /> Comenzar sesión
@@ -637,7 +661,7 @@ export default function HiraganaTrainer() {
 
               <button
                 disabled={selectedPairs.size === 0 || availablePairItems.length === 0}
-                onClick={() => startSession(poolForPairs, availablePairItems.length, "recognition")}
+                onClick={() => launchSession(poolForPairs, () => startSession(poolForPairs, availablePairItems.length, "recognition"))}
                 className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
               >
                 <Play size={18} /> Comenzar sesión de pares confusos
@@ -695,6 +719,57 @@ export default function HiraganaTrainer() {
             {saveError && (
               <p className="text-xs text-rose-600 mt-3">No se pudo guardar el progreso. Tus respuestas de esta sesión podrían no persistir.</p>
             )}
+          </div>
+        )}
+
+        {/* ── Preview ── */}
+        {view === "preview" && (
+          <div className="flex flex-col items-center">
+            <div className="w-full flex items-center justify-between text-xs text-stone-500 mb-6">
+              <button onClick={() => setView("setup")} className="flex items-center gap-1 hover:text-stone-700">
+                <ArrowLeft size={14} /> Volver
+              </button>
+              <span>Repaso previo</span>
+            </div>
+
+            <p className="text-sm text-stone-500 mb-6 text-center">
+              {previewRows.length === 1
+                ? `La siguiente sesión incluye la fila "${previewRows[0].title.split("—")[1].trim()}", que es nueva para ti.`
+                : `La siguiente sesión incluye ${previewRows.length} filas nuevas para ti.`}
+            </p>
+
+            {previewRows.map((row) => (
+              <div key={row.id} className="w-full mb-8">
+                <p className="text-xs font-medium text-stone-400 uppercase tracking-widest mb-4 text-center">
+                  {row.title.split("—")[1].trim()}
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {row.chars.map((ch) => (
+                    <div key={ch.kana} className="flex flex-col items-center gap-1 w-16">
+                      <span className="text-5xl select-none" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
+                        {ch.kana}
+                      </span>
+                      <span className="text-sm text-stone-500">{ch.romaji}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="w-full flex flex-col gap-2 mt-4">
+              <button
+                onClick={() => { pendingStartRef.current?.(); }}
+                className="w-full py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2"
+              >
+                <Play size={18} /> Empezar test
+              </button>
+              <button
+                onClick={() => { pendingStartRef.current?.(); }}
+                className="w-full py-3 rounded-xl border-2 border-stone-300 text-stone-500 font-medium text-sm"
+              >
+                Ya me los sé, saltar repaso
+              </button>
+            </div>
           </div>
         )}
 
