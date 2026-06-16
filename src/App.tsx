@@ -140,9 +140,8 @@ export default function HiraganaTrainer() {
     return () => { document.head.removeChild(link); };
   }, []);
 
-  useEffect(() => {
-    if (view === "quiz" && !feedback && inputRef.current) inputRef.current.focus();
-  }, [view, current, feedback]);
+  // Intentionally no autofocus on the text input — iOS Safari blocks programmatic
+  // .focus() unless triggered by a direct user tap, so we let the user tap the field.
 
   useEffect(() => {
     if (feedback?.status === "wrong" && nextBtnRef.current) nextBtnRef.current.focus();
@@ -437,13 +436,13 @@ export default function HiraganaTrainer() {
                     <span className="rounded-full border-2 border-rose-600 p-1"><X size={16} /></span>
                     Era "{feedback.expected}"
                   </div>
-                  <button ref={nextBtnRef} type="submit" className="px-5 py-2 rounded-lg bg-rose-700 text-white text-sm font-medium">
+                  <button ref={nextBtnRef} type="submit" className="px-6 py-3 rounded-lg bg-rose-700 text-white text-sm font-medium">
                     Siguiente →
                   </button>
                 </div>
               )}
               {!feedback && (
-                <button type="submit" className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-medium">
+                <button type="submit" className="px-6 py-3 rounded-lg bg-indigo-700 text-white text-sm font-medium">
                   Comprobar
                 </button>
               )}

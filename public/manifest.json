@@ -1,0 +1,18 @@
+{
+  "name": "Hiragana Trainer",
+  "short_name": "ひらがな",
+  "description": "Practice hiragana with spaced repetition",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffbeb",
+  "theme_color": "#4338ca",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

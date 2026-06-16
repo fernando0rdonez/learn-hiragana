@@ -5,6 +5,33 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ---
 
+## Phase 0.1 — Mobile platform + PWA `[x]`
+
+**Goal:** Make the app work well on a phone browser and installable as a home screen icon.
+
+**Rules (from spec section 0.1):**
+- Viewport meta must be `width=device-width, initial-scale=1` — already present in the Vite scaffold.
+- No programmatic `.focus()` on text inputs — iOS Safari blocks it unless triggered by a direct user tap.
+- Touch targets ≥ 44×44 px on all interactive elements (buttons, row chips).
+- `hover:` Tailwind states are fine to keep — they're inert on touch and don't need replacing.
+- PWA: `manifest.json` + icon files + `theme-color` meta. **No service worker / offline support** in this phase.
+
+**Files created/edited:**
+- `public/icon.svg` — hiragana あ on indigo background; works for Android/Chrome installability.
+- `public/manifest.json` — `display: standalone`, theme color `#4338ca`, references `icon.svg`.
+- `index.html` — added manifest link, `theme-color` meta, `apple-touch-icon`, fixed `lang="ja"` and title.
+- `src/App.tsx` — removed input autofocus `useEffect`; bumped quiz action buttons to `py-3` (≥44px).
+
+**Known limitation:** iOS home screen icon requires a 180×180 PNG.
+`apple-touch-icon` currently points to the SVG (ignored by iOS). Add `/public/icon-180.png` and update the link when a PNG is available.
+
+**Mobile reminders for phases 3–5:**
+- All new buttons must be `py-3` minimum (≥44px tall).
+- No `autoFocus` or `.focus()` calls on `<input>` elements.
+- Production mode (Phase 3) uses tap buttons — naturally touch-friendly, no extra work needed.
+
+---
+
 ## Phase 1 — localStorage migration `[x]`
 
 **Goal:** Replace `window.storage` (Claude artifact sandbox API) with `localStorage`. No behavior change for the user — recognition mode works exactly as before.
