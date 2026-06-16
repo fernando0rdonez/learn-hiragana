@@ -558,74 +558,6 @@ export default function HiraganaTrainer() {
               </p>
             </div>
 
-            {/* Confused pairs */}
-            <div className="mt-6">
-              <span className="text-sm font-medium text-stone-600">Pares confusos</span>
-              <p className="text-xs text-stone-400 mt-1">Practica solo los kana que más se confunden entre sí.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                {CONFUSED_PAIRS.map((group, idx) => {
-                  const selected = selectedPairs.has(idx);
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => togglePair(idx)}
-                      className={`rounded-lg border-2 py-3 text-lg transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                      style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
-                    >
-                      {group.join("/")}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {nothingDuePairs && (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
-                  Nada por repasar hoy en estos pares.
-                </p>
-              )}
-
-              <button
-                disabled={selectedPairs.size === 0 || availablePairItems.length === 0}
-                onClick={() => startSession(poolForPairs, availablePairItems.length, "recognition")}
-                className="w-full mt-3 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
-              >
-                <Play size={18} /> Comenzar sesión de pares confusos
-                {selectedPairs.size > 0 && ` (${availablePairItems.length})`}
-              </button>
-            </div>
-
-            {/* Words */}
-            <div className="mt-6">
-              <span className="text-sm font-medium text-stone-600">Palabras</span>
-              <p className="text-xs text-stone-400 mt-1">
-                Disponibles según las filas elegidas (o ya dominadas): {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
-              </p>
-              {wordPool.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {wordPool.map((w) => (
-                    <span key={w.kana} className="text-sm bg-white border border-stone-200 rounded-lg px-2 py-1" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
-                      {w.kana}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {nothingDueWords && (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
-                  Nada por repasar hoy en estas palabras.
-                </p>
-              )}
-
-              <button
-                disabled={availableWordItems.length === 0}
-                onClick={() => startWordSession(wordPool, availableWordItems.length)}
-                className="w-full mt-3 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
-              >
-                <Play size={18} /> Comenzar sesión de palabras
-                {availableWordItems.length > 0 && ` (${availableWordItems.length})`}
-              </button>
-            </div>
-
             {/* Session length */}
             <div className="mt-6">
               <span className="text-sm font-medium text-stone-600">Largo de la sesión</span>
@@ -663,6 +595,80 @@ export default function HiraganaTrainer() {
             >
               <Play size={18} /> Comenzar sesión
             </button>
+
+            {/* Modos adicionales (usan las filas elegidas arriba) */}
+            <div className="mt-8 pt-6 border-t border-stone-200">
+              <span className="text-sm font-medium text-stone-600">Modos adicionales</span>
+              <p className="text-xs text-stone-400 mt-1">Usan las mismas filas que elegiste arriba.</p>
+            </div>
+
+            {/* Confused pairs */}
+            <div className="mt-4">
+              <span className="text-sm font-medium text-stone-600">Pares confusos</span>
+              <p className="text-xs text-stone-400 mt-1">Practica solo los kana que más se confunden entre sí.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                {CONFUSED_PAIRS.map((group, idx) => {
+                  const selected = selectedPairs.has(idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => togglePair(idx)}
+                      className={`rounded-lg border-2 py-3 text-lg transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                      style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+                    >
+                      {group.join("/")}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {nothingDuePairs && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
+                  Nada por repasar hoy en estos pares.
+                </p>
+              )}
+
+              <button
+                disabled={selectedPairs.size === 0 || availablePairItems.length === 0}
+                onClick={() => startSession(poolForPairs, availablePairItems.length, "recognition")}
+                className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
+              >
+                <Play size={18} /> Comenzar sesión de pares confusos
+                {selectedPairs.size > 0 && ` (${availablePairItems.length})`}
+              </button>
+            </div>
+
+            {/* Words */}
+            <div className="mt-6">
+              <span className="text-sm font-medium text-stone-600">Palabras</span>
+              <p className="text-xs text-stone-400 mt-1">
+                Disponibles según las filas elegidas (o ya dominadas): {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
+              </p>
+              {wordPool.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {wordPool.map((w) => (
+                    <span key={w.kana} className="text-sm bg-white border border-stone-200 rounded-lg px-2 py-1" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
+                      {w.kana}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {nothingDueWords && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
+                  Nada por repasar hoy en estas palabras.
+                </p>
+              )}
+
+              <button
+                disabled={availableWordItems.length === 0}
+                onClick={() => startWordSession(wordPool, availableWordItems.length)}
+                className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
+              >
+                <Play size={18} /> Comenzar sesión de palabras
+                {availableWordItems.length > 0 && ` (${availableWordItems.length})`}
+              </button>
+            </div>
 
             <div className="flex items-center justify-between mt-4">
               <button onClick={() => setView("stats")} className="text-sm text-stone-500 flex items-center gap-1 hover:text-stone-700">
