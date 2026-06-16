@@ -167,6 +167,7 @@ export default function HiraganaTrainer() {
   const [view, setView]             = useState<ViewName>("setup");
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
+  const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
 
   // Session state
   const [sessionQueue, setSessionQueue]   = useState<QueueItem[]>([]);
@@ -562,20 +563,26 @@ export default function HiraganaTrainer() {
             <div className="mt-6">
               <span className="text-sm font-medium text-stone-600">Largo de la sesión</span>
               <div className="flex gap-2 mt-2">
-                {[10, 20].map((n) => (
+                {([10, 20] as const).map((n) => (
                   <button
                     key={n}
-                    disabled={availableItems.length === 0}
-                    onClick={() => startSession(poolForSelected, n)}
-                    className="flex-1 py-2 rounded-lg border-2 border-stone-200 bg-white hover:border-indigo-700 disabled:opacity-40 disabled:hover:border-stone-200 text-sm font-medium"
+                    onClick={() => setSessionLength(n)}
+                    className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                      sessionLength === n
+                        ? "border-indigo-700 bg-indigo-50 text-indigo-700"
+                        : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
+                    }`}
                   >
                     {n}
                   </button>
                 ))}
                 <button
-                  disabled={availableItems.length === 0}
-                  onClick={() => startSession(poolForSelected, availableItems.length)}
-                  className="flex-1 py-2 rounded-lg border-2 border-stone-200 bg-white hover:border-indigo-700 disabled:opacity-40 disabled:hover:border-stone-200 text-sm font-medium"
+                  onClick={() => setSessionLength("all")}
+                  className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                    sessionLength === "all"
+                      ? "border-indigo-700 bg-indigo-50 text-indigo-700"
+                      : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
+                  }`}
                 >
                   Todas ({availableItems.length})
                 </button>
@@ -590,7 +597,7 @@ export default function HiraganaTrainer() {
 
             <button
               disabled={availableItems.length === 0}
-              onClick={() => startSession(poolForSelected, Math.min(20, availableItems.length))}
+              onClick={() => startSession(poolForSelected, sessionLength === "all" ? availableItems.length : Math.min(sessionLength, availableItems.length))}
               className="w-full mt-4 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
             >
               <Play size={18} /> Comenzar sesión
