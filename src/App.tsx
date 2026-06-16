@@ -707,14 +707,15 @@ export default function HiraganaTrainer() {
 
                   {feedback?.status === "correct" && (
                     <div className="stamp-pop flex items-center gap-2 text-emerald-700 font-semibold">
-                      <span className="rounded-full border-2 border-emerald-600 p-1"><Check size={16} /></span> ¡Correcto!
+                      <span className="rounded-full border-2 border-emerald-600 p-1"><Check size={16} /></span>
+                      ¡Correcto!{currentMode === "word" && ` — ${WORDS.find((w) => w.kana === current.kana)?.meaning}`}
                     </div>
                   )}
                   {feedback?.status === "wrong" && (
                     <div className="flex flex-col items-center gap-2">
                       <div className="flex items-center gap-2 text-rose-700 font-semibold">
                         <span className="rounded-full border-2 border-rose-600 p-1"><X size={16} /></span>
-                        Era "{feedback.expected}"
+                        Era "{feedback.expected}"{currentMode === "word" && ` — ${WORDS.find((w) => w.kana === current.kana)?.meaning}`}
                       </div>
                       <button ref={nextBtnRef} type="submit" className="px-6 py-3 rounded-lg bg-rose-700 text-white text-sm font-medium">
                         Siguiente →
@@ -769,7 +770,9 @@ export default function HiraganaTrainer() {
                       <span className="text-xl shrink-0" style={{ fontFamily: "'Shippori Mincho', serif" }}>{m.kana}</span>
                       <span className="text-stone-400 text-xs shrink-0">{m.mode === "production" ? "→ kana" : "→ romaji"}</span>
                       <span className="text-stone-500 truncate">{m.mode === "production" ? "elegiste" : "escribiste"} "{m.given}"</span>
-                      <span className="text-rose-700 font-medium shrink-0">era "{m.expected}"</span>
+                      <span className="text-rose-700 font-medium shrink-0">
+                        era "{m.expected}"{m.mode === "word" && ` — ${WORDS.find((w) => w.kana === m.kana)?.meaning}`}
+                      </span>
                     </div>
                   ))}
                 </div>

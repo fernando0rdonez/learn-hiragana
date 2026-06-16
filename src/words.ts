@@ -6,28 +6,29 @@ export interface WordEntry {
   kana: string;
   romaji: string;
   rows: string[];
+  meaning: string;
 }
 
 export const WORDS: WordEntry[] = [
-  { kana: "あさ",   romaji: "asa",     rows: ["a", "sa"] },
-  { kana: "いえ",   romaji: "ie",      rows: ["a"] },
-  { kana: "うた",   romaji: "uta",     rows: ["a", "ta"] },
-  { kana: "かさ",   romaji: "kasa",    rows: ["ka", "sa"] },
-  { kana: "きく",   romaji: "kiku",    rows: ["ka"] },
-  { kana: "さかな", romaji: "sakana",  rows: ["sa", "ka", "na"] },
-  { kana: "そら",   romaji: "sora",    rows: ["sa", "ra"] },
-  { kana: "たぬき", romaji: "tanuki",  rows: ["ta", "na", "ka"] },
-  { kana: "とり",   romaji: "tori",    rows: ["ta", "ra"] },
-  { kana: "なつ",   romaji: "natsu",   rows: ["na", "ta"] },
-  { kana: "ねこ",   romaji: "neko",    rows: ["na", "ka"] },
-  { kana: "はな",   romaji: "hana",    rows: ["ha", "na"] },
-  { kana: "まめ",   romaji: "mame",    rows: ["ma"] },
-  { kana: "みかん", romaji: "mikan",   rows: ["ma", "ka", "wa"] },
-  { kana: "やま",   romaji: "yama",    rows: ["ya", "ma"] },
-  { kana: "ゆき",   romaji: "yuki",    rows: ["ya", "ka"] },
-  { kana: "よる",   romaji: "yoru",    rows: ["ya", "ra"] },
-  { kana: "わたし", romaji: "watashi", rows: ["wa", "ta", "sa"] },
-  { kana: "くるま", romaji: "kuruma",  rows: ["ka", "ra", "ma"] },
+  { kana: "あさ",   romaji: "asa",     rows: ["a", "sa"],         meaning: "mañana" },
+  { kana: "いえ",   romaji: "ie",      rows: ["a"],               meaning: "casa" },
+  { kana: "うた",   romaji: "uta",     rows: ["a", "ta"],         meaning: "canción" },
+  { kana: "かさ",   romaji: "kasa",    rows: ["ka", "sa"],        meaning: "sombrilla" },
+  { kana: "きく",   romaji: "kiku",    rows: ["ka"],              meaning: "escuchar" },
+  { kana: "さかな", romaji: "sakana",  rows: ["sa", "ka", "na"],  meaning: "pez" },
+  { kana: "そら",   romaji: "sora",    rows: ["sa", "ra"],        meaning: "cielo" },
+  { kana: "たぬき", romaji: "tanuki",  rows: ["ta", "na", "ka"],  meaning: "tejón" },
+  { kana: "とり",   romaji: "tori",    rows: ["ta", "ra"],        meaning: "pájaro" },
+  { kana: "なつ",   romaji: "natsu",   rows: ["na", "ta"],        meaning: "verano" },
+  { kana: "ねこ",   romaji: "neko",    rows: ["na", "ka"],        meaning: "gato" },
+  { kana: "はな",   romaji: "hana",    rows: ["ha", "na"],        meaning: "flor" },
+  { kana: "まめ",   romaji: "mame",    rows: ["ma"],              meaning: "frijol" },
+  { kana: "みかん", romaji: "mikan",   rows: ["ma", "ka", "wa"],  meaning: "mandarina" },
+  { kana: "やま",   romaji: "yama",    rows: ["ya", "ma"],        meaning: "montaña" },
+  { kana: "ゆき",   romaji: "yuki",    rows: ["ya", "ka"],        meaning: "nieve" },
+  { kana: "よる",   romaji: "yoru",    rows: ["ya", "ra"],        meaning: "noche" },
+  { kana: "わたし", romaji: "watashi", rows: ["wa", "ta", "sa"],  meaning: "yo" },
+  { kana: "くるま", romaji: "kuruma",  rows: ["ka", "ra", "ma"],  meaning: "coche" },
 ];
 
 /** Returns words whose every required row passes `isRowReady` (selected or already mastered). */
