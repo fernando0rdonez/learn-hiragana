@@ -7,7 +7,7 @@ import type {
 } from "./types";
 import { loadProgress, saveProgress } from "./storage";
 import { advanceBox, buildSessionQueue } from "./leitner";
-import { getConfusablePairs } from "./confusedPairs";
+import { getConfusablePairs, CONFUSED_PAIRS } from "./confusedPairs";
 import ProductionCard from "./components/ProductionCard";
 
 // ── Data ───────────────────────────────────────────────────────────────────
@@ -150,6 +150,7 @@ export default function HiraganaTrainer() {
   const [saveError, setSaveError]   = useState(false);
   const [progress, setProgress]     = useState<ProgressItems>({});
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set());
   const [view, setView]             = useState<ViewName>("setup");
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
@@ -205,6 +206,14 @@ export default function HiraganaTrainer() {
     });
   }
 
+  function togglePair(idx: number) {
+    setSelectedPairs((prev) => {
+      const next = new Set(prev);
+      next.has(idx) ? next.delete(idx) : next.add(idx);
+      return next;
+    });
+  }
+
   function rowStats(rowId: string) {
     const chars = ROWS.find((r) => r.id === rowId)?.chars ?? [];
     let attempts = 0, correct = 0, tested = 0;
@@ -246,9 +255,9 @@ export default function HiraganaTrainer() {
 
   // ── Session start ─────────────────────────────────────────────────────────
 
-  function startSession(pool: CharWithRow[], length: number) {
+  function startSession(pool: CharWithRow[], length: number, mode: SessionMode = sessionMode) {
     const today = toISODate();
-    const queue = buildQueueItems(pool, sessionMode, length, progress, today);
+    const queue = buildQueueItems(pool, mode, length, progress, today);
     if (queue.length === 0) return;
 
     sessionIndexRef.current = 0;
@@ -396,6 +405,11 @@ export default function HiraganaTrainer() {
   const nothingDue      = poolForSelected.length > 0 && availableItems.length === 0;
   const masteredTotal   = ALL_CHARS.filter((c) => charStatus(progress, c.kana) === "mastered").length;
 
+  const pairKanaSet     = new Set([...selectedPairs].flatMap((idx) => CONFUSED_PAIRS[idx]));
+  const poolForPairs    = ALL_CHARS.filter((c) => pairKanaSet.has(c.kana));
+  const availablePairItems = buildQueueItems(poolForPairs, "recognition", poolForPairs.length * 2, progress, today);
+  const nothingDuePairs = poolForPairs.length > 0 && availablePairItems.length === 0;
+
   const queueLen    = sessionQueue.length;
   const questionNum = sessionIndexRef.current + 1;
 
@@ -483,6 +497,42 @@ export default function HiraganaTrainer() {
                 {sessionMode === "production"  && "Ves el romaji, eliges el kana correcto."}
                 {sessionMode === "both"        && "Mezcla de reconocimiento y producción."}
               </p>
+            </div>
+
+            {/* Confused pairs */}
+            <div className="mt-6">
+              <span className="text-sm font-medium text-stone-600">Pares confusos</span>
+              <p className="text-xs text-stone-400 mt-1">Practica solo los kana que más se confunden entre sí.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                {CONFUSED_PAIRS.map((group, idx) => {
+                  const selected = selectedPairs.has(idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => togglePair(idx)}
+                      className={`rounded-lg border-2 py-3 text-lg transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                      style={{ fontFamily: "'Shippori Mincho', serif" }}
+                    >
+                      {group.join("/")}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {nothingDuePairs && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
+                  Nada por repasar hoy en estos pares.
+                </p>
+              )}
+
+              <button
+                disabled={selectedPairs.size === 0 || availablePairItems.length === 0}
+                onClick={() => startSession(poolForPairs, availablePairItems.length, "recognition")}
+                className="w-full mt-3 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+              >
+                <Play size={18} /> Comenzar sesión de pares confusos
+                {selectedPairs.size > 0 && ` (${availablePairItems.length})`}
+              </button>
             </div>
 
             {/* Session length */}

@@ -103,7 +103,7 @@ Item key format: `"{mode}:{content}"` — e.g. `recognition:あ`, `production:�
 
 ---
 
-## Phase 4 — Confused pairs mode `[ ]`
+## Phase 4 — Confused pairs mode `[x]`
 
 **Goal:** Dedicated session type focused on visually similar kana. Reuses existing recognition/production items — no new data schema.
 
