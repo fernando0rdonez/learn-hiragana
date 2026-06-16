@@ -23,8 +23,21 @@ export interface ItemProgress {
 
 export type ProgressItems = Record<string, ItemProgress>;
 
+export interface StreakData {
+  current: number;
+  longest: number;
+  lastSuccessDate: string; // "" si nunca se cumplió un día
+}
+
+export interface DailyProgress {
+  date: string; // "" si nunca hubo progreso; "YYYY-MM-DD"
+  correctToday: number;
+}
+
 export interface ProgressData {
   items: ProgressItems;
+  streak?: StreakData;
+  dailyProgress?: DailyProgress;
 }
 
 export type CharStatus = "untested" | "developing" | "weak" | "mastered";

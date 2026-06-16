@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-import { Check, X, RotateCcw, BarChart3, Play, Trash2, ArrowLeft } from "lucide-react";
+import { Check, X, RotateCcw, BarChart3, Play, Trash2, ArrowLeft, Flame } from "lucide-react";
 import type {
   CharWithRow, CharData,
   ProgressItems, ItemProgress,
   CharStatus, SessionMode, QueueItem, QuizMode,
+  StreakData, DailyProgress,
 } from "./types";
 import { loadProgress, saveProgress } from "./storage";
 import { advanceBox, buildSessionQueue } from "./leitner";
 import { getConfusablePairs, CONFUSED_PAIRS } from "./confusedPairs";
 import { WORDS, getAvailableWords } from "./words";
+import { recordCorrectAnswer, DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, DAILY_GOAL } from "./streak";
 import ProductionCard from "./components/ProductionCard";
 
 // ── Data ───────────────────────────────────────────────────────────────────
@@ -158,6 +160,8 @@ export default function HiraganaTrainer() {
   const [loading, setLoading]       = useState(true);
   const [saveError, setSaveError]   = useState(false);
   const [progress, setProgress]     = useState<ProgressItems>({});
+  const [streak, setStreak]         = useState<StreakData>(DEFAULT_STREAK);
+  const [dailyProgress, setDailyProgress] = useState<DailyProgress>(DEFAULT_DAILY_PROGRESS);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set());
   const [view, setView]             = useState<ViewName>("setup");
@@ -189,7 +193,10 @@ export default function HiraganaTrainer() {
     link.rel = "stylesheet";
     link.href = "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&display=swap";
     document.head.appendChild(link);
-    setProgress(loadProgress().items);
+    const data = loadProgress();
+    setProgress(data.items);
+    setStreak(data.streak ?? DEFAULT_STREAK);
+    setDailyProgress(data.dailyProgress ?? DEFAULT_DAILY_PROGRESS);
     setLoading(false);
     return () => { document.head.removeChild(link); };
   }, []);
@@ -200,9 +207,11 @@ export default function HiraganaTrainer() {
 
   // ── Persistence ──────────────────────────────────────────────────────────
 
-  function persist(newItems: ProgressItems) {
-    const ok = saveProgress({ items: newItems });
+  function persist(newItems: ProgressItems, newStreak: StreakData = streak, newDaily: DailyProgress = dailyProgress) {
+    const ok = saveProgress({ items: newItems, streak: newStreak, dailyProgress: newDaily });
     setSaveError(!ok);
+    setStreak(newStreak);
+    setDailyProgress(newDaily);
   }
 
   // ── Setup helpers ─────────────────────────────────────────────────────────
@@ -337,8 +346,11 @@ export default function HiraganaTrainer() {
     const { box, nextDue } = advanceBox(prevP, isCorrect, today);
     const newP: ItemProgress = { box, nextDue, attempts: prevP.attempts + 1, correct: prevP.correct + (isCorrect ? 1 : 0) };
     const newProgress: ProgressItems = { ...progress, [key]: newP };
+    const { streak: nextStreak, daily: nextDaily } = isCorrect
+      ? recordCorrectAnswer(streak, dailyProgress, today)
+      : { streak, daily: dailyProgress };
     setProgress(newProgress);
-    persist(newProgress);
+    persist(newProgress, nextStreak, nextDaily);
 
     if (isCorrect) {
       setCorrectCount((c) => c + 1);
@@ -364,8 +376,11 @@ export default function HiraganaTrainer() {
     const { box, nextDue } = advanceBox(prevP, isCorrect, today);
     const newP: ItemProgress = { box, nextDue, attempts: prevP.attempts + 1, correct: prevP.correct + (isCorrect ? 1 : 0) };
     const newProgress: ProgressItems = { ...progress, [key]: newP };
+    const { streak: nextStreak, daily: nextDaily } = isCorrect
+      ? recordCorrectAnswer(streak, dailyProgress, today)
+      : { streak, daily: dailyProgress };
     setProgress(newProgress);
-    persist(newProgress);
+    persist(newProgress, nextStreak, nextDaily);
 
     setSelectedOption(selectedKana);
 
@@ -425,7 +440,7 @@ export default function HiraganaTrainer() {
   function resetProgress() {
     const empty: ProgressItems = {};
     setProgress(empty);
-    persist(empty);
+    persist(empty, DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS);
     setResetConfirm(false);
     setView("setup");
   }
@@ -474,6 +489,12 @@ export default function HiraganaTrainer() {
             <p className="text-stone-500 text-sm mt-1">
               {masteredTotal}/{ALL_CHARS.length} caracteres dominados
             </p>
+            {streak.current > 0 && (
+              <p className="text-stone-500 text-sm mt-1 flex items-center gap-1">
+                <Flame size={14} className="text-orange-500" />
+                Racha de {streak.current} día{streak.current === 1 ? "" : "s"}
+              </p>
+            )}
             <div className="w-full h-1.5 bg-stone-200 rounded-full mt-2 overflow-hidden">
               <div className="h-full bg-indigo-700 rounded-full transition-all" style={{ width: `${(masteredTotal / ALL_CHARS.length) * 100}%` }} />
             </div>
@@ -805,6 +826,10 @@ export default function HiraganaTrainer() {
               </button>
             </div>
             <p className="text-stone-500 text-sm mb-4">{masteredTotal}/{ALL_CHARS.length} dominados (3+ intentos, ≥85% acierto)</p>
+            <p className="text-stone-500 text-sm mb-4">
+              Racha actual: {streak.current} día{streak.current === 1 ? "" : "s"} · Récord: {streak.longest} ·
+              Hoy: {Math.min(dailyProgress.date === today ? dailyProgress.correctToday : 0, DAILY_GOAL)}/{DAILY_GOAL} aciertos
+            </p>
 
             {ROWS.map((row) => (
               <div key={row.id} className="mb-4">
