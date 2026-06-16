@@ -2,14 +2,14 @@
   "name": "Hiragana Trainer",
   "short_name": "ひらがな",
   "description": "Practice hiragana with spaced repetition",
-  "start_url": "/",
+  "start_url": "/learn-hiragana/",
   "display": "standalone",
   "background_color": "#fffbeb",
   "theme_color": "#4338ca",
   "lang": "ja",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/learn-hiragana/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
