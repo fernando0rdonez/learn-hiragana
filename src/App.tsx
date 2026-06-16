@@ -357,7 +357,7 @@ export default function HiraganaTrainer() {
       setCorrectCount((c) => c + 1);
       setFeedback({ status: "correct", expected: cur.romaji });
       sessionIndexRef.current += 1;
-      setTimeout(() => goNext(), 600);
+      setTimeout(() => goNext(), mode === "word" ? 1400 : 600);
     } else {
       const newQueue: QueueItem[] = [...sessionQueueRef.current, { char: cur, mode }];
       updateQueue(newQueue);
