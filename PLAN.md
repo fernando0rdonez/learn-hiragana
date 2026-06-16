@@ -82,7 +82,7 @@ Item key format: `"{mode}:{content}"` — e.g. `recognition:あ`, `production:�
 
 ---
 
-## Phase 3 — Production mode (romaji → kana) `[ ]`
+## Phase 3 — Production mode (romaji → kana) `[x]`
 
 **Goal:** New quiz direction: user sees romaji, picks the correct kana from 4 options.
 

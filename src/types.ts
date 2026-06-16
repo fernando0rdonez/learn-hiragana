@@ -1,3 +1,17 @@
+// ── Character data ─────────────────────────────────────────────────────────
+
+export interface CharData {
+  kana: string;
+  romaji: string;
+  accept?: string[];
+}
+
+export interface CharWithRow extends CharData {
+  row: string;
+}
+
+// ── Progress ───────────────────────────────────────────────────────────────
+
 export type ItemMode = "recognition" | "production" | "word";
 
 export interface ItemProgress {
@@ -14,3 +28,12 @@ export interface ProgressData {
 }
 
 export type CharStatus = "untested" | "developing" | "weak" | "mastered";
+
+// ── Session ────────────────────────────────────────────────────────────────
+
+export type SessionMode = "recognition" | "production" | "both";
+
+export interface QueueItem {
+  char: CharWithRow;
+  mode: "recognition" | "production";
+}
