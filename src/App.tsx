@@ -675,16 +675,6 @@ export default function HiraganaTrainer() {
               <p className="text-xs text-stone-400 mt-1">
                 Disponibles según las filas elegidas (o ya dominadas): {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
               </p>
-              {wordPool.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {wordPool.map((w) => (
-                    <span key={w.kana} className="text-sm bg-white border border-stone-200 rounded-lg px-2 py-1" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
-                      {w.kana}
-                    </span>
-                  ))}
-                </div>
-              )}
-
               {nothingDueWords && (
                 <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
                   Nada por repasar hoy en estas palabras.
