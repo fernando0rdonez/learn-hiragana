@@ -38,6 +38,7 @@ export interface ProgressData {
   items: ProgressItems;
   streak?: StreakData;
   dailyProgress?: DailyProgress;
+  settings?: { showRomaji: boolean };
 }
 
 export type CharStatus = "untested" | "developing" | "weak" | "mastered";

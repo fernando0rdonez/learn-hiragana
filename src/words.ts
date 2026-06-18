@@ -137,3 +137,44 @@ export const WORDS: WordEntry[] = [
 export function getAvailableWords(isRowReady: (rowId: string) => boolean): WordEntry[] {
   return WORDS.filter((w) => w.rows.every(isRowReady));
 }
+
+// ── Spell-It words ─────────────────────────────────────────────────────────────
+
+export interface SpellWordEntry {
+  id: string;
+  hiragana: string;
+  romaji: string;
+  meaning: string;
+  emoji: string;
+  emojiLabel: string;
+  rows: string[];
+}
+
+export const SPELL_WORDS: SpellWordEntry[] = [
+  { id: "asa",     hiragana: "あさ",   romaji: "asa",     meaning: "mañana",    emoji: "🌅", emojiLabel: "sunrise",     rows: ["a", "sa"] },
+  { id: "ie",      hiragana: "いえ",   romaji: "ie",      meaning: "casa",      emoji: "🏠", emojiLabel: "house",       rows: ["a"] },
+  { id: "uta",     hiragana: "うた",   romaji: "uta",     meaning: "canción",   emoji: "🎵", emojiLabel: "music note",  rows: ["a", "ta"] },
+  { id: "kasa",    hiragana: "かさ",   romaji: "kasa",    meaning: "sombrilla", emoji: "☂️", emojiLabel: "umbrella",    rows: ["ka", "sa"] },
+  { id: "kiku",    hiragana: "きく",   romaji: "kiku",    meaning: "escuchar",  emoji: "🌼", emojiLabel: "flower",      rows: ["ka"] },
+  { id: "sakana",  hiragana: "さかな", romaji: "sakana",  meaning: "pez",       emoji: "🐟", emojiLabel: "fish",        rows: ["sa", "ka", "na"] },
+  { id: "sora",    hiragana: "そら",   romaji: "sora",    meaning: "cielo",     emoji: "🌤️", emojiLabel: "sky",         rows: ["sa", "ra"] },
+  { id: "tanuki",  hiragana: "たぬき", romaji: "tanuki",  meaning: "mapache",   emoji: "🦝", emojiLabel: "raccoon",     rows: ["ta", "na", "ka"] },
+  { id: "tori",    hiragana: "とり",   romaji: "tori",    meaning: "pájaro",    emoji: "🐦", emojiLabel: "bird",        rows: ["ta", "ra"] },
+  { id: "natsu",   hiragana: "なつ",   romaji: "natsu",   meaning: "verano",    emoji: "☀️", emojiLabel: "summer sun",  rows: ["na", "ta"] },
+  { id: "neko",    hiragana: "ねこ",   romaji: "neko",    meaning: "gato",      emoji: "🐱", emojiLabel: "cat",         rows: ["na", "ka"] },
+  { id: "hana",    hiragana: "はな",   romaji: "hana",    meaning: "flor",      emoji: "🌸", emojiLabel: "cherry blossom", rows: ["ha", "na"] },
+  { id: "mame",    hiragana: "まめ",   romaji: "mame",    meaning: "frijol",    emoji: "🫘", emojiLabel: "beans",       rows: ["ma"] },
+  { id: "mikan",   hiragana: "みかん", romaji: "mikan",   meaning: "mandarina", emoji: "🍊", emojiLabel: "orange",      rows: ["ma", "ka", "wa"] },
+  { id: "yama",    hiragana: "やま",   romaji: "yama",    meaning: "montaña",   emoji: "⛰️", emojiLabel: "mountain",    rows: ["ya", "ma"] },
+  { id: "yuki",    hiragana: "ゆき",   romaji: "yuki",    meaning: "nieve",     emoji: "❄️", emojiLabel: "snowflake",   rows: ["ya", "ka"] },
+  { id: "yoru",    hiragana: "よる",   romaji: "yoru",    meaning: "noche",     emoji: "🌙", emojiLabel: "moon",        rows: ["ya", "ra"] },
+  { id: "watashi", hiragana: "わたし", romaji: "watashi", meaning: "yo",        emoji: "🙋", emojiLabel: "person",      rows: ["wa", "ta", "sa"] },
+  { id: "kuruma",  hiragana: "くるま", romaji: "kuruma",  meaning: "coche",     emoji: "🚗", emojiLabel: "car",         rows: ["ka", "ra", "ma"] },
+];
+
+export const getSpellWordById = (id: string): SpellWordEntry | undefined =>
+  SPELL_WORDS.find((w) => w.id === id);
+
+export function getAvailableSpellWords(isRowReady: (rowId: string) => boolean): SpellWordEntry[] {
+  return SPELL_WORDS.filter((w) => w.rows.every(isRowReady));
+}

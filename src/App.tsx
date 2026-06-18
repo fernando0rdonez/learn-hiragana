@@ -9,9 +9,11 @@ import type {
 import { loadProgress, saveProgress } from "./storage";
 import { advanceBox, buildSessionQueue } from "./leitner";
 import { getConfusablePairs, CONFUSED_PAIRS } from "./confusedPairs";
-import { WORDS, getAvailableWords } from "./words";
+import { WORDS, getAvailableWords, getAvailableSpellWords } from "./words";
+import type { SpellWordEntry } from "./words";
 import { recordCorrectAnswer, DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, DAILY_GOAL } from "./streak";
 import ProductionCard from "./components/ProductionCard";
+import SpellItGame from "./components/SpellItGame";
 
 // ── Data ───────────────────────────────────────────────────────────────────
 
@@ -34,7 +36,7 @@ const ALL_CHARS: CharWithRow[] = ROWS.flatMap((row) =>
 
 // ── Local types ────────────────────────────────────────────────────────────
 
-type ViewName = "setup" | "quiz" | "preview" | "summary" | "stats";
+type ViewName = "setup" | "quiz" | "preview" | "summary" | "stats" | "spellIt";
 
 interface Feedback {
   status: "correct" | "wrong";
@@ -159,6 +161,7 @@ const STATUS_STYLE: Record<CharStatus, string> = {
 export default function HiraganaTrainer() {
   const [loading, setLoading]       = useState(true);
   const [saveError, setSaveError]   = useState(false);
+  const [showRomaji, setShowRomaji] = useState(false);
   const [progress, setProgress]     = useState<ProgressItems>({});
   const [streak, setStreak]         = useState<StreakData>(DEFAULT_STREAK);
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>(DEFAULT_DAILY_PROGRESS);
@@ -200,6 +203,7 @@ export default function HiraganaTrainer() {
     setProgress(data.items);
     setStreak(data.streak ?? DEFAULT_STREAK);
     setDailyProgress(data.dailyProgress ?? DEFAULT_DAILY_PROGRESS);
+    setShowRomaji(data.settings?.showRomaji ?? false);
     setLoading(false);
     return () => { document.head.removeChild(link); };
   }, []);
@@ -211,7 +215,7 @@ export default function HiraganaTrainer() {
   // ── Persistence ──────────────────────────────────────────────────────────
 
   function persist(newItems: ProgressItems, newStreak: StreakData = streak, newDaily: DailyProgress = dailyProgress) {
-    const ok = saveProgress({ items: newItems, streak: newStreak, dailyProgress: newDaily });
+    const ok = saveProgress({ items: newItems, streak: newStreak, dailyProgress: newDaily, settings: { showRomaji } });
     setSaveError(!ok);
     setStreak(newStreak);
     setDailyProgress(newDaily);
@@ -488,6 +492,8 @@ export default function HiraganaTrainer() {
   const availableWordItems = buildSessionQueue(wordPool, progress, "word", wordPool.length * 2, today);
   const nothingDueWords     = wordPool.length > 0 && availableWordItems.length === 0;
 
+  const availableSpellWords: SpellWordEntry[] = getAvailableSpellWords(isRowReady);
+
   const queueLen    = sessionQueue.length;
   const questionNum = sessionIndexRef.current + 1;
 
@@ -671,7 +677,22 @@ export default function HiraganaTrainer() {
 
             {/* Words */}
             <div className="mt-6">
-              <span className="text-sm font-medium text-stone-600">Palabras</span>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-stone-600">Palabras</span>
+                <label className="flex items-center gap-2 text-xs text-stone-500 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showRomaji}
+                    onChange={(e) => {
+                      const val = e.target.checked;
+                      setShowRomaji(val);
+                      saveProgress({ items: progress, streak, dailyProgress, settings: { showRomaji: val } });
+                    }}
+                    className="accent-indigo-700"
+                  />
+                  Mostrar romaji
+                </label>
+              </div>
               <p className="text-xs text-stone-400 mt-1">
                 Disponibles según las filas elegidas (o ya dominadas): {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
               </p>
@@ -686,8 +707,17 @@ export default function HiraganaTrainer() {
                 onClick={() => startWordSession(wordPool, availableWordItems.length)}
                 className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
               >
-                <Play size={18} /> Comenzar sesión de palabras
+                <Play size={18} /> Sesión de romaji
                 {availableWordItems.length > 0 && ` (${availableWordItems.length})`}
+              </button>
+
+              <button
+                disabled={availableSpellWords.length === 0}
+                onClick={() => setView("spellIt")}
+                className="w-full mt-2 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+              >
+                🎴 Spell It
+                {availableSpellWords.length > 0 && ` (${availableSpellWords.length})`}
               </button>
             </div>
 
@@ -892,6 +922,21 @@ export default function HiraganaTrainer() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* ── Spell It ── */}
+        {view === "spellIt" && (
+          <SpellItGame
+            spellWords={availableSpellWords}
+            progress={progress}
+            showRomaji={showRomaji}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("setup")}
+          />
         )}
 
         {/* ── Stats ── */}
