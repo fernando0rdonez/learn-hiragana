@@ -197,6 +197,8 @@ export default function HiraganaTrainer() {
   const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set());
   const [selectedPhenomena, setSelectedPhenomena] = useState<Set<string>>(new Set());
   const [view, setView]             = useState<ViewName>("setup");
+  const [setupSlide, setSetupSlide] = useState(0);
+  const setupTouchX = useRef<number | null>(null);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
   const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
@@ -585,115 +587,151 @@ export default function HiraganaTrainer() {
               <div className="h-full bg-indigo-700 rounded-full transition-all" style={{ width: `${(masteredTotal / ALL_CHARS.length) * 100}%` }} />
             </div>
 
-            {/* Row selector */}
-            <div className="flex items-center justify-between mt-6 mb-2">
-              <span className="text-sm font-medium text-stone-600">Elige las filas a practicar</span>
-              <div className="flex gap-3 text-xs">
-                <button onClick={() => setSelectedRows(new Set(ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
-                <button onClick={() => setSelectedRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {ROWS.map((row) => {
-                const stats    = rowStats(row.id);
-                const selected = selectedRows.has(row.id);
-                return (
+            {/* Row selector — 3-slide carousel */}
+            <div className="mt-6">
+              {/* Tab bar */}
+              <div className="flex gap-1 bg-stone-100 rounded-xl p-1 mb-4">
+                {[
+                  { label: "Básico",        idx: 0 },
+                  { label: "Dakuten",       idx: 1 },
+                  { label: "Combinaciones", idx: 2 },
+                ].map(({ label, idx }) => (
                   <button
-                    key={row.id}
-                    onClick={() => toggleRow(row.id)}
-                    className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                    key={idx}
+                    onClick={() => setSetupSlide(idx)}
+                    className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition-all ${
+                      setupSlide === idx
+                        ? "bg-white text-indigo-700 shadow-sm"
+                        : "text-stone-500"
+                    }`}
                   >
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
-                      {stats.mastered ? (
-                        <Check size={16} className="text-emerald-600" />
-                      ) : stats.accuracy !== null ? (
-                        <span className="text-xs text-stone-500">{stats.accuracy}%</span>
-                      ) : (
-                        <span className="text-xs text-stone-400">nuevo</span>
-                      )}
-                    </div>
-                    <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
+                    {label}
                   </button>
-                );
-              })}
-            </div>
+                ))}
+              </div>
 
-            {/* Dakuten / Handakuten row selector */}
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <span className="text-sm font-medium text-stone-600">Dakuten y Handakuten</span>
-                  <p className="text-xs text-stone-400 mt-0.5">Consonantes sonoras (が・ざ・だ・ば) y semi-sonoras (ぱ).</p>
-                </div>
-                <div className="flex gap-3 text-xs">
-                  <button onClick={() => setSelectedDakutenRows(new Set(DAKUTEN_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
-                  <button onClick={() => setSelectedDakutenRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {DAKUTEN_ROWS.map((row) => {
-                  const stats    = rowStats(row.id);
-                  const selected = selectedDakutenRows.has(row.id);
-                  return (
-                    <button
-                      key={row.id}
-                      onClick={() => toggleDakutenRow(row.id)}
-                      className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                    >
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
-                        {stats.mastered ? (
-                          <Check size={16} className="text-emerald-600" />
-                        ) : stats.accuracy !== null ? (
-                          <span className="text-xs text-stone-500">{stats.accuracy}%</span>
-                        ) : (
-                          <span className="text-xs text-stone-400">nuevo</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+              {/* Sliding panels */}
+              <div
+                className="overflow-hidden"
+                onTouchStart={(e) => { setupTouchX.current = e.touches[0].clientX; }}
+                onTouchEnd={(e) => {
+                  if (setupTouchX.current === null) return;
+                  const dx = e.changedTouches[0].clientX - setupTouchX.current;
+                  setupTouchX.current = null;
+                  if (Math.abs(dx) < 40) return;
+                  if (dx < 0) setSetupSlide((p) => Math.min(p + 1, 2));
+                  if (dx > 0) setSetupSlide((p) => Math.max(p - 1, 0));
+                }}
+              >
+                <div
+                  className="flex transition-transform duration-300 ease-in-out items-start"
+                  style={{ transform: `translateX(-${setupSlide * 100}%)` }}
+                >
+                  {/* Slide 0 — Básico */}
+                  <div className="w-full flex-shrink-0">
+                    <div className="flex justify-end mb-2 gap-3 text-xs">
+                      <button onClick={() => setSelectedRows(new Set(ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
+                      <button onClick={() => setSelectedRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {ROWS.map((row) => {
+                        const stats    = rowStats(row.id);
+                        const selected = selectedRows.has(row.id);
+                        return (
+                          <button
+                            key={row.id}
+                            onClick={() => toggleRow(row.id)}
+                            className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                          >
+                            <div className="flex items-baseline justify-between">
+                              <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
+                              {stats.mastered ? (
+                                <Check size={16} className="text-emerald-600" />
+                              ) : stats.accuracy !== null ? (
+                                <span className="text-xs text-stone-500">{stats.accuracy}%</span>
+                              ) : (
+                                <span className="text-xs text-stone-400">nuevo</span>
+                              )}
+                            </div>
+                            <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-            {/* Compound (yōon) row selector */}
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <span className="text-sm font-medium text-stone-600">Combinaciones (拗音)</span>
-                  <p className="text-xs text-stone-400 mt-0.5">Sílabas compuestas con や・ゆ・よ pequeñas.</p>
-                </div>
-                <div className="flex gap-3 text-xs">
-                  <button onClick={() => setSelectedCompoundRows(new Set(COMPOUND_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
-                  <button onClick={() => setSelectedCompoundRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {COMPOUND_ROWS.map((row) => {
-                  const stats    = rowStats(row.id);
-                  const selected = selectedCompoundRows.has(row.id);
-                  return (
-                    <button
-                      key={row.id}
-                      onClick={() => toggleCompoundRow(row.id)}
-                      className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                    >
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
-                        {stats.mastered ? (
-                          <Check size={16} className="text-emerald-600" />
-                        ) : stats.accuracy !== null ? (
-                          <span className="text-xs text-stone-500">{stats.accuracy}%</span>
-                        ) : (
-                          <span className="text-xs text-stone-400">nuevo</span>
-                        )}
+                  {/* Slide 1 — Dakuten y Handakuten */}
+                  <div className="w-full flex-shrink-0">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-xs text-stone-400">Consonantes sonoras (が・ざ・だ・ば) y semi-sonoras (ぱ).</p>
+                      <div className="flex gap-3 text-xs ml-2 shrink-0">
+                        <button onClick={() => setSelectedDakutenRows(new Set(DAKUTEN_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
+                        <button onClick={() => setSelectedDakutenRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
                       </div>
-                      <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
-                    </button>
-                  );
-                })}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {DAKUTEN_ROWS.map((row) => {
+                        const stats    = rowStats(row.id);
+                        const selected = selectedDakutenRows.has(row.id);
+                        return (
+                          <button
+                            key={row.id}
+                            onClick={() => toggleDakutenRow(row.id)}
+                            className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                          >
+                            <div className="flex items-baseline justify-between">
+                              <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
+                              {stats.mastered ? (
+                                <Check size={16} className="text-emerald-600" />
+                              ) : stats.accuracy !== null ? (
+                                <span className="text-xs text-stone-500">{stats.accuracy}%</span>
+                              ) : (
+                                <span className="text-xs text-stone-400">nuevo</span>
+                              )}
+                            </div>
+                            <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Slide 2 — Combinaciones */}
+                  <div className="w-full flex-shrink-0">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-xs text-stone-400">Sílabas compuestas con や・ゆ・よ pequeñas.</p>
+                      <div className="flex gap-3 text-xs ml-2 shrink-0">
+                        <button onClick={() => setSelectedCompoundRows(new Set(COMPOUND_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
+                        <button onClick={() => setSelectedCompoundRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {COMPOUND_ROWS.map((row) => {
+                        const stats    = rowStats(row.id);
+                        const selected = selectedCompoundRows.has(row.id);
+                        return (
+                          <button
+                            key={row.id}
+                            onClick={() => toggleCompoundRow(row.id)}
+                            className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                          >
+                            <div className="flex items-baseline justify-between">
+                              <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
+                              {stats.mastered ? (
+                                <Check size={16} className="text-emerald-600" />
+                              ) : stats.accuracy !== null ? (
+                                <span className="text-xs text-stone-500">{stats.accuracy}%</span>
+                              ) : (
+                                <span className="text-xs text-stone-400">nuevo</span>
+                              )}
+                            </div>
+                            <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

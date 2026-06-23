@@ -341,21 +341,16 @@ export default function SpellItGame({
         </div>
       )}
 
-      {/* Kana chip pool — horizontal swipeable row */}
-      <div
-        className="w-full overflow-x-auto"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
-      >
-        <div className="flex gap-3 px-4 min-w-full justify-center">
-          {chips.map((chip) => (
-            <KanaChip
-              key={chip.id}
-              kana={chip.kana}
-              used={chip.used}
-              onClick={() => handleChipTap(chip.id)}
-            />
-          ))}
-        </div>
+      {/* Kana chip pool — all chips visible at once */}
+      <div className="flex flex-wrap gap-2 justify-center px-2">
+        {chips.map((chip) => (
+          <KanaChip
+            key={chip.id}
+            kana={chip.kana}
+            used={chip.used}
+            onClick={() => handleChipTap(chip.id)}
+          />
+        ))}
       </div>
 
       {/* Clear button */}
