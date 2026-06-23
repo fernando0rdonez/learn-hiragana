@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { SpellWordEntry } from "../words";
@@ -85,8 +85,6 @@ export default function SpellItGame({
   const [failCount, setFailCount] = useState(0);
   const [phase, setPhase] = useState<GamePhase>("playing");
   const [animClass, setAnimClass] = useState("");
-  const [chipPage, setChipPage] = useState(0);
-  const touchStartX = useRef<number | null>(null);
 
   const today = toISODate();
 
@@ -118,7 +116,6 @@ export default function SpellItGame({
     setFailCount(0);
     setPhase("playing");
     setAnimClass("");
-    setChipPage(0);
   }
 
   function recordResult(word: SpellWordEntry, isCorrect: boolean) {
@@ -188,7 +185,6 @@ export default function SpellItGame({
             setChips(buildChips(word));
             setSlots(Array(wordLen).fill(null));
             setSlotChipIds(Array(wordLen).fill(null));
-            setChipPage(0);
             setPhase("playing");
           }, 800);
         }
@@ -252,7 +248,6 @@ export default function SpellItGame({
     setChips(buildChips(currentWord));
     setSlots(Array(wordLen).fill(null));
     setSlotChipIds(Array(wordLen).fill(null));
-    setChipPage(0);
   }
 
   // ── Done screen ──────────────────────────────────────────────────────────────
@@ -346,73 +341,17 @@ export default function SpellItGame({
         </div>
       )}
 
-      {/* Kana chip pool — paginated swipe carousel */}
-      {(() => {
-        const total = chips.length;
-        // Split evenly into 2 pages max; single page when ≤6 chips
-        const perPage = total <= 6 ? total : Math.ceil(total / 2);
-        const pages: Chip[][] = [];
-        for (let i = 0; i < total; i += perPage) pages.push(chips.slice(i, i + perPage));
-        const clampedPage = Math.min(chipPage, pages.length - 1);
-
-        function onTouchStart(e: React.TouchEvent) {
-          touchStartX.current = e.touches[0].clientX;
-        }
-        function onTouchEnd(e: React.TouchEvent) {
-          if (touchStartX.current === null) return;
-          const dx = e.changedTouches[0].clientX - touchStartX.current;
-          touchStartX.current = null;
-          if (Math.abs(dx) < 40) return;
-          if (dx < 0 && clampedPage < pages.length - 1) setChipPage(clampedPage + 1);
-          if (dx > 0 && clampedPage > 0) setChipPage(clampedPage - 1);
-        }
-
-        return (
-          <div className="w-full flex flex-col items-center gap-3">
-            <div
-              className="w-full overflow-hidden"
-              onTouchStart={onTouchStart}
-              onTouchEnd={onTouchEnd}
-            >
-              <div
-                className="flex transition-transform duration-300 ease-in-out"
-                style={{ transform: `translateX(-${clampedPage * 100}%)` }}
-              >
-                {pages.map((pageChips, pageIdx) => (
-                  <div
-                    key={pageIdx}
-                    className="w-full flex-shrink-0 flex flex-wrap gap-3 justify-center px-2"
-                  >
-                    {pageChips.map((chip) => (
-                      <KanaChip
-                        key={chip.id}
-                        kana={chip.kana}
-                        used={chip.used}
-                        onClick={() => handleChipTap(chip.id)}
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Page dots */}
-            {pages.length > 1 && (
-              <div className="flex gap-2">
-                {pages.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setChipPage(i)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      i === clampedPage ? "bg-indigo-600" : "bg-stone-300"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })()}
+      {/* Kana chip pool — all chips visible at once */}
+      <div className="flex flex-wrap gap-2 justify-center px-2">
+        {chips.map((chip) => (
+          <KanaChip
+            key={chip.id}
+            kana={chip.kana}
+            used={chip.used}
+            onClick={() => handleChipTap(chip.id)}
+          />
+        ))}
+      </div>
 
       {/* Clear button */}
       {phase === "playing" && slots.some((s) => s !== null) && (
