@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { SpellWordEntry } from "../words";
-import { buildSessionQueue, INTERVALS } from "../leitner";
+import { INTERVALS, isDue } from "../leitner";
 import { getDistractors } from "../utils/distractors";
 import { playChime, playBuzz } from "../utils/audio";
 import EmojiDisplay from "./EmojiDisplay";
@@ -54,7 +54,7 @@ function getSyllables(word: SpellWordEntry): string[] {
 
 function buildChips(word: SpellWordEntry): Chip[] {
   const syllables = getSyllables(word);
-  const kanas = [...syllables, ...getDistractors(word.hiragana, 3, word.kanaUnits)];
+  const kanas = [...syllables, ...getDistractors(word.hiragana, 4, word.kanaUnits)];
   return shuffle(kanas.map((kana, id) => ({ id, kana, used: false })));
 }
 
@@ -88,12 +88,19 @@ export default function SpellItGame({
 
   const today = toISODate();
 
-  // Build session queue on mount using Leitner (kana = word.id for key lookup)
+  // Build session queue on mount: due/new words first, then not-yet-due — always include all
   useEffect(() => {
-    type PoolItem = SpellWordEntry & { kana: string };
-    const pool: PoolItem[] = spellWords.map((w) => ({ ...w, kana: w.id }));
-    const ordered = buildSessionQueue(pool, progress, "word", pool.length, today) as PoolItem[];
-    const wordQueue = ordered.map((item) => spellWords.find((w) => w.id === item.id)!);
+    const due: SpellWordEntry[] = [];
+    const notDue: SpellWordEntry[] = [];
+    for (const w of spellWords) {
+      const p = progress[`word:${w.id}`];
+      if (!p || p.attempts === 0 || isDue(p.nextDue, today)) {
+        due.push(w);
+      } else {
+        notDue.push(w);
+      }
+    }
+    const wordQueue = [...shuffle(due), ...shuffle(notDue)];
     setQueue(wordQueue);
     setQueueIndex(0);
     if (wordQueue.length > 0) initWord(wordQueue[0]);
@@ -272,7 +279,6 @@ export default function SpellItGame({
 
   if (!currentWord) return null;
 
-  const wordLen = getSyllables(currentWord).length;
   const totalWords = queue.length;
   const progressPct = (queueIndex / totalWords) * 100;
 
@@ -335,19 +341,21 @@ export default function SpellItGame({
         </div>
       )}
 
-      {/* Kana chip pool */}
+      {/* Kana chip pool — horizontal swipeable row */}
       <div
-        className="flex flex-wrap gap-2 justify-center max-w-xs"
-        style={{ minHeight: `${Math.ceil((wordLen + 3) / 4) * 56}px` }}
+        className="w-full overflow-x-auto"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
       >
-        {chips.map((chip) => (
-          <KanaChip
-            key={chip.id}
-            kana={chip.kana}
-            used={chip.used}
-            onClick={() => handleChipTap(chip.id)}
-          />
-        ))}
+        <div className="flex gap-3 px-4 min-w-full justify-center">
+          {chips.map((chip) => (
+            <KanaChip
+              key={chip.id}
+              kana={chip.kana}
+              used={chip.used}
+              onClick={() => handleChipTap(chip.id)}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Clear button */}
