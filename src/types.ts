@@ -12,7 +12,7 @@ export interface CharWithRow extends CharData {
 
 // ── Progress ───────────────────────────────────────────────────────────────
 
-export type ItemMode = "recognition" | "production" | "word";
+export type ItemMode = "recognition" | "production" | "word" | "phonetics";
 
 export interface ItemProgress {
   box: number;

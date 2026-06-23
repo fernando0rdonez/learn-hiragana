@@ -12,8 +12,10 @@ import { getConfusablePairs, CONFUSED_PAIRS } from "./confusedPairs";
 import { WORDS, getAvailableWords, getAvailableSpellWords } from "./words";
 import type { SpellWordEntry } from "./words";
 import { recordCorrectAnswer, DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, DAILY_GOAL } from "./streak";
+import { PHENOMENON_GROUPS, getAvailablePhonetics } from "./phonetics";
 import ProductionCard from "./components/ProductionCard";
 import SpellItGame from "./components/SpellItGame";
+import PhoneticsDrill from "./components/PhoneticsDrill";
 
 // ── Data ───────────────────────────────────────────────────────────────────
 
@@ -60,7 +62,7 @@ const ALL_CHARS: CharWithRow[] = ALL_ROW_GROUPS.flatMap((row) =>
 
 // ── Local types ────────────────────────────────────────────────────────────
 
-type ViewName = "setup" | "quiz" | "preview" | "summary" | "stats" | "spellIt";
+type ViewName = "setup" | "quiz" | "preview" | "summary" | "stats" | "spellIt" | "phonetics";
 
 interface Feedback {
   status: "correct" | "wrong";
@@ -193,6 +195,7 @@ export default function HiraganaTrainer() {
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
   const [selectedCompoundRows, setSelectedCompoundRows] = useState<Set<string>>(new Set());
   const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set());
+  const [selectedPhenomena, setSelectedPhenomena] = useState<Set<string>>(new Set());
   const [view, setView]             = useState<ViewName>("setup");
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
@@ -275,6 +278,14 @@ export default function HiraganaTrainer() {
 
   function toggleCompoundRow(id: string) {
     setSelectedCompoundRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function togglePhenomenon(id: string) {
+    setSelectedPhenomena((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -536,6 +547,8 @@ export default function HiraganaTrainer() {
 
   const availableSpellWords: SpellWordEntry[] = getAvailableSpellWords(isRowReady);
 
+  const phoneticPool = getAvailablePhonetics(selectedPhenomena);
+
   const queueLen    = sessionQueue.length;
   const questionNum = sessionIndexRef.current + 1;
 
@@ -795,6 +808,35 @@ export default function HiraganaTrainer() {
               </button>
             </div>
 
+            {/* Fonética */}
+            <div className="mt-6">
+              <span className="text-sm font-medium text-stone-600">Fonética</span>
+              <p className="text-xs text-stone-400 mt-1">Practica cómo suenan realmente las palabras japonesas.</p>
+              <div className="flex flex-col gap-2 mt-2">
+                {PHENOMENON_GROUPS.map((pg) => {
+                  const sel = selectedPhenomena.has(pg.id);
+                  return (
+                    <button
+                      key={pg.id}
+                      onClick={() => togglePhenomenon(pg.id)}
+                      className={`text-left rounded-xl border-2 p-3 transition-colors ${sel ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                    >
+                      <div className="text-sm font-medium text-stone-700">{pg.title}</div>
+                      <div className="text-xs text-stone-400 mt-0.5">{pg.description}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                disabled={phoneticPool.length === 0}
+                onClick={() => setView("phonetics")}
+                className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
+              >
+                <Play size={18} /> Sesión de fonética
+                {phoneticPool.length > 0 && ` (${phoneticPool.length})`}
+              </button>
+            </div>
+
             {/* Words */}
             <div className="mt-6">
               <div className="flex items-center justify-between">
@@ -1042,6 +1084,20 @@ export default function HiraganaTrainer() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* ── Fonética ── */}
+        {view === "phonetics" && (
+          <PhoneticsDrill
+            phoneticWords={phoneticPool}
+            progress={progress}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("setup")}
+          />
         )}
 
         {/* ── Spell It ── */}
