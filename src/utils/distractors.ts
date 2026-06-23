@@ -13,6 +13,20 @@ const BASE_KANA = [
   "わ","を","ん",
 ];
 
+const COMPOUND_KANA = [
+  "きゃ","きゅ","きょ",
+  "ぎゃ","ぎゅ","ぎょ",
+  "しゃ","しゅ","しょ",
+  "じゃ","じゅ","じょ",
+  "ちゃ","ちゅ","ちょ",
+  "にゃ","にゅ","にょ",
+  "ひゃ","ひゅ","ひょ",
+  "びゃ","びゅ","びょ",
+  "ぴゃ","ぴゅ","ぴょ",
+  "みゃ","みゅ","みょ",
+  "りゃ","りゅ","りょ",
+];
+
 function shuffle<T>(arr: T[]): T[] {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -21,16 +35,26 @@ function shuffle<T>(arr: T[]): T[] {
   return arr;
 }
 
-export function getDistractors(wordKana: string, count = 3): string[] {
-  const chars = [...wordKana];
+/**
+ * Returns `count` distractor kana for a word.
+ * Pass `units` when the word uses compound kana (e.g. ["お","ちゃ"]) so that
+ * compound kana are included in the distractor pool.
+ */
+export function getDistractors(wordKana: string, count = 3, units?: string[]): string[] {
+  const chars = units ?? [...wordKana];
   const charSet = new Set(chars);
 
-  // Priority: confused-pair alternatives for the word's characters
+  const hasCompound = chars.some((c) => c.length > 1);
+  const pool = hasCompound ? [...BASE_KANA, ...COMPOUND_KANA] : BASE_KANA;
+
+  // Priority: confused-pair alternatives for single-char kana
   const confused: string[] = [];
   for (const ch of chars) {
-    for (const group of CONFUSED_PAIRS) {
-      if (group.includes(ch)) {
-        group.filter((k) => k !== ch && !charSet.has(k)).forEach((k) => confused.push(k));
+    if (ch.length === 1) {
+      for (const group of CONFUSED_PAIRS) {
+        if (group.includes(ch)) {
+          group.filter((k) => k !== ch && !charSet.has(k)).forEach((k) => confused.push(k));
+        }
       }
     }
   }
@@ -43,7 +67,7 @@ export function getDistractors(wordKana: string, count = 3): string[] {
     if (!seen.has(k)) { seen.add(k); result.push(k); }
   }
 
-  for (const k of shuffle(BASE_KANA.filter((k) => !seen.has(k)))) {
+  for (const k of shuffle(pool.filter((k) => !seen.has(k)))) {
     if (result.length >= count) break;
     result.push(k);
   }

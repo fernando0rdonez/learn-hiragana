@@ -131,6 +131,35 @@ export const WORDS: WordEntry[] = [
   { kana: "にわとり", romaji: "niwatori",  rows: ["na", "wa", "ta", "ra"],meaning: "gallina" },
   { kana: "ふるさと", romaji: "furusato",  rows: ["ha", "ra", "sa", "ta"],meaning: "tierra natal" },
   { kana: "かわうそ", romaji: "kawauso",   rows: ["ka", "wa", "a", "sa"], meaning: "nutria" },
+
+  // ── Dakuten / Handakuten ─────────────────────────────────────────────────────
+  { kana: "ぶた",   romaji: "buta",   rows: ["ba", "ta"],          meaning: "cerdo" },
+  { kana: "ぞう",   romaji: "zou",    rows: ["za", "a"],           meaning: "elefante" },
+  { kana: "げた",   romaji: "geta",   rows: ["ga", "ta"],          meaning: "sandalias" },
+  { kana: "ばら",   romaji: "bara",   rows: ["ba", "ra"],          meaning: "rosa" },
+  { kana: "どろ",   romaji: "doro",   rows: ["da", "ra"],          meaning: "barro" },
+  { kana: "がか",   romaji: "gaka",   rows: ["ga", "ka"],          meaning: "pintor" },
+  { kana: "ごみ",   romaji: "gomi",   rows: ["ga", "ma"],          meaning: "basura" },
+  { kana: "びわ",   romaji: "biwa",   rows: ["ba", "wa"],          meaning: "laúd biwa" },
+  { kana: "ぱん",   romaji: "pan",    rows: ["pa", "wa"],          meaning: "pan" },
+  { kana: "どこ",   romaji: "doko",   rows: ["da", "ka"],          meaning: "dónde" },
+  { kana: "だれ",   romaji: "dare",   rows: ["da", "ra"],          meaning: "quién" },
+  { kana: "ごはん", romaji: "gohan",  rows: ["ga", "ha", "wa"],    meaning: "arroz/comida" },
+  { kana: "じかん", romaji: "jikan",  rows: ["za", "ka", "wa"],    meaning: "tiempo" },
+  { kana: "ぼたん", romaji: "botan",  rows: ["ba", "ta", "wa"],    meaning: "peonía" },
+  { kana: "ぎんか", romaji: "ginka",  rows: ["ga", "wa", "ka"],    meaning: "moneda de plata" },
+  { kana: "だいず", romaji: "daizu",  rows: ["da", "a", "za"],     meaning: "soja" },
+
+  // ── Combinaciones (拗音) ──────────────────────────────────────────────────────
+  { kana: "おちゃ",   romaji: "ocha",    rows: ["a", "cha"],          meaning: "té" },
+  { kana: "きゃく",   romaji: "kyaku",   rows: ["kya", "ka"],         meaning: "huésped" },
+  { kana: "じゃり",   romaji: "jari",    rows: ["ja", "ra"],          meaning: "grava" },
+  { kana: "ひゃく",   romaji: "hyaku",   rows: ["hya", "ka"],         meaning: "cien" },
+  { kana: "りゅう",   romaji: "ryuu",    rows: ["rya", "a"],          meaning: "dragón" },
+  { kana: "しゃしん", romaji: "shashin", rows: ["sha", "sa", "wa"],   meaning: "foto" },
+  { kana: "ちゃわん", romaji: "chawan",  rows: ["cha", "wa"],         meaning: "tazón de arroz" },
+  { kana: "みゃく",   romaji: "myaku",   rows: ["mya", "ka"],         meaning: "pulso" },
+  { kana: "にゃん",   romaji: "nyan",    rows: ["nya", "wa"],         meaning: "miau" },
 ];
 
 /** Returns words whose every required row passes `isRowReady` (selected or already mastered). */
@@ -148,6 +177,8 @@ export interface SpellWordEntry {
   emoji: string;
   emojiLabel: string;
   rows: string[];
+  /** Explicit syllable units for compound-kana words (e.g. ["お","ちゃ"] for おちゃ). */
+  kanaUnits?: string[];
 }
 
 export const SPELL_WORDS: SpellWordEntry[] = [
@@ -170,6 +201,24 @@ export const SPELL_WORDS: SpellWordEntry[] = [
   { id: "yoru",    hiragana: "よる",   romaji: "yoru",    meaning: "noche",     emoji: "🌙", emojiLabel: "moon",        rows: ["ya", "ra"] },
   { id: "watashi", hiragana: "わたし", romaji: "watashi", meaning: "yo",        emoji: "🙋", emojiLabel: "person",      rows: ["wa", "ta", "sa"] },
   { id: "kuruma",  hiragana: "くるま", romaji: "kuruma",  meaning: "coche",     emoji: "🚗", emojiLabel: "car",         rows: ["ka", "ra", "ma"] },
+
+  // ── Dakuten / Handakuten ─────────────────────────────────────────────────────
+  { id: "buta",   hiragana: "ぶた",   romaji: "buta",   meaning: "cerdo",     emoji: "🐷", emojiLabel: "pig",         rows: ["ba", "ta"] },
+  { id: "zou",    hiragana: "ぞう",   romaji: "zou",    meaning: "elefante",  emoji: "🐘", emojiLabel: "elephant",    rows: ["za", "a"] },
+  { id: "bara",   hiragana: "ばら",   romaji: "bara",   meaning: "rosa",      emoji: "🌹", emojiLabel: "rose",        rows: ["ba", "ra"] },
+  { id: "gohan",  hiragana: "ごはん", romaji: "gohan",  meaning: "arroz",     emoji: "🍚", emojiLabel: "rice",        rows: ["ga", "ha", "wa"] },
+  { id: "pan",    hiragana: "ぱん",   romaji: "pan",    meaning: "pan",       emoji: "🍞", emojiLabel: "bread",       rows: ["pa", "wa"] },
+  { id: "jikan",  hiragana: "じかん", romaji: "jikan",  meaning: "tiempo",    emoji: "⏰", emojiLabel: "clock",       rows: ["za", "ka", "wa"] },
+  { id: "gomi",   hiragana: "ごみ",   romaji: "gomi",   meaning: "basura",    emoji: "🗑️", emojiLabel: "trash",       rows: ["ga", "ma"] },
+  { id: "doko",   hiragana: "どこ",   romaji: "doko",   meaning: "dónde",     emoji: "🗺️", emojiLabel: "map",         rows: ["da", "ka"] },
+
+  // ── Combinaciones (拗音) ──────────────────────────────────────────────────────
+  { id: "ocha",    hiragana: "おちゃ",   romaji: "ocha",    meaning: "té",      emoji: "🍵", emojiLabel: "tea",     rows: ["a", "cha"],        kanaUnits: ["お", "ちゃ"] },
+  { id: "kyaku",   hiragana: "きゃく",   romaji: "kyaku",   meaning: "huésped", emoji: "🛎️", emojiLabel: "bell",    rows: ["kya", "ka"],        kanaUnits: ["きゃ", "く"] },
+  { id: "shashin", hiragana: "しゃしん", romaji: "shashin", meaning: "foto",    emoji: "📷", emojiLabel: "camera",  rows: ["sha", "sa", "wa"], kanaUnits: ["しゃ", "し", "ん"] },
+  { id: "chawan",  hiragana: "ちゃわん", romaji: "chawan",  meaning: "tazón",   emoji: "🥣", emojiLabel: "bowl",    rows: ["cha", "wa"],        kanaUnits: ["ちゃ", "わ", "ん"] },
+  { id: "ryuu",    hiragana: "りゅう",   romaji: "ryuu",    meaning: "dragón",  emoji: "🐉", emojiLabel: "dragon",  rows: ["rya", "a"],         kanaUnits: ["りゅ", "う"] },
+  { id: "hyaku",   hiragana: "ひゃく",   romaji: "hyaku",   meaning: "cien",    emoji: "💯", emojiLabel: "hundred", rows: ["hya", "ka"],        kanaUnits: ["ひゃ", "く"] },
 ];
 
 export const getSpellWordById = (id: string): SpellWordEntry | undefined =>

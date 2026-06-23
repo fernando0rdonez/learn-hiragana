@@ -294,7 +294,7 @@ export default function HiraganaTrainer() {
   }
 
   function isRowReady(rowId: string): boolean {
-    return selectedRows.has(rowId) || rowStats(rowId).mastered;
+    return selectedRows.has(rowId) || selectedDakutenRows.has(rowId) || selectedCompoundRows.has(rowId) || rowStats(rowId).mastered;
   }
 
   // ── Queue management ──────────────────────────────────────────────────────

@@ -48,8 +48,13 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+function getSyllables(word: SpellWordEntry): string[] {
+  return word.kanaUnits ?? [...word.hiragana];
+}
+
 function buildChips(word: SpellWordEntry): Chip[] {
-  const kanas = [...word.hiragana, ...getDistractors(word.hiragana)];
+  const syllables = getSyllables(word);
+  const kanas = [...syllables, ...getDistractors(word.hiragana, 3, word.kanaUnits)];
   return shuffle(kanas.map((kana, id) => ({ id, kana, used: false })));
 }
 
@@ -97,7 +102,7 @@ export default function SpellItGame({
   }, []);
 
   function initWord(word: SpellWordEntry) {
-    const wordLen = [...word.hiragana].length;
+    const wordLen = getSyllables(word).length;
     setChips(buildChips(word));
     setSlots(Array(wordLen).fill(null));
     setSlotChipIds(Array(wordLen).fill(null));
@@ -169,7 +174,7 @@ export default function SpellItGame({
           setPhase("wrong");
           // Reset chips back to pool after shake
           setTimeout(() => {
-            const wordLen = [...word.hiragana].length;
+            const wordLen = getSyllables(word).length;
             setChips(buildChips(word));
             setSlots(Array(wordLen).fill(null));
             setSlotChipIds(Array(wordLen).fill(null));
@@ -232,7 +237,7 @@ export default function SpellItGame({
 
   function handleClear() {
     if (!currentWord || phase !== "playing") return;
-    const wordLen = [...currentWord.hiragana].length;
+    const wordLen = getSyllables(currentWord).length;
     setChips(buildChips(currentWord));
     setSlots(Array(wordLen).fill(null));
     setSlotChipIds(Array(wordLen).fill(null));
@@ -267,7 +272,7 @@ export default function SpellItGame({
 
   if (!currentWord) return null;
 
-  const wordLen = [...currentWord.hiragana].length;
+  const wordLen = getSyllables(currentWord).length;
   const totalWords = queue.length;
   const progressPct = (queueIndex / totalWords) * 100;
 
