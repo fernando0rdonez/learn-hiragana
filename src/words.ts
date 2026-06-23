@@ -201,6 +201,11 @@ export const SPELL_WORDS: SpellWordEntry[] = [
   { id: "yoru",    hiragana: "よる",   romaji: "yoru",    meaning: "noche",     emoji: "🌙", emojiLabel: "moon",        rows: ["ya", "ra"] },
   { id: "watashi", hiragana: "わたし", romaji: "watashi", meaning: "yo",        emoji: "🙋", emojiLabel: "person",      rows: ["wa", "ta", "sa"] },
   { id: "kuruma",  hiragana: "くるま", romaji: "kuruma",  meaning: "coche",     emoji: "🚗", emojiLabel: "car",         rows: ["ka", "ra", "ma"] },
+  { id: "usagi",   hiragana: "うさぎ", romaji: "usagi",   meaning: "conejo",    emoji: "🐰", emojiLabel: "rabbit",      rows: ["a", "sa", "ga"] },
+  { id: "kinoko",  hiragana: "きのこ", romaji: "kinoko",  meaning: "hongo",     emoji: "🍄", emojiLabel: "mushroom",    rows: ["ka", "na"] },
+  { id: "tamago",  hiragana: "たまご", romaji: "tamago",  meaning: "huevo",     emoji: "🥚", emojiLabel: "egg",         rows: ["ta", "ma", "ga"] },
+  { id: "ringo",   hiragana: "りんご", romaji: "ringo",   meaning: "manzana",   emoji: "🍎", emojiLabel: "apple",       rows: ["ra", "wa", "ga"] },
+  { id: "denwa",   hiragana: "でんわ", romaji: "denwa",   meaning: "teléfono",  emoji: "📱", emojiLabel: "phone",       rows: ["da", "wa"] },
 
   // ── Dakuten / Handakuten ─────────────────────────────────────────────────────
   { id: "buta",   hiragana: "ぶた",   romaji: "buta",   meaning: "cerdo",     emoji: "🐷", emojiLabel: "pig",         rows: ["ba", "ta"] },
@@ -212,6 +217,21 @@ export const SPELL_WORDS: SpellWordEntry[] = [
   { id: "gomi",   hiragana: "ごみ",   romaji: "gomi",   meaning: "basura",    emoji: "🗑️", emojiLabel: "trash",       rows: ["ga", "ma"] },
   { id: "doko",   hiragana: "どこ",   romaji: "doko",   meaning: "dónde",     emoji: "🗺️", emojiLabel: "map",         rows: ["da", "ka"] },
 
+  // ── 4 sílabas ────────────────────────────────────────────────────────────────
+  { id: "onigiri",  hiragana: "おにぎり", romaji: "onigiri",  meaning: "onigiri",    emoji: "🍙", emojiLabel: "rice ball",  rows: ["a", "na", "ga", "ra"] },
+  { id: "hikouki",  hiragana: "ひこうき", romaji: "hikouki",  meaning: "avión",      emoji: "✈️", emojiLabel: "airplane",   rows: ["ha", "ka", "a"] },
+  { id: "tomodachi",hiragana: "ともだち", romaji: "tomodachi",meaning: "amigo",      emoji: "👫", emojiLabel: "friends",    rows: ["ta", "ma", "da"] },
+  { id: "kaminari", hiragana: "かみなり", romaji: "kaminari", meaning: "trueno",     emoji: "⛈️", emojiLabel: "thunder",    rows: ["ka", "ma", "na", "ra"] },
+  { id: "murasaki", hiragana: "むらさき", romaji: "murasaki", meaning: "morado",     emoji: "🟣", emojiLabel: "purple",     rows: ["ma", "ra", "sa", "ka"] },
+  { id: "ninjin",   hiragana: "にんじん", romaji: "ninjin",   meaning: "zanahoria",  emoji: "🥕", emojiLabel: "carrot",     rows: ["na", "wa", "za"] },
+  { id: "fuusen",   hiragana: "ふうせん", romaji: "fuusen",   meaning: "globo",      emoji: "🎈", emojiLabel: "balloon",    rows: ["ha", "a", "sa", "wa"] },
+  { id: "yakitori", hiragana: "やきとり", romaji: "yakitori", meaning: "yakitori",   emoji: "🍢", emojiLabel: "skewer",     rows: ["ya", "ka", "ta", "ra"] },
+
+  // ── 5 sílabas ────────────────────────────────────────────────────────────────
+  { id: "arigatou",  hiragana: "ありがとう", romaji: "arigatou",  meaning: "gracias",  emoji: "🙏", emojiLabel: "folded hands", rows: ["a", "ra", "ga", "ta"] },
+  { id: "sakuranbo", hiragana: "さくらんぼ", romaji: "sakuranbo", meaning: "cereza",   emoji: "🍒", emojiLabel: "cherries",     rows: ["sa", "ka", "ra", "wa", "ba"] },
+  { id: "okaasan",   hiragana: "おかあさん", romaji: "okaasan",   meaning: "mamá",     emoji: "👩", emojiLabel: "woman",        rows: ["a", "ka", "sa", "wa"] },
+
   // ── Combinaciones (拗音) ──────────────────────────────────────────────────────
   { id: "ocha",    hiragana: "おちゃ",   romaji: "ocha",    meaning: "té",      emoji: "🍵", emojiLabel: "tea",     rows: ["a", "cha"],        kanaUnits: ["お", "ちゃ"] },
   { id: "kyaku",   hiragana: "きゃく",   romaji: "kyaku",   meaning: "huésped", emoji: "🛎️", emojiLabel: "bell",    rows: ["kya", "ka"],        kanaUnits: ["きゃ", "く"] },
@@ -219,6 +239,7 @@ export const SPELL_WORDS: SpellWordEntry[] = [
   { id: "chawan",  hiragana: "ちゃわん", romaji: "chawan",  meaning: "tazón",   emoji: "🥣", emojiLabel: "bowl",    rows: ["cha", "wa"],        kanaUnits: ["ちゃ", "わ", "ん"] },
   { id: "ryuu",    hiragana: "りゅう",   romaji: "ryuu",    meaning: "dragón",  emoji: "🐉", emojiLabel: "dragon",  rows: ["rya", "a"],         kanaUnits: ["りゅ", "う"] },
   { id: "hyaku",   hiragana: "ひゃく",   romaji: "hyaku",   meaning: "cien",    emoji: "💯", emojiLabel: "hundred", rows: ["hya", "ka"],        kanaUnits: ["ひゃ", "く"] },
+  { id: "akachan", hiragana: "あかちゃん",romaji: "akachan", meaning: "bebé",    emoji: "👶", emojiLabel: "baby",    rows: ["a", "ka", "cha", "wa"], kanaUnits: ["あ", "か", "ちゃ", "ん"] },
 ];
 
 export const getSpellWordById = (id: string): SpellWordEntry | undefined =>

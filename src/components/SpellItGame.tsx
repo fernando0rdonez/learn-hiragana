@@ -54,7 +54,7 @@ function getSyllables(word: SpellWordEntry): string[] {
 
 function buildChips(word: SpellWordEntry): Chip[] {
   const syllables = getSyllables(word);
-  const kanas = [...syllables, ...getDistractors(word.hiragana, 3, word.kanaUnits)];
+  const kanas = [...syllables, ...getDistractors(word.hiragana, 4, word.kanaUnits)];
   return shuffle(kanas.map((kana, id) => ({ id, kana, used: false })));
 }
 
