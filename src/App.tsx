@@ -30,7 +30,31 @@ const ROWS: { id: string; title: string; chars: CharData[] }[] = [
   { id: "wa", title: "わ — fila WA / N", chars: [{ kana: "わ", romaji: "wa" }, { kana: "を", romaji: "wo", accept: ["wo", "o"] }, { kana: "ん", romaji: "n" }] },
 ];
 
-const ALL_CHARS: CharWithRow[] = ROWS.flatMap((row) =>
+const DAKUTEN_ROWS: { id: string; title: string; chars: CharData[] }[] = [
+  { id: "ga", title: "が — fila GA", chars: [{ kana: "が", romaji: "ga" }, { kana: "ぎ", romaji: "gi" }, { kana: "ぐ", romaji: "gu" }, { kana: "げ", romaji: "ge" }, { kana: "ご", romaji: "go" }] },
+  { id: "za", title: "ざ — fila ZA", chars: [{ kana: "ざ", romaji: "za" }, { kana: "じ", romaji: "ji" }, { kana: "ず", romaji: "zu" }, { kana: "ぜ", romaji: "ze" }, { kana: "ぞ", romaji: "zo" }] },
+  { id: "da", title: "だ — fila DA", chars: [{ kana: "だ", romaji: "da" }, { kana: "ぢ", romaji: "di", accept: ["ji"] }, { kana: "づ", romaji: "du", accept: ["zu"] }, { kana: "で", romaji: "de" }, { kana: "ど", romaji: "do" }] },
+  { id: "ba", title: "ば — fila BA", chars: [{ kana: "ば", romaji: "ba" }, { kana: "び", romaji: "bi" }, { kana: "ぶ", romaji: "bu" }, { kana: "べ", romaji: "be" }, { kana: "ぼ", romaji: "bo" }] },
+  { id: "pa", title: "ぱ — fila PA", chars: [{ kana: "ぱ", romaji: "pa" }, { kana: "ぴ", romaji: "pi" }, { kana: "ぷ", romaji: "pu" }, { kana: "ぺ", romaji: "pe" }, { kana: "ぽ", romaji: "po" }] },
+];
+
+const COMPOUND_ROWS: { id: string; title: string; chars: CharData[] }[] = [
+  { id: "kya", title: "きゃ — KY", chars: [{ kana: "きゃ", romaji: "kya" }, { kana: "きゅ", romaji: "kyu" }, { kana: "きょ", romaji: "kyo" }] },
+  { id: "gya", title: "ぎゃ — GY", chars: [{ kana: "ぎゃ", romaji: "gya" }, { kana: "ぎゅ", romaji: "gyu" }, { kana: "ぎょ", romaji: "gyo" }] },
+  { id: "sha", title: "しゃ — SH", chars: [{ kana: "しゃ", romaji: "sha" }, { kana: "しゅ", romaji: "shu" }, { kana: "しょ", romaji: "sho" }] },
+  { id: "ja",  title: "じゃ — J",  chars: [{ kana: "じゃ", romaji: "ja" }, { kana: "じゅ", romaji: "ju" }, { kana: "じょ", romaji: "jo" }] },
+  { id: "cha", title: "ちゃ — CH", chars: [{ kana: "ちゃ", romaji: "cha" }, { kana: "ちゅ", romaji: "chu" }, { kana: "ちょ", romaji: "cho" }] },
+  { id: "nya", title: "にゃ — NY", chars: [{ kana: "にゃ", romaji: "nya" }, { kana: "にゅ", romaji: "nyu" }, { kana: "にょ", romaji: "nyo" }] },
+  { id: "hya", title: "ひゃ — HY", chars: [{ kana: "ひゃ", romaji: "hya" }, { kana: "ひゅ", romaji: "hyu" }, { kana: "ひょ", romaji: "hyo" }] },
+  { id: "bya", title: "びゃ — BY", chars: [{ kana: "びゃ", romaji: "bya" }, { kana: "びゅ", romaji: "byu" }, { kana: "びょ", romaji: "byo" }] },
+  { id: "pya", title: "ぴゃ — PY", chars: [{ kana: "ぴゃ", romaji: "pya" }, { kana: "ぴゅ", romaji: "pyu" }, { kana: "ぴょ", romaji: "pyo" }] },
+  { id: "mya", title: "みゃ — MY", chars: [{ kana: "みゃ", romaji: "mya" }, { kana: "みゅ", romaji: "myu" }, { kana: "みょ", romaji: "myo" }] },
+  { id: "rya", title: "りゃ — RY", chars: [{ kana: "りゃ", romaji: "rya" }, { kana: "りゅ", romaji: "ryu" }, { kana: "りょ", romaji: "ryo" }] },
+];
+
+const ALL_ROW_GROUPS = [...ROWS, ...DAKUTEN_ROWS, ...COMPOUND_ROWS];
+
+const ALL_CHARS: CharWithRow[] = ALL_ROW_GROUPS.flatMap((row) =>
   row.chars.map((ch) => ({ ...ch, row: row.id }))
 );
 
@@ -166,6 +190,8 @@ export default function HiraganaTrainer() {
   const [streak, setStreak]         = useState<StreakData>(DEFAULT_STREAK);
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>(DEFAULT_DAILY_PROGRESS);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
+  const [selectedCompoundRows, setSelectedCompoundRows] = useState<Set<string>>(new Set());
   const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set());
   const [view, setView]             = useState<ViewName>("setup");
   const [resetConfirm, setResetConfirm] = useState(false);
@@ -239,8 +265,24 @@ export default function HiraganaTrainer() {
     });
   }
 
+  function toggleDakutenRow(id: string) {
+    setSelectedDakutenRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleCompoundRow(id: string) {
+    setSelectedCompoundRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
   function rowStats(rowId: string) {
-    const chars = ROWS.find((r) => r.id === rowId)?.chars ?? [];
+    const chars = ALL_ROW_GROUPS.find((r) => r.id === rowId)?.chars ?? [];
     let attempts = 0, correct = 0, tested = 0;
     chars.forEach((ch) => {
       const p = progress[`recognition:${ch.kana}`];
@@ -286,7 +328,7 @@ export default function HiraganaTrainer() {
 
   function getNewRows(pool: CharWithRow[]): { id: string; title: string; chars: CharData[] }[] {
     const rowIdsInPool = new Set(pool.map((c) => c.row));
-    return ROWS.filter((row) =>
+    return ALL_ROW_GROUPS.filter((row) =>
       rowIdsInPool.has(row.id) &&
       row.chars.every((ch) => {
         const p = progress[`recognition:${ch.kana}`];
@@ -477,7 +519,7 @@ export default function HiraganaTrainer() {
   // ── Derived values ────────────────────────────────────────────────────────
 
   const today           = toISODate();
-  const poolForSelected = ALL_CHARS.filter((c) => selectedRows.has(c.row));
+  const poolForSelected = ALL_CHARS.filter((c) => selectedRows.has(c.row) || selectedDakutenRows.has(c.row) || selectedCompoundRows.has(c.row));
   const availableItems  = buildQueueItems(poolForSelected, sessionMode, poolForSelected.length * 2, progress, today);
   const nothingDue      = poolForSelected.length > 0 && availableItems.length === 0;
   const masteredTotal   = ALL_CHARS.filter((c) => charStatus(progress, c.kana) === "mastered").length;
@@ -562,6 +604,84 @@ export default function HiraganaTrainer() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* Dakuten / Handakuten row selector */}
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <span className="text-sm font-medium text-stone-600">Dakuten y Handakuten</span>
+                  <p className="text-xs text-stone-400 mt-0.5">Consonantes sonoras (が・ざ・だ・ば) y semi-sonoras (ぱ).</p>
+                </div>
+                <div className="flex gap-3 text-xs">
+                  <button onClick={() => setSelectedDakutenRows(new Set(DAKUTEN_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
+                  <button onClick={() => setSelectedDakutenRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {DAKUTEN_ROWS.map((row) => {
+                  const stats    = rowStats(row.id);
+                  const selected = selectedDakutenRows.has(row.id);
+                  return (
+                    <button
+                      key={row.id}
+                      onClick={() => toggleDakutenRow(row.id)}
+                      className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                    >
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
+                        {stats.mastered ? (
+                          <Check size={16} className="text-emerald-600" />
+                        ) : stats.accuracy !== null ? (
+                          <span className="text-xs text-stone-500">{stats.accuracy}%</span>
+                        ) : (
+                          <span className="text-xs text-stone-400">nuevo</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Compound (yōon) row selector */}
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <span className="text-sm font-medium text-stone-600">Combinaciones (拗音)</span>
+                  <p className="text-xs text-stone-400 mt-0.5">Sílabas compuestas con や・ゆ・よ pequeñas.</p>
+                </div>
+                <div className="flex gap-3 text-xs">
+                  <button onClick={() => setSelectedCompoundRows(new Set(COMPOUND_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
+                  <button onClick={() => setSelectedCompoundRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {COMPOUND_ROWS.map((row) => {
+                  const stats    = rowStats(row.id);
+                  const selected = selectedCompoundRows.has(row.id);
+                  return (
+                    <button
+                      key={row.id}
+                      onClick={() => toggleCompoundRow(row.id)}
+                      className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                    >
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
+                        {stats.mastered ? (
+                          <Check size={16} className="text-emerald-600" />
+                        ) : stats.accuracy !== null ? (
+                          <span className="text-xs text-stone-500">{stats.accuracy}%</span>
+                        ) : (
+                          <span className="text-xs text-stone-400">nuevo</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Mode selector */}
