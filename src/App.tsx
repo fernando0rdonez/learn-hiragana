@@ -1130,7 +1130,47 @@ export default function HiraganaTrainer() {
               Hoy: {Math.min(dailyProgress.date === today ? dailyProgress.correctToday : 0, DAILY_GOAL)}/{DAILY_GOAL} aciertos
             </p>
 
+            {/* Basic rows */}
+            <div className="text-sm font-semibold text-stone-600 mb-2">Hiragana básico</div>
             {ROWS.map((row) => (
+              <div key={row.id} className="mb-4">
+                <div className="text-xs font-medium text-stone-500 mb-1">{row.title}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {row.chars.map((ch) => {
+                    const status = charStatus(progress, ch.kana);
+                    return (
+                      <div key={ch.kana} className={`w-12 h-14 rounded-lg border flex flex-col items-center justify-center ${STATUS_STYLE[status]}`}>
+                        <span className="text-lg" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{ch.kana}</span>
+                        <span className="text-[10px]">{ch.romaji}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Dakuten / Handakuten rows */}
+            <div className="text-sm font-semibold text-stone-600 mt-2 mb-2">Dakuten y Handakuten</div>
+            {DAKUTEN_ROWS.map((row) => (
+              <div key={row.id} className="mb-4">
+                <div className="text-xs font-medium text-stone-500 mb-1">{row.title}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {row.chars.map((ch) => {
+                    const status = charStatus(progress, ch.kana);
+                    return (
+                      <div key={ch.kana} className={`w-12 h-14 rounded-lg border flex flex-col items-center justify-center ${STATUS_STYLE[status]}`}>
+                        <span className="text-lg" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{ch.kana}</span>
+                        <span className="text-[10px]">{ch.romaji}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Compound (拗音) rows */}
+            <div className="text-sm font-semibold text-stone-600 mt-2 mb-2">Combinaciones (拗音)</div>
+            {COMPOUND_ROWS.map((row) => (
               <div key={row.id} className="mb-4">
                 <div className="text-xs font-medium text-stone-500 mb-1">{row.title}</div>
                 <div className="flex flex-wrap gap-1.5">
