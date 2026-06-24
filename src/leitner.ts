@@ -23,8 +23,8 @@ export function isDue(nextDue: string, today: string): boolean {
  * Builds an ordered session queue:
  *   1. Due items (shuffled)
  *   2. New items — no attempts yet (shuffled)
- *   3. Not-yet-due items are excluded
- * Returns at most `sessionLength` items. Empty array means nothing to practice.
+ *   3. Not-yet-due items (shuffled) — included so practice is never blocked
+ * Returns at most `sessionLength` items.
  */
 export function buildSessionQueue<T extends { kana: string }>(
   pool: T[],
@@ -35,6 +35,7 @@ export function buildSessionQueue<T extends { kana: string }>(
 ): T[] {
   const due: T[] = [];
   const fresh: T[] = [];
+  const notDue: T[] = [];
 
   for (const char of pool) {
     const item = items[`${mode}:${char.kana}`];
@@ -42,13 +43,16 @@ export function buildSessionQueue<T extends { kana: string }>(
       fresh.push(char);
     } else if (isDue(item.nextDue, today)) {
       due.push(char);
+    } else {
+      notDue.push(char);
     }
   }
 
   shuffle(due);
   shuffle(fresh);
+  shuffle(notDue);
 
-  return [...due, ...fresh].slice(0, sessionLength);
+  return [...due, ...fresh, ...notDue].slice(0, sessionLength);
 }
 
 function addDays(dateStr: string, days: number): string {

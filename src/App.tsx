@@ -534,18 +534,15 @@ export default function HiraganaTrainer() {
   const today           = toISODate();
   const poolForSelected = ALL_CHARS.filter((c) => selectedRows.has(c.row) || selectedDakutenRows.has(c.row) || selectedCompoundRows.has(c.row));
   const availableItems  = buildQueueItems(poolForSelected, sessionMode, poolForSelected.length * 2, progress, today);
-  const nothingDue      = poolForSelected.length > 0 && availableItems.length === 0;
   const masteredTotal   = ALL_CHARS.filter((c) => charStatus(progress, c.kana) === "mastered").length;
 
   const pairKanaSet     = new Set([...selectedPairs].flatMap((idx) => CONFUSED_PAIRS[idx]));
   const poolForPairs    = ALL_CHARS.filter((c) => pairKanaSet.has(c.kana));
   const availablePairItems = buildQueueItems(poolForPairs, "recognition", poolForPairs.length * 2, progress, today);
-  const nothingDuePairs = poolForPairs.length > 0 && availablePairItems.length === 0;
 
   const wordPool: CharWithRow[] = getAvailableWords(isRowReady)
     .map((w): CharWithRow => ({ kana: w.kana, romaji: w.romaji, row: "word" }));
   const availableWordItems = buildSessionQueue(wordPool, progress, "word", wordPool.length * 2, today);
-  const nothingDueWords     = wordPool.length > 0 && availableWordItems.length === 0;
 
   const availableSpellWords: SpellWordEntry[] = getAvailableSpellWords(isRowReady);
 
@@ -790,12 +787,6 @@ export default function HiraganaTrainer() {
               </div>
             </div>
 
-            {nothingDue && (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-4">
-                Nada por repasar hoy en estas filas. Vuelve mañana o selecciona otras filas.
-              </p>
-            )}
-
             <button
               disabled={availableItems.length === 0}
               onClick={() => launchSession(poolForSelected, () => startSession(poolForSelected, sessionLength === "all" ? availableItems.length : Math.min(sessionLength, availableItems.length)))}
@@ -829,12 +820,6 @@ export default function HiraganaTrainer() {
                   );
                 })}
               </div>
-
-              {nothingDuePairs && (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
-                  Nada por repasar hoy en estos pares.
-                </p>
-              )}
 
               <button
                 disabled={selectedPairs.size === 0 || availablePairItems.length === 0}
@@ -896,12 +881,6 @@ export default function HiraganaTrainer() {
               <p className="text-xs text-stone-400 mt-1">
                 Disponibles según las filas elegidas (o ya dominadas): {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
               </p>
-              {nothingDueWords && (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
-                  Nada por repasar hoy en estas palabras.
-                </p>
-              )}
-
               <button
                 disabled={availableWordItems.length === 0}
                 onClick={() => startWordSession(wordPool, availableWordItems.length)}
