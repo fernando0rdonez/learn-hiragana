@@ -9,12 +9,12 @@ import type {
 import { loadProgress, saveProgress } from "./storage";
 import { advanceBox, buildSessionQueue } from "./leitner";
 import { getConfusablePairs, CONFUSED_PAIRS } from "./confusedPairs";
-import { WORDS, getAvailableWords, getAvailableSpellWords } from "./words";
-import type { SpellWordEntry } from "./words";
+import { WORDS, getAvailableWords } from "./words";
+import { VOCABULARY } from "./vocabulary";
 import { recordCorrectAnswer, DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, DAILY_GOAL } from "./streak";
 import { PHENOMENON_GROUPS, getAvailablePhonetics } from "./phonetics";
 import ProductionCard from "./components/ProductionCard";
-import SpellItGame from "./components/SpellItGame";
+import VocabularyGame from "./components/VocabularyGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
 
 // ── Data ───────────────────────────────────────────────────────────────────
@@ -544,8 +544,6 @@ export default function HiraganaTrainer() {
     .map((w): CharWithRow => ({ kana: w.kana, romaji: w.romaji, row: "word" }));
   const availableWordItems = buildSessionQueue(wordPool, progress, "word", wordPool.length * 2, today);
 
-  const availableSpellWords: SpellWordEntry[] = getAvailableSpellWords(isRowReady);
-
   const phoneticPool = getAvailablePhonetics(selectedPhenomena);
 
   const queueLen    = sessionQueue.length;
@@ -891,12 +889,10 @@ export default function HiraganaTrainer() {
               </button>
 
               <button
-                disabled={availableSpellWords.length === 0}
                 onClick={() => setView("spellIt")}
-                className="w-full mt-2 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+                className="w-full mt-2 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2"
               >
-                🎴 Spell It
-                {availableSpellWords.length > 0 && ` (${availableSpellWords.length})`}
+                🎴 Vocabulario ({VOCABULARY.length})
               </button>
             </div>
 
@@ -1117,10 +1113,10 @@ export default function HiraganaTrainer() {
           />
         )}
 
-        {/* ── Spell It ── */}
+        {/* ── Vocabulario ── */}
         {view === "spellIt" && (
-          <SpellItGame
-            spellWords={availableSpellWords}
+          <VocabularyGame
+            vocabulary={VOCABULARY}
             progress={progress}
             showRomaji={showRomaji}
             onProgressUpdate={(updates) => {
