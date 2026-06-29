@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft, RotateCcw, Lightbulb } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
-import type { SpellWordEntry } from "../words";
+import type { VocabWord } from "../vocabulary";
 import { INTERVALS, isDue } from "../leitner";
 import { getDistractors } from "../utils/distractors";
 import { playChime, playBuzz } from "../utils/audio";
-import EmojiDisplay from "./EmojiDisplay";
+import VocabImage from "./VocabImage";
 import KanaChip from "./KanaChip";
 import WordSlots from "./WordSlots";
 
@@ -25,6 +25,12 @@ interface Chip {
   id: number;
   kana: string;
   used: boolean;
+}
+
+interface SessionResult {
+  word: VocabWord;
+  correct: boolean;
+  hintUsed: boolean;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -48,20 +54,16 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function getSyllables(word: SpellWordEntry): string[] {
-  return word.kanaUnits ?? [...word.hiragana];
-}
-
-function buildChips(word: SpellWordEntry): Chip[] {
-  const syllables = getSyllables(word);
-  const kanas = [...syllables, ...getDistractors(word.hiragana, 4, word.kanaUnits)];
+function buildChips(word: VocabWord): Chip[] {
+  const syllables = [...word.hiragana];
+  const kanas = [...syllables, ...getDistractors(word.hiragana, 4)];
   return shuffle(kanas.map((kana, id) => ({ id, kana, used: false })));
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 interface Props {
-  spellWords: SpellWordEntry[];
+  vocabulary: VocabWord[];
   progress: ProgressItems;
   showRomaji: boolean;
   onProgressUpdate: (updates: ProgressItems) => void;
@@ -70,14 +72,14 @@ interface Props {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export default function SpellItGame({
-  spellWords,
+export default function VocabularyGame({
+  vocabulary,
   progress,
   showRomaji,
   onProgressUpdate,
   onBack,
 }: Props) {
-  const [queue, setQueue] = useState<SpellWordEntry[]>([]);
+  const [queue, setQueue] = useState<VocabWord[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
   const [chips, setChips] = useState<Chip[]>([]);
   const [slots, setSlots] = useState<(string | null)[]>([]);
@@ -85,15 +87,17 @@ export default function SpellItGame({
   const [failCount, setFailCount] = useState(0);
   const [phase, setPhase] = useState<GamePhase>("playing");
   const [animClass, setAnimClass] = useState("");
+  const [hintUsed, setHintUsed] = useState(false);
+  const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
 
   const today = toISODate();
 
   // Build session queue on mount: due/new words first, then not-yet-due — always include all
   useEffect(() => {
-    const due: SpellWordEntry[] = [];
-    const notDue: SpellWordEntry[] = [];
-    for (const w of spellWords) {
-      const p = progress[`word:${w.id}`];
+    const due: VocabWord[] = [];
+    const notDue: VocabWord[] = [];
+    for (const w of vocabulary) {
+      const p = progress[`word:${w.hiragana}`];
       if (!p || p.attempts === 0 || isDue(p.nextDue, today)) {
         due.push(w);
       } else {
@@ -108,28 +112,37 @@ export default function SpellItGame({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function initWord(word: SpellWordEntry) {
-    const wordLen = getSyllables(word).length;
+  function initWord(word: VocabWord) {
+    const wordLen = [...word.hiragana].length;
     setChips(buildChips(word));
     setSlots(Array(wordLen).fill(null));
     setSlotChipIds(Array(wordLen).fill(null));
     setFailCount(0);
+    setHintUsed(false);
     setPhase("playing");
     setAnimClass("");
   }
 
-  function recordResult(word: SpellWordEntry, isCorrect: boolean) {
-    const key = `word:${word.id}`;
+  function recordResult(word: VocabWord, isCorrect: boolean, usedHint: boolean) {
+    const key = `word:${word.hiragana}`;
     const prevP: ItemProgress = progress[key] ?? {
       box: 0,
       nextDue: today,
       attempts: 0,
       correct: 0,
     };
-    const newBox = isCorrect
-      ? Math.min(prevP.box + 1, INTERVALS.length - 1)
-      : Math.max(prevP.box - 1, 0);
-    const newNextDue = addDays(today, INTERVALS[newBox]);
+
+    let newBox = prevP.box;
+    let newNextDue = prevP.nextDue;
+    if (isCorrect && !usedHint) {
+      newBox = Math.min(prevP.box + 1, INTERVALS.length - 1);
+      newNextDue = addDays(today, INTERVALS[newBox]);
+    } else if (!isCorrect) {
+      newBox = Math.max(prevP.box - 1, 0);
+      newNextDue = today;
+    }
+    // isCorrect && usedHint → neutral: box/nextDue stay the same
+
     const newP: ItemProgress = {
       box: newBox,
       nextDue: newNextDue,
@@ -137,6 +150,7 @@ export default function SpellItGame({
       correct: prevP.correct + (isCorrect ? 1 : 0),
     };
     onProgressUpdate({ [key]: newP });
+    setSessionResults((prev) => [...prev, { word, correct: isCorrect, hintUsed: usedHint }]);
   }
 
   const currentWord = queue[queueIndex] ?? null;
@@ -157,7 +171,7 @@ export default function SpellItGame({
   }
 
   const checkAnswer = useCallback(
-    (filledSlots: (string | null)[], word: SpellWordEntry, currentFail: number) => {
+    (filledSlots: (string | null)[], word: VocabWord, currentFail: number, usedHint: boolean) => {
       const answer = filledSlots.join("");
       const isCorrect = answer === word.hiragana;
 
@@ -165,7 +179,7 @@ export default function SpellItGame({
         playChime();
         triggerAnim("correct-flash", 600);
         setPhase("correct");
-        recordResult(word, true);
+        recordResult(word, true, usedHint);
         setTimeout(() => advanceToNext(), 1500);
       } else {
         playBuzz();
@@ -174,14 +188,14 @@ export default function SpellItGame({
         if (newFail >= 2) {
           triggerAnim("error-shake", 500);
           setPhase("reveal");
-          recordResult(word, false);
+          recordResult(word, false, usedHint);
           setTimeout(() => advanceToNext(), 2500);
         } else {
           triggerAnim("error-shake", 500);
           setPhase("wrong");
           // Reset chips back to pool after shake
           setTimeout(() => {
-            const wordLen = getSyllables(word).length;
+            const wordLen = [...word.hiragana].length;
             setChips(buildChips(word));
             setSlots(Array(wordLen).fill(null));
             setSlotChipIds(Array(wordLen).fill(null));
@@ -215,7 +229,7 @@ export default function SpellItGame({
     setChips(newChips);
 
     if (newSlots.every((s) => s !== null)) {
-      checkAnswer(newSlots, currentWord, failCount);
+      checkAnswer(newSlots, currentWord, failCount, hintUsed);
     }
   }
 
@@ -244,7 +258,7 @@ export default function SpellItGame({
 
   function handleClear() {
     if (!currentWord || phase !== "playing") return;
-    const wordLen = getSyllables(currentWord).length;
+    const wordLen = [...currentWord.hiragana].length;
     setChips(buildChips(currentWord));
     setSlots(Array(wordLen).fill(null));
     setSlotChipIds(Array(wordLen).fill(null));
@@ -253,6 +267,7 @@ export default function SpellItGame({
   // ── Done screen ──────────────────────────────────────────────────────────────
 
   if (phase === "done" || queue.length === 0) {
+    const missed = sessionResults.filter((r) => !r.correct);
     return (
       <div className="flex flex-col items-center gap-6 pt-8">
         <div className="text-5xl">🎉</div>
@@ -264,9 +279,23 @@ export default function SpellItGame({
         </h2>
         <p className="text-stone-500 text-sm">
           {queue.length === 0
-            ? "No hay palabras disponibles. Selecciona más filas."
+            ? "No hay palabras disponibles."
             : `Completaste ${queue.length} palabra${queue.length === 1 ? "" : "s"}.`}
         </p>
+        {missed.length > 0 && (
+          <div className="w-full max-w-xs">
+            <p className="text-xs font-medium text-stone-600 mb-2">Palabras falladas:</p>
+            <ul className="space-y-1">
+              {missed.map((r, i) => (
+                <li key={i} className="flex items-center justify-between text-sm text-stone-600">
+                  <span style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{r.word.hiragana}</span>
+                  <span className="text-stone-400">{r.word.meaning}</span>
+                  {r.hintUsed && <span title="Usó pista">💡</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <button
           onClick={onBack}
           className="mt-4 px-8 py-3 rounded-xl bg-indigo-700 text-white font-semibold"
@@ -302,14 +331,32 @@ export default function SpellItGame({
         />
       </div>
 
-      {/* Emoji */}
+      {/* Image */}
       <div className="mt-2">
-        <EmojiDisplay emoji={currentWord.emoji} label={currentWord.emojiLabel} size={128} />
+        <VocabImage
+          hiragana={currentWord.hiragana}
+          imageQuery={currentWord.imageQuery}
+          emojiBackup={currentWord.emojiBackup}
+          label={currentWord.meaning}
+        />
       </div>
 
       {/* Romaji hint */}
       {showRomaji && (
         <p className="text-stone-400 text-sm tracking-wide">{currentWord.romaji}</p>
+      )}
+
+      {/* Hint button / meaning reveal */}
+      {phase === "playing" && !hintUsed && (
+        <button
+          onClick={() => setHintUsed(true)}
+          className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700"
+        >
+          <Lightbulb size={14} /> Ver pista 💡
+        </button>
+      )}
+      {hintUsed && phase === "playing" && (
+        <p className="text-xs text-amber-600">{currentWord.meaning}</p>
       )}
 
       {/* Word slots */}
@@ -322,15 +369,15 @@ export default function SpellItGame({
       {/* Phase feedback */}
       {phase === "correct" && (
         <p className="text-emerald-600 font-semibold text-sm">
-          ¡Correcto! — {currentWord.meaning}
+          ✅ ¡Correcto! — {currentWord.meaning}
         </p>
       )}
       {phase === "wrong" && (
-        <p className="text-rose-600 font-semibold text-sm">Inténtalo de nuevo</p>
+        <p className="text-rose-600 font-semibold text-sm">❌ Inténtalo de nuevo</p>
       )}
       {phase === "reveal" && (
         <div className="text-center">
-          <p className="text-rose-600 font-semibold text-sm mb-1">La respuesta era:</p>
+          <p className="text-rose-600 font-semibold text-sm mb-1">❌ La respuesta era:</p>
           <p
             className="text-4xl"
             style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
