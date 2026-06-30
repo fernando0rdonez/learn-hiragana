@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getCachedImage, setCachedImage, type UnsplashImage } from "../unsplashCache";
 
-const FETCH_TIMEOUT_MS = 3000;
+const FETCH_TIMEOUT_MS = 8000;
 
 export type UnsplashStatus = "loading" | "loaded" | "error";
 

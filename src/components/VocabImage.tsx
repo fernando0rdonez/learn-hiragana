@@ -12,7 +12,7 @@ export default function VocabImage({ hiragana, imageQuery, emojiBackup, label }:
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className="w-56 h-40 rounded-2xl overflow-hidden bg-stone-100 flex items-center justify-center">
+      <div className="rounded-2xl overflow-hidden bg-stone-100 flex items-center justify-center">
         {status === "loading" && <div className="w-full h-full animate-pulse bg-stone-200" />}
         {status === "loaded" && image && (
           <img
