@@ -62,7 +62,7 @@ const ALL_CHARS: CharWithRow[] = ALL_ROW_GROUPS.flatMap((row) =>
 
 // ── Local types ────────────────────────────────────────────────────────────
 
-type ViewName = "setup" | "quiz" | "preview" | "summary" | "stats" | "spellIt" | "phonetics";
+type ViewName = "setup" | "quiz" | "preview" | "summary" | "stats" | "spellIt" | "vocabSetup" | "phonetics";
 
 interface Feedback {
   status: "correct" | "wrong";
@@ -187,7 +187,7 @@ const STATUS_STYLE: Record<CharStatus, string> = {
 export default function HiraganaTrainer() {
   const [loading, setLoading]       = useState(true);
   const [saveError, setSaveError]   = useState(false);
-  const [showRomaji, setShowRomaji] = useState(false);
+  const [showRomaji, setShowRomaji] = useState(true);
   const [progress, setProgress]     = useState<ProgressItems>({});
   const [streak, setStreak]         = useState<StreakData>(DEFAULT_STREAK);
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>(DEFAULT_DAILY_PROGRESS);
@@ -202,6 +202,7 @@ export default function HiraganaTrainer() {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
   const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
+  const [vocabSessionLimit, setVocabSessionLimit] = useState<20 | 50>(50);
   const [previewRows, setPreviewRows] = useState<{ id: string; title: string; chars: CharData[] }[]>([]);
   const pendingStartRef = useRef<(() => void) | null>(null);
 
@@ -889,7 +890,7 @@ export default function HiraganaTrainer() {
               </button>
 
               <button
-                onClick={() => setView("spellIt")}
+                onClick={() => setView("vocabSetup")}
                 className="w-full mt-2 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2"
               >
                 🎴 Vocabulario ({VOCABULARY.length})
@@ -1113,12 +1114,50 @@ export default function HiraganaTrainer() {
           />
         )}
 
+        {/* ── Vocabulario: selector de sesión ── */}
+        {view === "vocabSetup" && (
+          <div className="flex flex-col items-center gap-6 pt-12">
+            <h2
+              className="text-2xl font-bold text-stone-800"
+              style={{ fontFamily: "'Shippori Mincho', serif" }}
+            >
+              🎴 Vocabulario
+            </h2>
+            <p className="text-stone-500 text-sm">¿Cuántas palabras por sesión?</p>
+            <div className="flex gap-4">
+              {([20, 50] as const).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => {
+                    setVocabSessionLimit(n);
+                    setView("spellIt");
+                  }}
+                  className={`w-28 py-5 rounded-2xl text-2xl font-bold border-2 transition-colors ${
+                    vocabSessionLimit === n
+                      ? "bg-indigo-700 text-white border-indigo-700"
+                      : "bg-white text-indigo-700 border-indigo-700 hover:bg-indigo-50"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setView("setup")}
+              className="mt-2 text-xs text-stone-400 hover:text-stone-600"
+            >
+              Volver
+            </button>
+          </div>
+        )}
+
         {/* ── Vocabulario ── */}
         {view === "spellIt" && (
           <VocabularyGame
             vocabulary={VOCABULARY}
             progress={progress}
             showRomaji={showRomaji}
+            sessionLimit={vocabSessionLimit}
             onProgressUpdate={(updates) => {
               const merged = { ...progress, ...updates };
               setProgress(merged);
