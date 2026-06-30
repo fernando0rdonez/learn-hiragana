@@ -104,7 +104,7 @@ export default function VocabularyGame({
         notDue.push(w);
       }
     }
-    const wordQueue = [...shuffle(due), ...shuffle(notDue)];
+    const wordQueue = [...shuffle(due), ...shuffle(notDue)].slice(0, 50);
     setQueue(wordQueue);
     setQueueIndex(0);
     if (wordQueue.length > 0) initWord(wordQueue[0]);
@@ -280,7 +280,7 @@ export default function VocabularyGame({
         <p className="text-stone-500 text-sm">
           {queue.length === 0
             ? "No hay palabras disponibles."
-            : `Completaste ${queue.length} palabra${queue.length === 1 ? "" : "s"}.`}
+            : `Completaste ${queue.length} palabra${queue.length === 1 ? "" : "s"} de esta sesión.`}
         </p>
         {missed.length > 0 && (
           <div className="w-full max-w-xs">
