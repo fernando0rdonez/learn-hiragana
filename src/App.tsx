@@ -187,7 +187,7 @@ const STATUS_STYLE: Record<CharStatus, string> = {
 export default function HiraganaTrainer() {
   const [loading, setLoading]       = useState(true);
   const [saveError, setSaveError]   = useState(false);
-  const [showRomaji, setShowRomaji] = useState(false);
+  const [showRomaji, setShowRomaji] = useState(true);
   const [progress, setProgress]     = useState<ProgressItems>({});
   const [streak, setStreak]         = useState<StreakData>(DEFAULT_STREAK);
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>(DEFAULT_DAILY_PROGRESS);
