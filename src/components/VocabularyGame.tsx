@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, RotateCcw, Lightbulb } from "lucide-react";
+import AudioButton from "./AudioButton";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
 import { INTERVALS, isDue } from "../leitner";
@@ -333,14 +334,15 @@ export default function VocabularyGame({
         />
       </div>
 
-      {/* Image */}
-      <div className="mt-2">
+      {/* Image + audio */}
+      <div className="mt-2 flex flex-col items-center gap-2">
         <VocabImage
           hiragana={currentWord.hiragana}
           imageQuery={currentWord.imageQuery}
           emojiBackup={currentWord.emojiBackup}
           label={currentWord.meaning}
         />
+        <AudioButton text={currentWord.hiragana} />
       </div>
 
       {/* Romaji hint */}

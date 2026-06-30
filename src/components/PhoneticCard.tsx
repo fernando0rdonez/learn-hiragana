@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import AudioButton from "./AudioButton";
 
 interface Props {
   kana: string;
@@ -27,11 +28,14 @@ export default function PhoneticCard({
     <div className="flex flex-col items-center w-full gap-6">
       <p className="text-xs text-stone-400 uppercase tracking-widest">¿Cómo suena esta palabra?</p>
 
-      <div
-        className="text-5xl font-semibold text-stone-800"
-        style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
-      >
-        {kana}
+      <div className="flex items-center gap-3">
+        <div
+          className="text-5xl font-semibold text-stone-800"
+          style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+        >
+          {kana}
+        </div>
+        <AudioButton text={kana} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
