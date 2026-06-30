@@ -16,6 +16,7 @@ import { PHENOMENON_GROUPS, getAvailablePhonetics } from "./phonetics";
 import ProductionCard from "./components/ProductionCard";
 import VocabularyGame from "./components/VocabularyGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
+import AudioButton from "./components/AudioButton";
 
 // ── Data ───────────────────────────────────────────────────────────────────
 
@@ -970,6 +971,7 @@ export default function HiraganaTrainer() {
                         {ch.kana}
                       </span>
                       <span className="text-sm text-stone-500">{ch.romaji}</span>
+                      <AudioButton text={ch.kana} className="mt-1" />
                     </div>
                   ))}
                 </div>
@@ -1010,12 +1012,15 @@ export default function HiraganaTrainer() {
             {currentMode !== "production" ? (
               /* ── Recognition / word: kana → romaji ── */
               <>
-                <div
-                  key={current.kana + "-rec"}
-                  className={`mb-10 select-none ${currentMode === "word" ? "text-6xl" : "text-9xl"}`}
-                  style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
-                >
-                  {current.kana}
+                <div className="flex flex-col items-center mb-10 gap-3">
+                  <div
+                    key={current.kana + "-rec"}
+                    className={`select-none ${currentMode === "word" ? "text-6xl" : "text-9xl"}`}
+                    style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+                  >
+                    {current.kana}
+                  </div>
+                  <AudioButton text={current.kana} />
                 </div>
 
                 <form onSubmit={handleSubmit} className="w-full flex flex-col items-center gap-4">

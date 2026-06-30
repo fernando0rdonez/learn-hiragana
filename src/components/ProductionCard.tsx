@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import type { CharWithRow } from "../types";
+import AudioButton from "./AudioButton";
 
 interface Props {
   romaji: string;
@@ -26,7 +27,10 @@ export default function ProductionCard({
     <div className="flex flex-col items-center w-full gap-6">
       <p className="text-xs text-stone-400 uppercase tracking-widest">¿Cuál es este sonido?</p>
 
-      <div className="text-5xl font-semibold text-stone-800">{romaji}</div>
+      <div className="flex items-center gap-3">
+        <div className="text-5xl font-semibold text-stone-800">{romaji}</div>
+        <AudioButton text={correctKana} />
+      </div>
 
       <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
         {choices.map((ch) => {
