@@ -66,6 +66,7 @@ interface Props {
   vocabulary: VocabWord[];
   progress: ProgressItems;
   showRomaji: boolean;
+  sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
 }
@@ -76,6 +77,7 @@ export default function VocabularyGame({
   vocabulary,
   progress,
   showRomaji,
+  sessionLimit = 50,
   onProgressUpdate,
   onBack,
 }: Props) {
@@ -104,7 +106,7 @@ export default function VocabularyGame({
         notDue.push(w);
       }
     }
-    const wordQueue = [...shuffle(due), ...shuffle(notDue)].slice(0, 50);
+    const wordQueue = [...shuffle(due), ...shuffle(notDue)].slice(0, sessionLimit);
     setQueue(wordQueue);
     setQueueIndex(0);
     if (wordQueue.length > 0) initWord(wordQueue[0]);
