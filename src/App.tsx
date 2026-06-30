@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Check, X, RotateCcw, BarChart3, Play, Trash2, ArrowLeft, Flame } from "lucide-react";
+import { Check, X, RotateCcw, BarChart3, Play, Trash2, ArrowLeft, Flame, ChevronRight } from "lucide-react";
 import type {
   CharWithRow, CharData,
   ProgressItems, ItemProgress,
@@ -10,7 +10,7 @@ import { loadProgress, saveProgress } from "./storage";
 import { advanceBox, buildSessionQueue } from "./leitner";
 import { getConfusablePairs, CONFUSED_PAIRS } from "./confusedPairs";
 import { WORDS, getAvailableWords } from "./words";
-import { VOCABULARY } from "./vocabulary";
+import { VOCABULARY, VOCAB_CATEGORIES } from "./vocabulary";
 import { recordCorrectAnswer, DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, DAILY_GOAL } from "./streak";
 import { PHENOMENON_GROUPS, getAvailablePhonetics } from "./phonetics";
 import ProductionCard from "./components/ProductionCard";
@@ -62,7 +62,7 @@ const ALL_CHARS: CharWithRow[] = ALL_ROW_GROUPS.flatMap((row) =>
 
 // ── Local types ────────────────────────────────────────────────────────────
 
-type ViewName = "setup" | "quiz" | "preview" | "summary" | "stats" | "spellIt" | "vocabSetup" | "phonetics";
+type ViewName = "home" | "hiraganaSetup" | "quiz" | "preview" | "summary" | "stats" | "vocabCategory" | "spellIt" | "phoneticSetup" | "phonetics";
 
 interface Feedback {
   status: "correct" | "wrong";
@@ -196,13 +196,14 @@ export default function HiraganaTrainer() {
   const [selectedCompoundRows, setSelectedCompoundRows] = useState<Set<string>>(new Set());
   const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set());
   const [selectedPhenomena, setSelectedPhenomena] = useState<Set<string>>(new Set());
-  const [view, setView]             = useState<ViewName>("setup");
+  const [view, setView]             = useState<ViewName>("home");
   const [setupSlide, setSetupSlide] = useState(0);
   const setupTouchX = useRef<number | null>(null);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
   const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
-  const [vocabSessionLimit, setVocabSessionLimit] = useState<20 | 50>(50);
+  const [vocabSessionLimit, setVocabSessionLimit] = useState<20 | 50 | "all">(50);
+  const [selectedVocabCategory, setSelectedVocabCategory] = useState<string | null>(null);
   const [previewRows, setPreviewRows] = useState<{ id: string; title: string; chars: CharData[] }[]>([]);
   const pendingStartRef = useRef<(() => void) | null>(null);
 
@@ -527,7 +528,7 @@ export default function HiraganaTrainer() {
     setProgress(empty);
     persist(empty, DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS);
     setResetConfirm(false);
-    setView("setup");
+    setView("home");
   }
 
   // ── Derived values ────────────────────────────────────────────────────────
@@ -547,6 +548,10 @@ export default function HiraganaTrainer() {
 
   const phoneticPool = getAvailablePhonetics(selectedPhenomena);
 
+  const filteredVocabulary = selectedVocabCategory
+    ? VOCABULARY.filter((w) => w.category === selectedVocabCategory)
+    : VOCABULARY;
+
   const queueLen    = sessionQueue.length;
   const questionNum = sessionIndexRef.current + 1;
 
@@ -564,28 +569,104 @@ export default function HiraganaTrainer() {
       `}</style>
       <div className="w-full max-w-xl">
 
-        {/* ── Setup ── */}
-        {view === "setup" && (
+        {/* ── Home ── */}
+        {view === "home" && (
           <div>
             <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif" }}>
               ひらがな trainer
             </h1>
-            <p className="text-stone-500 text-sm mt-1">
-              {masteredTotal}/{ALL_CHARS.length} caracteres dominados
-            </p>
             {streak.current > 0 && (
               <p className="text-stone-500 text-sm mt-1 flex items-center gap-1">
                 <Flame size={14} className="text-orange-500" />
                 Racha de {streak.current} día{streak.current === 1 ? "" : "s"}
               </p>
             )}
-            <div className="w-full h-1.5 bg-stone-200 rounded-full mt-2 overflow-hidden">
-              <div className="h-full bg-indigo-700 rounded-full transition-all" style={{ width: `${(masteredTotal / ALL_CHARS.length) * 100}%` }} />
+
+            <div className="mt-8 flex flex-col gap-3">
+              {/* Hiragana card */}
+              <button
+                onClick={() => setView("hiraganaSetup")}
+                className="w-full text-left rounded-2xl border-2 border-stone-200 bg-white p-5 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl shrink-0" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>あ</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-lg font-semibold text-stone-800">Hiragana</div>
+                    <div className="text-sm text-stone-500 mt-0.5">{masteredTotal}/{ALL_CHARS.length} caracteres dominados</div>
+                    <div className="w-full h-1.5 bg-stone-200 rounded-full mt-2 overflow-hidden">
+                      <div className="h-full bg-indigo-700 rounded-full transition-all" style={{ width: `${(masteredTotal / ALL_CHARS.length) * 100}%` }} />
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-stone-400 shrink-0" />
+                </div>
+              </button>
+
+              {/* Vocabulario card */}
+              <button
+                onClick={() => setView("vocabCategory")}
+                className="w-full text-left rounded-2xl border-2 border-stone-200 bg-white p-5 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl shrink-0">🎴</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-lg font-semibold text-stone-800">Vocabulario</div>
+                    <div className="text-sm text-stone-500 mt-0.5">{VOCABULARY.length} palabras · {VOCAB_CATEGORIES.length} categorías</div>
+                  </div>
+                  <ChevronRight size={18} className="text-stone-400 shrink-0" />
+                </div>
+              </button>
+
+              {/* Fonética card */}
+              <button
+                onClick={() => setView("phoneticSetup")}
+                className="w-full text-left rounded-2xl border-2 border-stone-200 bg-white p-5 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl shrink-0">🎤</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-lg font-semibold text-stone-800">Fonética</div>
+                    <div className="text-sm text-stone-500 mt-0.5">Practica cómo suenan realmente las palabras</div>
+                  </div>
+                  <ChevronRight size={18} className="text-stone-400 shrink-0" />
+                </div>
+              </button>
             </div>
 
+            <div className="flex items-center justify-between mt-8">
+              <button onClick={() => setView("stats")} className="text-sm text-stone-500 flex items-center gap-1 hover:text-stone-700">
+                <BarChart3 size={14} /> Ver estadísticas
+              </button>
+              {!resetConfirm ? (
+                <button onClick={() => setResetConfirm(true)} className="text-xs text-stone-400 hover:text-rose-600 flex items-center gap-1">
+                  <Trash2 size={12} /> Borrar progreso
+                </button>
+              ) : (
+                <button onClick={resetProgress} className="text-xs text-rose-600 font-medium">
+                  ¿Seguro? Confirmar borrado
+                </button>
+              )}
+            </div>
+
+            {saveError && (
+              <p className="text-xs text-rose-600 mt-3">No se pudo guardar el progreso. Tus respuestas de esta sesión podrían no persistir.</p>
+            )}
+          </div>
+        )}
+
+        {/* ── Hiragana Setup ── */}
+        {view === "hiraganaSetup" && (
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <button onClick={() => setView("home")} className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700">
+                <ArrowLeft size={14} /> Inicio
+              </button>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif" }}>
+              Hiragana
+            </h2>
+
             {/* Row selector — 3-slide carousel */}
-            <div className="mt-6">
-              {/* Tab bar */}
+            <div className="mt-5">
               <div className="flex gap-1 bg-stone-100 rounded-xl p-1 mb-4">
                 {[
                   { label: "Básico",        idx: 0 },
@@ -606,7 +687,6 @@ export default function HiraganaTrainer() {
                 ))}
               </div>
 
-              {/* Sliding panels */}
               <div
                 className="overflow-hidden"
                 onTouchStart={(e) => { setupTouchX.current = e.touches[0].clientX; }}
@@ -794,7 +874,7 @@ export default function HiraganaTrainer() {
               <Play size={18} /> Comenzar sesión
             </button>
 
-            {/* Modos adicionales (usan las filas elegidas arriba) */}
+            {/* Modos adicionales */}
             <div className="mt-8 pt-6 border-t border-stone-200">
               <span className="text-sm font-medium text-stone-600">Modos adicionales</span>
               <p className="text-xs text-stone-400 mt-1">Usan las mismas filas que elegiste arriba.</p>
@@ -819,50 +899,20 @@ export default function HiraganaTrainer() {
                   );
                 })}
               </div>
-
               <button
                 disabled={selectedPairs.size === 0 || availablePairItems.length === 0}
                 onClick={() => launchSession(poolForPairs, () => startSession(poolForPairs, availablePairItems.length, "recognition"))}
                 className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
               >
-                <Play size={18} /> Comenzar sesión de pares confusos
+                <Play size={18} /> Pares confusos
                 {selectedPairs.size > 0 && ` (${availablePairItems.length})`}
               </button>
             </div>
 
-            {/* Fonética */}
-            <div className="mt-6">
-              <span className="text-sm font-medium text-stone-600">Fonética</span>
-              <p className="text-xs text-stone-400 mt-1">Practica cómo suenan realmente las palabras japonesas.</p>
-              <div className="flex flex-col gap-2 mt-2">
-                {PHENOMENON_GROUPS.map((pg) => {
-                  const sel = selectedPhenomena.has(pg.id);
-                  return (
-                    <button
-                      key={pg.id}
-                      onClick={() => togglePhenomenon(pg.id)}
-                      className={`text-left rounded-xl border-2 p-3 transition-colors ${sel ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                    >
-                      <div className="text-sm font-medium text-stone-700">{pg.title}</div>
-                      <div className="text-xs text-stone-400 mt-0.5">{pg.description}</div>
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                disabled={phoneticPool.length === 0}
-                onClick={() => setView("phonetics")}
-                className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
-              >
-                <Play size={18} /> Sesión de fonética
-                {phoneticPool.length > 0 && ` (${phoneticPool.length})`}
-              </button>
-            </div>
-
-            {/* Words */}
+            {/* Sesión de romaji */}
             <div className="mt-6">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-stone-600">Palabras</span>
+                <span className="text-sm font-medium text-stone-600">Palabras en romaji</span>
                 <label className="flex items-center gap-2 text-xs text-stone-500 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -878,7 +928,7 @@ export default function HiraganaTrainer() {
                 </label>
               </div>
               <p className="text-xs text-stone-400 mt-1">
-                Disponibles según las filas elegidas (o ya dominadas): {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
+                Disponibles según las filas elegidas: {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
               </p>
               <button
                 disabled={availableWordItems.length === 0}
@@ -888,33 +938,7 @@ export default function HiraganaTrainer() {
                 <Play size={18} /> Sesión de romaji
                 {availableWordItems.length > 0 && ` (${availableWordItems.length})`}
               </button>
-
-              <button
-                onClick={() => setView("vocabSetup")}
-                className="w-full mt-2 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2"
-              >
-                🎴 Vocabulario ({VOCABULARY.length})
-              </button>
             </div>
-
-            <div className="flex items-center justify-between mt-4">
-              <button onClick={() => setView("stats")} className="text-sm text-stone-500 flex items-center gap-1 hover:text-stone-700">
-                <BarChart3 size={14} /> Ver estadísticas completas
-              </button>
-              {!resetConfirm ? (
-                <button onClick={() => setResetConfirm(true)} className="text-xs text-stone-400 hover:text-rose-600 flex items-center gap-1">
-                  <Trash2 size={12} /> Borrar progreso
-                </button>
-              ) : (
-                <button onClick={resetProgress} className="text-xs text-rose-600 font-medium">
-                  ¿Seguro? Confirmar borrado
-                </button>
-              )}
-            </div>
-
-            {saveError && (
-              <p className="text-xs text-rose-600 mt-3">No se pudo guardar el progreso. Tus respuestas de esta sesión podrían no persistir.</p>
-            )}
           </div>
         )}
 
@@ -922,7 +946,7 @@ export default function HiraganaTrainer() {
         {view === "preview" && (
           <div className="flex flex-col items-center">
             <div className="w-full flex items-center justify-between text-xs text-stone-500 mb-6">
-              <button onClick={() => setView("setup")} className="flex items-center gap-1 hover:text-stone-700">
+              <button onClick={() => setView("hiraganaSetup")} className="flex items-center gap-1 hover:text-stone-700">
                 <ArrowLeft size={14} /> Volver
               </button>
               <span>Repaso previo</span>
@@ -974,7 +998,7 @@ export default function HiraganaTrainer() {
           <div className="flex flex-col items-center">
             {/* Header */}
             <div className="w-full flex items-center justify-between text-xs text-stone-500 mb-2">
-              <button onClick={() => setView("setup")} className="flex items-center gap-1 hover:text-stone-700">
+              <button onClick={() => setView("home")} className="flex items-center gap-1 hover:text-stone-700">
                 <ArrowLeft size={14} /> Salir
               </button>
               <span>Pregunta {Math.min(questionNum, queueLen)} de {queueLen}</span>
@@ -1090,13 +1114,51 @@ export default function HiraganaTrainer() {
                   <RotateCcw size={16} /> Repasar fallos ({uniqueMissed})
                 </button>
               )}
-              <button onClick={() => setView("setup")} className="w-full py-3 rounded-xl bg-indigo-700 text-white font-semibold">
+              <button onClick={() => setView("home")} className="w-full py-3 rounded-xl bg-indigo-700 text-white font-semibold">
                 Nueva sesión
               </button>
               <button onClick={() => setView("stats")} className="w-full py-2 rounded-xl text-stone-500 text-sm">
                 Ver estadísticas
               </button>
             </div>
+          </div>
+        )}
+
+        {/* ── Fonética: selector ── */}
+        {view === "phoneticSetup" && (
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <button onClick={() => setView("home")} className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700">
+                <ArrowLeft size={14} /> Inicio
+              </button>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif" }}>
+              🎤 Fonética
+            </h2>
+            <p className="text-stone-500 text-sm mt-1">Practica cómo suenan realmente las palabras japonesas.</p>
+            <div className="flex flex-col gap-2 mt-5">
+              {PHENOMENON_GROUPS.map((pg) => {
+                const sel = selectedPhenomena.has(pg.id);
+                return (
+                  <button
+                    key={pg.id}
+                    onClick={() => togglePhenomenon(pg.id)}
+                    className={`text-left rounded-xl border-2 p-3 transition-colors ${sel ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
+                  >
+                    <div className="text-sm font-medium text-stone-700">{pg.title}</div>
+                    <div className="text-xs text-stone-400 mt-0.5">{pg.description}</div>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              disabled={phoneticPool.length === 0}
+              onClick={() => setView("phonetics")}
+              className="w-full mt-4 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+            >
+              <Play size={18} /> Comenzar sesión
+              {phoneticPool.length > 0 && ` (${phoneticPool.length})`}
+            </button>
           </div>
         )}
 
@@ -1110,43 +1172,100 @@ export default function HiraganaTrainer() {
               setProgress(merged);
               persist(merged);
             }}
-            onBack={() => setView("setup")}
+            onBack={() => setView("home")}
           />
         )}
 
-        {/* ── Vocabulario: selector de sesión ── */}
-        {view === "vocabSetup" && (
-          <div className="flex flex-col items-center gap-6 pt-12">
-            <h2
-              className="text-2xl font-bold text-stone-800"
-              style={{ fontFamily: "'Shippori Mincho', serif" }}
-            >
+        {/* ── Vocabulario: selector de categoría ── */}
+        {view === "vocabCategory" && (
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <button onClick={() => setView("home")} className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700">
+                <ArrowLeft size={14} /> Inicio
+              </button>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif" }}>
               🎴 Vocabulario
             </h2>
-            <p className="text-stone-500 text-sm">¿Cuántas palabras por sesión?</p>
-            <div className="flex gap-4">
-              {([20, 50] as const).map((n) => (
+
+            {/* Category picker */}
+            <div className="mt-5">
+              <span className="text-sm font-medium text-stone-600">Categoría</span>
+              <div className="grid grid-cols-2 gap-2 mt-2">
                 <button
-                  key={n}
-                  onClick={() => {
-                    setVocabSessionLimit(n);
-                    setView("spellIt");
-                  }}
-                  className={`w-28 py-5 rounded-2xl text-2xl font-bold border-2 transition-colors ${
-                    vocabSessionLimit === n
-                      ? "bg-indigo-700 text-white border-indigo-700"
-                      : "bg-white text-indigo-700 border-indigo-700 hover:bg-indigo-50"
+                  onClick={() => setSelectedVocabCategory(null)}
+                  className={`text-left rounded-xl border-2 p-3 transition-colors ${
+                    selectedVocabCategory === null
+                      ? "border-indigo-700 bg-indigo-50"
+                      : "border-stone-200 bg-white hover:border-stone-300"
                   }`}
                 >
-                  {n}
+                  <div className="text-2xl">🌐</div>
+                  <div className="text-sm font-medium text-stone-700 mt-1">Todas</div>
+                  <div className="text-xs text-stone-400">{VOCABULARY.length} palabras</div>
                 </button>
-              ))}
+                {VOCAB_CATEGORIES.map((cat) => {
+                  const count = VOCABULARY.filter((w) => w.category === cat.id).length;
+                  const selected = selectedVocabCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedVocabCategory(cat.id)}
+                      className={`text-left rounded-xl border-2 p-3 transition-colors ${
+                        selected
+                          ? "border-indigo-700 bg-indigo-50"
+                          : "border-stone-200 bg-white hover:border-stone-300"
+                      }`}
+                    >
+                      <div className="text-2xl">{cat.emoji}</div>
+                      <div className="text-sm font-medium text-stone-700 mt-1">{cat.label}</div>
+                      <div className="text-xs text-stone-400">{count} palabras</div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Session length */}
+            <div className="mt-6">
+              <span className="text-sm font-medium text-stone-600">Palabras por sesión</span>
+              <div className="flex gap-2 mt-2">
+                {([20, 50] as const).map((n) => {
+                  const max = filteredVocabulary.length;
+                  return (
+                    <button
+                      key={n}
+                      disabled={max < n}
+                      onClick={() => setVocabSessionLimit(n)}
+                      className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors disabled:opacity-40 ${
+                        vocabSessionLimit === n
+                          ? "border-indigo-700 bg-indigo-50 text-indigo-700"
+                          : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setVocabSessionLimit("all")}
+                  className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                    vocabSessionLimit === "all"
+                      ? "border-indigo-700 bg-indigo-50 text-indigo-700"
+                      : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
+                  }`}
+                >
+                  Todas ({filteredVocabulary.length})
+                </button>
+              </div>
+            </div>
+
             <button
-              onClick={() => setView("setup")}
-              className="mt-2 text-xs text-stone-400 hover:text-stone-600"
+              disabled={filteredVocabulary.length === 0}
+              onClick={() => setView("spellIt")}
+              className="w-full mt-4 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
             >
-              Volver
+              <Play size={18} /> Comenzar vocabulario
             </button>
           </div>
         )}
@@ -1154,16 +1273,16 @@ export default function HiraganaTrainer() {
         {/* ── Vocabulario ── */}
         {view === "spellIt" && (
           <VocabularyGame
-            vocabulary={VOCABULARY}
+            vocabulary={filteredVocabulary}
             progress={progress}
             showRomaji={showRomaji}
-            sessionLimit={vocabSessionLimit}
+            sessionLimit={vocabSessionLimit === "all" ? filteredVocabulary.length : vocabSessionLimit}
             onProgressUpdate={(updates) => {
               const merged = { ...progress, ...updates };
               setProgress(merged);
               persist(merged);
             }}
-            onBack={() => setView("setup")}
+            onBack={() => setView("home")}
           />
         )}
 
@@ -1172,8 +1291,8 @@ export default function HiraganaTrainer() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold" style={{ fontFamily: "'Shippori Mincho', serif" }}>Tu progreso</h2>
-              <button onClick={() => setView("setup")} className="text-sm text-indigo-700 flex items-center gap-1">
-                <ArrowLeft size={14} /> Volver
+              <button onClick={() => setView("home")} className="text-sm text-indigo-700 flex items-center gap-1">
+                <ArrowLeft size={14} /> Inicio
               </button>
             </div>
             <p className="text-stone-500 text-sm mb-4">{masteredTotal}/{ALL_CHARS.length} dominados (3+ intentos, ≥85% acierto)</p>
