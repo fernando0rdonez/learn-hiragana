@@ -1,0 +1,1395 @@
+{
+  "いち::numeros": {
+    "prompt": "Flat vector illustration of a number one, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T19:59:37.256Z",
+    "slug": "numeros-ichi"
+  },
+  "に::numeros": {
+    "prompt": "Flat vector illustration of a number two, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:00:32.330Z",
+    "slug": "numeros-ni"
+  },
+  "さん::numeros": {
+    "prompt": "Flat vector illustration of a number three, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:00:41.055Z",
+    "slug": "numeros-san"
+  },
+  "し::numeros": {
+    "prompt": "Flat vector illustration of a number four, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:00:51.104Z",
+    "slug": "numeros-shi"
+  },
+  "ご::numeros": {
+    "prompt": "Flat vector illustration of a number five, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:01:07.434Z",
+    "slug": "numeros-go"
+  },
+  "ろく::numeros": {
+    "prompt": "Flat vector illustration of a number six, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:01:16.396Z",
+    "slug": "numeros-roku"
+  },
+  "なな::numeros": {
+    "prompt": "Flat vector illustration of a number seven, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:01:24.317Z",
+    "slug": "numeros-nana"
+  },
+  "はち::numeros": {
+    "prompt": "Flat vector illustration of a number eight, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:01:43.748Z",
+    "slug": "numeros-hachi"
+  },
+  "きゅう::numeros": {
+    "prompt": "Flat vector illustration of a number nine, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:01:53.056Z",
+    "slug": "numeros-kyuu"
+  },
+  "じゅう::numeros": {
+    "prompt": "Flat vector illustration of a number ten, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:02:08.463Z",
+    "slug": "numeros-juu"
+  },
+  "きょう::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of sol grande centrado sobre un calendario, sin marcas adicionales, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:02:18.603Z",
+    "slug": "tiempo-kyou"
+  },
+  "あした::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of calendario con una casilla resaltada/circulada, una flecha corta apuntando hacia adelante desde \"hoy\", using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:02:29.998Z",
+    "slug": "tiempo-ashita"
+  },
+  "きのう::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of calendario con una casilla resaltada, flecha corta apuntando hacia atrás, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:02:38.924Z",
+    "slug": "tiempo-kinou"
+  },
+  "いま::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of reloj de pared con las manecillas marcadas y un pequeño destello/pulso alrededor del centro, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:02:49.036Z",
+    "slug": "tiempo-ima"
+  },
+  "まいにち::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of fila de 7 casillas de calendario, todas resaltadas igual (repetición), using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:02:58.318Z",
+    "slug": "tiempo-mainichi"
+  },
+  "あさ::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of sol naciente, mitad visible sobre el horizonte, cielo en tono de amanecer (durazno/rosado), using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:03:13.426Z",
+    "slug": "tiempo-asa"
+  },
+  "ひる::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of sol en la posición más alta del cielo, rayos completos, sin sombra proyectada, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:03:25.122Z",
+    "slug": "tiempo-hiru"
+  },
+  "よる::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of luna creciente con un par de estrellas alrededor, fondo oscuro, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:03:34.405Z",
+    "slug": "tiempo-yoru"
+  },
+  "ことし::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of calendario de pared mostrando una grilla anual, un mes resaltado/circulado en el centro, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:03:45.247Z",
+    "slug": "tiempo-kotoshi"
+  },
+  "らいねん::tiempo": {
+    "prompt": "Flat vector icon illustration representing the concept of calendario de pared con una hoja adelante siendo pasada/volteada hacia la siguiente, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:03:57.591Z",
+    "slug": "tiempo-rainen"
+  },
+  "おかあさん::familia": {
+    "prompt": "Flat vector illustration of a silueta de mujer adulta con delantal de cocina, cabello recogido en un moño, tono de color cálido, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:04:09.157Z",
+    "slug": "familia-okaasan"
+  },
+  "おとうさん::familia": {
+    "prompt": "Flat vector illustration of a silueta de hombre adulto con corbata, cabello corto, tono de color azul, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:04:19.778Z",
+    "slug": "familia-otousan"
+  },
+  "おにいさん::familia": {
+    "prompt": "Flat vector illustration of a silueta de adolescente varón, más alto que un niño pequeño, con una mochila escolar al hombro, cabello corto, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:04:29.408Z",
+    "slug": "familia-oniisan"
+  },
+  "おねえさん::familia": {
+    "prompt": "Flat vector illustration of a silueta de adolescente mujer, cabello largo con un lazo, sosteniendo un libro escolar, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:04:41.518Z",
+    "slug": "familia-oneesan"
+  },
+  "おとうと::familia": {
+    "prompt": "Flat vector illustration of a silueta de niño pequeño con proporciones de infante, más bajo que un adolescente, sosteniendo un carrito de juguete, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:04:52.186Z",
+    "slug": "familia-otouto"
+  },
+  "いもうと::familia": {
+    "prompt": "Flat vector illustration of a silueta de niña pequeña con proporciones de infante, cabello con un lazo, sosteniendo un peluche, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:05:01.882Z",
+    "slug": "familia-imouto"
+  },
+  "おじいさん::familia": {
+    "prompt": "Flat vector illustration of a silueta de hombre mayor levemente encorvado, con bastón y anteojos, cabello blanco/gris, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:05:11.862Z",
+    "slug": "familia-ojiisan"
+  },
+  "おばあさん::familia": {
+    "prompt": "Flat vector illustration of a silueta de mujer mayor, cabello blanco/gris recogido en un moño, con anteojos y un chal sobre los hombros, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:05:20.170Z",
+    "slug": "familia-obaasan"
+  },
+  "こども::familia": {
+    "prompt": "Flat vector illustration of a silueta de niño/a genérico de estatura pequeña, sin distinción de género, jugando con una pelota, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:05:30.693Z",
+    "slug": "familia-kodomo"
+  },
+  "ともだち::familia": {
+    "prompt": "Flat vector illustration of a dos siluetas de niños tomados de la mano o lado a lado, sonriendo, tamaño similar, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:05:41.675Z",
+    "slug": "familia-tomodachi"
+  },
+  "みず::comida": {
+    "prompt": "Flat vector illustration of a glass of water, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:05:52.512Z",
+    "slug": "comida-mizu"
+  },
+  "おちゃ::comida": {
+    "prompt": "Flat vector illustration of a green tea, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:06:01.979Z",
+    "slug": "comida-ocha"
+  },
+  "コーヒー::comida": {
+    "prompt": "Flat vector illustration of a coffee cup, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:06:09.992Z",
+    "slug": "comida-koohii"
+  },
+  "ごはん::comida": {
+    "prompt": "Flat vector illustration of a rice bowl, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:06:18.797Z",
+    "slug": "comida-gohan"
+  },
+  "パン::comida": {
+    "prompt": "Flat vector illustration of a bread, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:06:29.333Z",
+    "slug": "comida-pan"
+  },
+  "たまご::comida": {
+    "prompt": "Flat vector illustration of a egg, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:06:37.171Z",
+    "slug": "comida-tamago"
+  },
+  "さかな::comida": {
+    "prompt": "Flat vector illustration of a fish, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:06:46.425Z",
+    "slug": "comida-sakana"
+  },
+  "くだもの::comida": {
+    "prompt": "Flat vector illustration of a fruit, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:06:56.907Z",
+    "slug": "comida-kudamono"
+  },
+  "さる::animales": {
+    "prompt": "Flat vector illustration of a monkey, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:07:09.818Z",
+    "slug": "animales-saru"
+  },
+  "うち::lugares": {
+    "prompt": "Flat vector illustration of a home house, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:07:23.743Z",
+    "slug": "lugares-uchi"
+  },
+  "がっこう::lugares": {
+    "prompt": "Flat vector illustration of a school building, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:07:34.885Z",
+    "slug": "lugares-gakkou"
+  },
+  "ぎんこう::lugares": {
+    "prompt": "Flat vector illustration of a bank building, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:07:45.072Z",
+    "slug": "lugares-ginkou"
+  },
+  "でんしゃ::transporte": {
+    "prompt": "Flat vector illustration of a train, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:07:56.790Z",
+    "slug": "transporte-densha"
+  },
+  "テレビ::objetos": {
+    "prompt": "Flat vector illustration of a television, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:08:10.342Z",
+    "slug": "objetos-terebi"
+  },
+  "いす::objetos": {
+    "prompt": "Flat vector illustration of a chair, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:08:22.148Z",
+    "slug": "objetos-isu"
+  },
+  "シャツ::ropa": {
+    "prompt": "Flat vector illustration of a shirt, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:08:32.666Z",
+    "slug": "ropa-shatsu"
+  },
+  "はな::naturaleza": {
+    "prompt": "Flat vector illustration of a flower, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:08:43.102Z",
+    "slug": "naturaleza-hana"
+  },
+  "みる::verbos": {
+    "prompt": "Flat vector illustration of a character sitting on a couch facing a television screen, remote control in hand, eyes toward the screen, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:08:58.296Z",
+    "slug": "verbos-miru"
+  },
+  "かう::verbos": {
+    "prompt": "Flat vector illustration of a character handing money to a shopkeeper across a counter, receiving a bag, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:09:09.597Z",
+    "slug": "verbos-kau"
+  },
+  "かえる::verbos": {
+    "prompt": "Flat vector illustration of a character walking toward an open house door, waving, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:09:22.862Z",
+    "slug": "verbos-kaeru"
+  },
+  "まつ::verbos": {
+    "prompt": "Flat vector illustration of a character standing arms crossed, looking at wristwatch, foot tapping, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:09:33.611Z",
+    "slug": "verbos-matsu"
+  },
+  "あける::verbos": {
+    "prompt": "Flat vector illustration of a character pushing a door open, mid-swing, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:09:45.449Z",
+    "slug": "verbos-akeru"
+  },
+  "いい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of mano con pulgar hacia arriba, ícono simple, sin rostro, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:09:56.025Z",
+    "slug": "adjetivos-ii"
+  },
+  "こんばんは::saludos": {
+    "prompt": "Flat vector illustration of a character waving one hand in greeting, a crescent moon and a couple of stars behind them, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:10:10.128Z",
+    "slug": "saludos-konbanwa"
+  },
+  "わたし::pronombres": {
+    "prompt": "Flat vector icon illustration representing the concept of silueta de persona con una mano levantada, sin rostro (auto-referencia), using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:10:22.703Z",
+    "slug": "pronombres-watashi"
+  },
+  "かのじょ::pronombres": {
+    "prompt": "Flat vector icon illustration representing the concept of silueta de persona con cabello largo y un pequeño lazo/moño como accesorio, color sólido coral/rosado, sin rostro, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:10:31.447Z",
+    "slug": "pronombres-kanojo"
+  },
+  "えいが::misc": {
+    "prompt": "Flat vector illustration of a closed film clapperboard, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:10:51.728Z",
+    "slug": "misc-eiga"
+  },
+  "スポーツ::misc": {
+    "prompt": "Flat vector illustration of a soccer ball, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:11:01.829Z",
+    "slug": "misc-supootsu"
+  },
+  "てんき::misc": {
+    "prompt": "Flat vector icon illustration representing the concept of sol parcialmente cubierto por una nube, estilo ícono de clima, sin personaje, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:11:11.142Z",
+    "slug": "misc-tenki"
+  },
+  "にく::comida": {
+    "prompt": "Flat vector illustration of a meat, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:16:39.132Z",
+    "slug": "comida-niku"
+  },
+  "やさい::comida": {
+    "prompt": "Flat vector illustration of a vegetables, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:17:02.728Z",
+    "slug": "comida-yasai"
+  },
+  "りんご::comida": {
+    "prompt": "Flat vector illustration of a apple, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:17:26.158Z",
+    "slug": "comida-ringo"
+  },
+  "みかん::comida": {
+    "prompt": "Flat vector illustration of a mandarin orange, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:17:48.485Z",
+    "slug": "comida-mikan"
+  },
+  "バナナ::comida": {
+    "prompt": "Flat vector illustration of a banana, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:18:14.246Z",
+    "slug": "comida-banana"
+  },
+  "すし::comida": {
+    "prompt": "Flat vector illustration of a sushi, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:18:36.169Z",
+    "slug": "comida-sushi"
+  },
+  "ラーメン::comida": {
+    "prompt": "Flat vector illustration of a ramen noodles, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:19:06.560Z",
+    "slug": "comida-raamen"
+  },
+  "そば::comida": {
+    "prompt": "Flat vector illustration of a soba noodles, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:19:30.889Z",
+    "slug": "comida-soba"
+  },
+  "うどん::comida": {
+    "prompt": "Flat vector illustration of a udon noodles, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:19:54.835Z",
+    "slug": "comida-udon"
+  },
+  "ケーキ::comida": {
+    "prompt": "Flat vector illustration of a cake, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:20:19.487Z",
+    "slug": "comida-keeki"
+  },
+  "アイスクリーム::comida": {
+    "prompt": "Flat vector illustration of a ice cream, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:20:41.224Z",
+    "slug": "comida-aisukuriimu"
+  },
+  "しお::comida": {
+    "prompt": "Flat vector illustration of a salt, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:21:02.050Z",
+    "slug": "comida-shio"
+  },
+  "いぬ::animales": {
+    "prompt": "Flat vector illustration of a dog, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:21:21.912Z",
+    "slug": "animales-inu"
+  },
+  "ねこ::animales": {
+    "prompt": "Flat vector illustration of a cat, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:21:47.915Z",
+    "slug": "animales-neko"
+  },
+  "とり::animales": {
+    "prompt": "Flat vector illustration of a bird, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:22:10.760Z",
+    "slug": "animales-tori"
+  },
+  "うし::animales": {
+    "prompt": "Flat vector illustration of a cow, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:22:34.047Z",
+    "slug": "animales-ushi"
+  },
+  "うま::animales": {
+    "prompt": "Flat vector illustration of a horse, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:22:56.795Z",
+    "slug": "animales-uma"
+  },
+  "ぶた::animales": {
+    "prompt": "Flat vector illustration of a pig, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:23:19.253Z",
+    "slug": "animales-buta"
+  },
+  "うさぎ::animales": {
+    "prompt": "Flat vector illustration of a rabbit, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:23:41.764Z",
+    "slug": "animales-usagi"
+  },
+  "くま::animales": {
+    "prompt": "Flat vector illustration of a bear, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:24:07.176Z",
+    "slug": "animales-kuma"
+  },
+  "へび::animales": {
+    "prompt": "Flat vector illustration of a snake, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:24:30.486Z",
+    "slug": "animales-hebi"
+  },
+  "びょういん::lugares": {
+    "prompt": "Flat vector illustration of a hospital, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:24:56.128Z",
+    "slug": "lugares-byouin"
+  },
+  "ゆうびんきょく::lugares": {
+    "prompt": "Flat vector illustration of a post office, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:25:19.736Z",
+    "slug": "lugares-yuubinkyoku"
+  },
+  "えき::lugares": {
+    "prompt": "Flat vector illustration of a train station, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:25:43.262Z",
+    "slug": "lugares-eki"
+  },
+  "みせ::lugares": {
+    "prompt": "Flat vector illustration of a shop store, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:26:06.720Z",
+    "slug": "lugares-mise"
+  },
+  "レストラン::lugares": {
+    "prompt": "Flat vector illustration of a restaurant, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:26:30.098Z",
+    "slug": "lugares-resutoran"
+  },
+  "こうえん::lugares": {
+    "prompt": "Flat vector illustration of a park, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:26:52.344Z",
+    "slug": "lugares-kouen"
+  },
+  "やま::lugares": {
+    "prompt": "Flat vector illustration of a mountain, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:27:14.144Z",
+    "slug": "lugares-yama"
+  },
+  "かわ::lugares": {
+    "prompt": "Flat vector illustration of a river, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:27:37.176Z",
+    "slug": "lugares-kawa"
+  },
+  "うみ::lugares": {
+    "prompt": "Flat vector illustration of a sea ocean, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:28:02.822Z",
+    "slug": "lugares-umi"
+  },
+  "そら::lugares": {
+    "prompt": "Flat vector illustration of a blue sky, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:28:24.613Z",
+    "slug": "lugares-sora"
+  },
+  "くるま::transporte": {
+    "prompt": "Flat vector illustration of a car, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:28:48.128Z",
+    "slug": "transporte-kuruma"
+  },
+  "バス::transporte": {
+    "prompt": "Flat vector illustration of a bus, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:29:11.523Z",
+    "slug": "transporte-basu"
+  },
+  "じてんしゃ::transporte": {
+    "prompt": "Flat vector illustration of a bicycle, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:29:34.944Z",
+    "slug": "transporte-jitensha"
+  },
+  "ひこうき::transporte": {
+    "prompt": "Flat vector illustration of a airplane, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:29:56.454Z",
+    "slug": "transporte-hikouki"
+  },
+  "ふね::transporte": {
+    "prompt": "Flat vector illustration of a ship boat, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:30:19.498Z",
+    "slug": "transporte-fune"
+  },
+  "ほん::objetos": {
+    "prompt": "Flat vector illustration of a book, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:30:43.727Z",
+    "slug": "objetos-hon"
+  },
+  "かばん::objetos": {
+    "prompt": "Flat vector illustration of a bag, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:31:06.995Z",
+    "slug": "objetos-kaban"
+  },
+  "かぎ::objetos": {
+    "prompt": "Flat vector illustration of a key, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:31:28.084Z",
+    "slug": "objetos-kagi"
+  },
+  "とけい::objetos": {
+    "prompt": "Flat vector illustration of a watch clock, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:31:50.217Z",
+    "slug": "objetos-tokei"
+  },
+  "かさ::objetos": {
+    "prompt": "Flat vector illustration of a umbrella, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:32:11.325Z",
+    "slug": "objetos-kasa"
+  },
+  "めがね::objetos": {
+    "prompt": "Flat vector illustration of a glasses, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:32:31.635Z",
+    "slug": "objetos-megane"
+  },
+  "でんわ::objetos": {
+    "prompt": "Flat vector illustration of a telephone, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:32:55.267Z",
+    "slug": "objetos-denwa"
+  },
+  "カメラ::objetos": {
+    "prompt": "Flat vector illustration of a camera, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:33:17.725Z",
+    "slug": "objetos-kamera"
+  },
+  "つくえ::objetos": {
+    "prompt": "Flat vector illustration of a desk, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:33:43.239Z",
+    "slug": "objetos-tsukue"
+  },
+  "まど::objetos": {
+    "prompt": "Flat vector illustration of a window, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:34:06.516Z",
+    "slug": "objetos-mado"
+  },
+  "ドア::objetos": {
+    "prompt": "Flat vector illustration of a door, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:34:27.774Z",
+    "slug": "objetos-doa"
+  },
+  "かみ::objetos": {
+    "prompt": "Flat vector illustration of a paper, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:34:52.202Z",
+    "slug": "objetos-kami"
+  },
+  "えんぴつ::objetos": {
+    "prompt": "Flat vector illustration of a pencil, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:35:18.234Z",
+    "slug": "objetos-enpitsu"
+  },
+  "ズボン::ropa": {
+    "prompt": "Flat vector illustration of a trousers pants, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:35:42.940Z",
+    "slug": "ropa-zubon"
+  },
+  "くつ::ropa": {
+    "prompt": "Flat vector illustration of a shoes, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:36:08.339Z",
+    "slug": "ropa-kutsu"
+  },
+  "ぼうし::ropa": {
+    "prompt": "Flat vector illustration of a hat, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:36:30.790Z",
+    "slug": "ropa-boushi"
+  },
+  "コート::ropa": {
+    "prompt": "Flat vector illustration of a coat, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:36:54.225Z",
+    "slug": "ropa-kooto"
+  },
+  "あか::colores": {
+    "prompt": "Flat vector illustration of a muestra de pintura cuadrada de color rojo sólido, con un pincel pequeño apoyado al lado, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:37:15.144Z",
+    "slug": "colores-aka"
+  },
+  "あお::colores": {
+    "prompt": "Flat vector illustration of a muestra de pintura cuadrada de color azul sólido, con un pincel pequeño apoyado al lado, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:37:38.031Z",
+    "slug": "colores-ao"
+  },
+  "しろ::colores": {
+    "prompt": "Flat vector illustration of a muestra de pintura cuadrada de color blanco sólido con un borde delgado gris para distinguirse del fondo, con un pincel pequeño apoyado al lado, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:38:12.424Z",
+    "slug": "colores-shiro"
+  },
+  "くろ::colores": {
+    "prompt": "Flat vector illustration of a muestra de pintura cuadrada de color negro sólido, con un pincel pequeño apoyado al lado, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:38:38.024Z",
+    "slug": "colores-kuro"
+  },
+  "きいろ::colores": {
+    "prompt": "Flat vector illustration of a muestra de pintura cuadrada de color amarillo sólido, con un pincel pequeño apoyado al lado, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:39:01.897Z",
+    "slug": "colores-kiiro"
+  },
+  "みどり::colores": {
+    "prompt": "Flat vector illustration of a muestra de pintura cuadrada de color verde sólido, con un pincel pequeño apoyado al lado, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:39:27.397Z",
+    "slug": "colores-midori"
+  },
+  "ちゃいろ::colores": {
+    "prompt": "Flat vector illustration of a muestra de pintura cuadrada de color marrón/café sólido, con un pincel pequeño apoyado al lado, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:39:49.539Z",
+    "slug": "colores-chairo"
+  },
+  "き::naturaleza": {
+    "prompt": "Flat vector illustration of a tree, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:40:11.055Z",
+    "slug": "naturaleza-ki"
+  },
+  "くさ::naturaleza": {
+    "prompt": "Flat vector illustration of a grass, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:40:34.303Z",
+    "slug": "naturaleza-kusa"
+  },
+  "あめ::naturaleza": {
+    "prompt": "Flat vector illustration of a rain, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:40:58.242Z",
+    "slug": "naturaleza-ame"
+  },
+  "ゆき::naturaleza": {
+    "prompt": "Flat vector illustration of a snow, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:41:51.176Z",
+    "slug": "naturaleza-yuki"
+  },
+  "かぜ::naturaleza": {
+    "prompt": "Flat vector illustration of a wind, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:42:14.178Z",
+    "slug": "naturaleza-kaze"
+  },
+  "つき::naturaleza": {
+    "prompt": "Flat vector illustration of a moon, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:42:37.516Z",
+    "slug": "naturaleza-tsuki"
+  },
+  "ほし::naturaleza": {
+    "prompt": "Flat vector illustration of a star, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:42:59.796Z",
+    "slug": "naturaleza-hoshi"
+  },
+  "あたま::cuerpo": {
+    "prompt": "Flat vector illustration of a head, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:43:21.831Z",
+    "slug": "cuerpo-atama"
+  },
+  "め::cuerpo": {
+    "prompt": "Flat vector illustration of a eye, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:43:46.071Z",
+    "slug": "cuerpo-me"
+  },
+  "みみ::cuerpo": {
+    "prompt": "Flat vector illustration of a ear, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:44:09.844Z",
+    "slug": "cuerpo-mimi"
+  },
+  "はな::cuerpo": {
+    "prompt": "Flat vector illustration of a nose, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:44:31.667Z",
+    "slug": "cuerpo-hana"
+  },
+  "くち::cuerpo": {
+    "prompt": "Flat vector illustration of a mouth lips, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:44:55.179Z",
+    "slug": "cuerpo-kuchi"
+  },
+  "て::cuerpo": {
+    "prompt": "Flat vector illustration of a hand, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:45:22.339Z",
+    "slug": "cuerpo-te"
+  },
+  "あし::cuerpo": {
+    "prompt": "Flat vector illustration of a foot leg, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:45:50.201Z",
+    "slug": "cuerpo-ashi"
+  },
+  "たべる::verbos": {
+    "prompt": "Flat vector illustration of a character eating rice from a bowl with chopsticks, mouth open mid-bite, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:46:14.749Z",
+    "slug": "verbos-taberu"
+  },
+  "のむ::verbos": {
+    "prompt": "Flat vector illustration of a character drinking water from a glass, tilted back, glass touching lips, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:46:38.099Z",
+    "slug": "verbos-nomu"
+  },
+  "きく::verbos": {
+    "prompt": "Flat vector illustration of a character wearing headphones, eyes closed, listening to music notes floating nearby, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:47:00.569Z",
+    "slug": "verbos-kiku"
+  },
+  "はなす::verbos": {
+    "prompt": "Flat vector illustration of a character two characters facing each other, speech bubble with sound lines (no text), in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:47:23.963Z",
+    "slug": "verbos-hanasu"
+  },
+  "かく::verbos": {
+    "prompt": "Flat vector illustration of a character writing with a pencil on a notebook, visible pencil lines on the page, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:47:55.308Z",
+    "slug": "verbos-kaku"
+  },
+  "よむ::verbos": {
+    "prompt": "Flat vector illustration of a character reading an open book, eyes on the page, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:48:20.320Z",
+    "slug": "verbos-yomu"
+  },
+  "うる::verbos": {
+    "prompt": "Flat vector illustration of a character standing behind a market stall with price sign, handing a bag, receiving coins, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:48:43.304Z",
+    "slug": "verbos-uru"
+  },
+  "あるく::verbos": {
+    "prompt": "Flat vector illustration of a character mid-stride walking calmly, one foot forward, arms swinging (not running), in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:49:05.901Z",
+    "slug": "verbos-aruku"
+  },
+  "はしる::verbos": {
+    "prompt": "Flat vector illustration of a character running with motion lines, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:49:29.908Z",
+    "slug": "verbos-hashiru"
+  },
+  "のる::verbos": {
+    "prompt": "Flat vector illustration of a character stepping up into a bus door, hand on railing, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:49:53.567Z",
+    "slug": "verbos-noru"
+  },
+  "おきる::verbos": {
+    "prompt": "Flat vector illustration of a character sitting up in bed, stretching arms, alarm clock beside bed, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:50:20.455Z",
+    "slug": "verbos-okiru"
+  },
+  "ねる::verbos": {
+    "prompt": "Flat vector illustration of a character lying in bed asleep, eyes closed, \"Zzz\" symbol above head, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:50:41.887Z",
+    "slug": "verbos-neru"
+  },
+  "いく::verbos": {
+    "prompt": "Flat vector illustration of a character walking toward a road/signpost ahead, motion lines behind, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:51:04.234Z",
+    "slug": "verbos-iku"
+  },
+  "くる::verbos": {
+    "prompt": "Flat vector illustration of a character walking toward viewer with arms open, waving, approaching, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:51:27.246Z",
+    "slug": "verbos-kuru"
+  },
+  "あう::verbos": {
+    "prompt": "Flat vector illustration of a character two characters shaking hands, meeting face to face, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:51:51.244Z",
+    "slug": "verbos-au"
+  },
+  "しごとする::verbos": {
+    "prompt": "Flat vector illustration of a character sitting at desk with laptop and papers, typing, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:52:15.310Z",
+    "slug": "verbos-shigoto-suru"
+  },
+  "べんきょうする::verbos": {
+    "prompt": "Flat vector illustration of a character sitting at desk with open book and notebook, pencil in hand, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:52:39.192Z",
+    "slug": "verbos-benkyou-suru"
+  },
+  "あそぶ::verbos": {
+    "prompt": "Flat vector illustration of a character playing with a ball, joyful expression, mid-action, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:53:02.106Z",
+    "slug": "verbos-asobu"
+  },
+  "つかう::verbos": {
+    "prompt": "Flat vector illustration of a character holding and tapping a smartphone screen, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:53:25.098Z",
+    "slug": "verbos-tsukau"
+  },
+  "しめる::verbos": {
+    "prompt": "Flat vector illustration of a character pushing a door shut, mid-swing (mirror of abrir), in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:53:47.639Z",
+    "slug": "verbos-shimeru"
+  },
+  "おおきい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of dos formas geométricas simples lado a lado, una notablemente más grande que la otra, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:54:10.603Z",
+    "slug": "adjetivos-ookii"
+  },
+  "ちいさい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of mismo par, la pequeña resaltada/enfocada, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:54:39.179Z",
+    "slug": "adjetivos-chiisai"
+  },
+  "たかい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of dos columnas/pilares verticales simples, una mucho más alta que la otra, la alta resaltada, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:55:00.574Z",
+    "slug": "adjetivos-takai"
+  },
+  "ひくい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of mismo par de columnas, la baja resaltada/enfocada, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:55:23.507Z",
+    "slug": "adjetivos-hikui"
+  },
+  "あたらしい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of caja u objeto simple con pequeñas líneas de brillo/destello alrededor indicando que es nuevo, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:55:47.195Z",
+    "slug": "adjetivos-atarashii"
+  },
+  "ふるい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of mismo tipo de objeto con textura desgastada y tonos apagados, sin brillo, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:56:14.774Z",
+    "slug": "adjetivos-furui"
+  },
+  "わるい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of mano con pulgar hacia abajo, ícono simple, sin rostro, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:56:39.313Z",
+    "slug": "adjetivos-warui"
+  },
+  "あつい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of termómetro con el nivel en la parte alta, pequeñas líneas de vapor/calor arriba, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:57:01.410Z",
+    "slug": "adjetivos-atsui"
+  },
+  "さむい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of termómetro con el nivel en la parte baja, un copo de nieve pequeño al lado, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:57:25.023Z",
+    "slug": "adjetivos-samui"
+  },
+  "はやい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of flecha con líneas de movimiento múltiples, forma alargada sugiriendo velocidad, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:57:46.065Z",
+    "slug": "adjetivos-hayai"
+  },
+  "おそい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of tortuga simple o caracol, sin líneas de movimiento, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:58:08.232Z",
+    "slug": "adjetivos-osoi"
+  },
+  "むずかしい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of montaña empinada con una figura de escalada simple a medio camino, o rompecabezas con piezas revueltas, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:58:32.731Z",
+    "slug": "adjetivos-muzukashii"
+  },
+  "やさしい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of camino plano y recto, o rompecabezas casi armado, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:58:55.764Z",
+    "slug": "adjetivos-yasashii"
+  },
+  "たのしい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of confeti y una estrella de fiesta simple, sin personaje, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:59:18.383Z",
+    "slug": "adjetivos-tanoshii"
+  },
+  "つまらない::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of reloj con marcas de \"tictac\" repetitivas y un pequeño símbolo \"zzz\", sin personaje, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T20:59:43.390Z",
+    "slug": "adjetivos-tsumaranai"
+  },
+  "おいしい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of plato de comida con pequeñas líneas de aroma/estrellas de sabor subiendo, sin personaje, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:00:06.502Z",
+    "slug": "adjetivos-oishii"
+  },
+  "まずい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of plato de comida con una X pequeña superpuesta, sin personaje, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:00:27.849Z",
+    "slug": "adjetivos-mazui"
+  },
+  "きれい::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of objeto u espacio simple con pequeñas estrellas de brillo/destello alrededor, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:00:50.233Z",
+    "slug": "adjetivos-kirei"
+  },
+  "きたない::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the concept of objeto simple con manchas oscuras y pequeñas líneas onduladas de mal olor alrededor, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:01:12.664Z",
+    "slug": "adjetivos-kitanai"
+  },
+  "おはよう::saludos": {
+    "prompt": "Flat vector illustration of a character waving one hand in greeting, a rising sun with soft rays behind them, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:01:35.717Z",
+    "slug": "saludos-ohayou"
+  },
+  "こんにちは::saludos": {
+    "prompt": "Flat vector illustration of a character waving one hand in greeting, open palm, mid-motion, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:01:57.125Z",
+    "slug": "saludos-konnichiwa"
+  },
+  "ありがとう::saludos": {
+    "prompt": "Flat vector illustration of a character pressing both hands together in a small bow, a small heart shape floating just above the hands, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:02:22.530Z",
+    "slug": "saludos-arigatou"
+  },
+  "すみません::saludos": {
+    "prompt": "Flat vector illustration of a character bowing the head slightly, one hand raised near the head in an apologetic gesture, in the style of a modern Japanese language-learning flashcard. Include a clear prop/object that makes the action unmistakable even without a caption. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:02:46.143Z",
+    "slug": "saludos-sumimasen"
+  },
+  "はい::saludos": {
+    "prompt": "Flat vector icon illustration representing the concept of un ícono de check/marca de verificación limpia dentro de un círculo, sin personaje, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:03:07.646Z",
+    "slug": "saludos-hai"
+  },
+  "いいえ::saludos": {
+    "prompt": "Flat vector icon illustration representing the concept of un ícono de X limpia dentro de un círculo, sin personaje, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:03:53.814Z",
+    "slug": "saludos-iie"
+  },
+  "あなた::pronombres": {
+    "prompt": "Flat vector icon illustration representing the concept of flecha o mano señalando directamente hacia una silueta de persona, sin rostro, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:04:18.550Z",
+    "slug": "pronombres-anata"
+  },
+  "かれ::pronombres": {
+    "prompt": "Flat vector icon illustration representing the concept of silueta de persona con cabello corto, color sólido azul, sin rostro, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:04:46.546Z",
+    "slug": "pronombres-kare"
+  },
+  "みんな::pronombres": {
+    "prompt": "Flat vector icon illustration representing the concept of grupo de 3-4 siluetas idénticas juntas, ninguna resaltada (repetición, como まいにち), using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:05:09.869Z",
+    "slug": "pronombres-minna"
+  },
+  "すこし::cantidades": {
+    "prompt": "Flat vector icon illustration representing the concept of vaso o barra de progreso llena solo 20%, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:05:32.336Z",
+    "slug": "cantidades-sukoshi"
+  },
+  "たくさん::cantidades": {
+    "prompt": "Flat vector icon illustration representing the concept of vaso o barra de progreso llena 90%+, casi desbordando, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:05:57.227Z",
+    "slug": "cantidades-takusan"
+  },
+  "ぜんぶ::cantidades": {
+    "prompt": "Flat vector icon illustration representing the concept of barra de progreso 100% llena, o círculo completamente rellenado, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:06:21.109Z",
+    "slug": "cantidades-zenbu"
+  },
+  "なにも::cantidades": {
+    "prompt": "Flat vector icon illustration representing the concept of contenedor/caja vacía, vacío evidente (sin objetos dentro), using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:06:45.001Z",
+    "slug": "cantidades-nanimo"
+  },
+  "なに::preguntas": {
+    "prompt": "Flat vector icon illustration representing the concept of signo de interrogación grande y limpio, sin personaje, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:07:08.507Z",
+    "slug": "preguntas-nani"
+  },
+  "どこ::preguntas": {
+    "prompt": "Flat vector icon illustration representing the concept of pin de mapa (📍) estilizado, sin texto, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:07:30.875Z",
+    "slug": "preguntas-doko"
+  },
+  "いつ::preguntas": {
+    "prompt": "Flat vector icon illustration representing the concept of reloj/calendario con un signo de interrogación pequeño superpuesto, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:07:53.657Z",
+    "slug": "preguntas-itsu"
+  },
+  "だれ::preguntas": {
+    "prompt": "Flat vector icon illustration representing the concept of silueta de persona genérica con signo de interrogación sobre la cabeza, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:08:16.719Z",
+    "slug": "preguntas-dare"
+  },
+  "なぜ::preguntas": {
+    "prompt": "Flat vector icon illustration representing the concept of signo de interrogación con una lupa pequeña superpuesta, indicando causa/razón, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:08:40.041Z",
+    "slug": "preguntas-naze"
+  },
+  "どうやって::preguntas": {
+    "prompt": "Flat vector icon illustration representing the concept of engranaje simple con un signo de interrogación pequeño superpuesto, indicando proceso/método, using a clear visual metaphor (e.g. clock with arrow pointing backward for \"yesterday\", partially filled bar for \"a little\"). No human face or facial expression as the primary signal. Plain white background, no text, no border. Bold clean outlines, soft pastel palette, minimal flat shading.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:09:01.689Z",
+    "slug": "preguntas-douyatte"
+  },
+  "へや::casa": {
+    "prompt": "Flat vector illustration of a room bedroom, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:09:24.226Z",
+    "slug": "casa-heya"
+  },
+  "トイレ::casa": {
+    "prompt": "Flat vector illustration of a bathroom toilet, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:09:46.096Z",
+    "slug": "casa-toire"
+  },
+  "だいどころ::casa": {
+    "prompt": "Flat vector illustration of a kitchen, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:10:10.444Z",
+    "slug": "casa-daidokoro"
+  },
+  "にわ::casa": {
+    "prompt": "Flat vector illustration of a garden, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:10:33.226Z",
+    "slug": "casa-niwa"
+  },
+  "おかね::misc": {
+    "prompt": "Flat vector illustration of a small pile of coins next to a folded banknote, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:10:56.105Z",
+    "slug": "misc-okane"
+  },
+  "しごと::misc": {
+    "prompt": "Flat vector illustration of a closed briefcase with a handle, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:11:18.657Z",
+    "slug": "misc-shigoto"
+  },
+  "べんきょう::misc": {
+    "prompt": "Flat vector illustration of a stack of books with a pencil resting on top, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:11:41.952Z",
+    "slug": "misc-benkyou"
+  },
+  "おんがく::misc": {
+    "prompt": "Flat vector illustration of a single bold stylized eighth musical note, in the style of a modern Japanese language-learning flashcard. Single centered object, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-01T21:12:05.881Z",
+    "slug": "misc-ongaku"
+  }
+}

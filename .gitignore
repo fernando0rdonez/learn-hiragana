@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 
 .env
+
+# Vocab image generation working state (drafts pending review/approval)
+.claude/skills/vocab-images/state/*
+!.claude/skills/vocab-images/state/.gitkeep
