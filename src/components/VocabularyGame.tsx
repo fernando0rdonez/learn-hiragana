@@ -341,6 +341,7 @@ export default function VocabularyGame({
           imageQuery={currentWord.imageQuery}
           emojiBackup={currentWord.emojiBackup}
           label={currentWord.meaning}
+          imagePath={currentWord.generated ? currentWord.imagePath : undefined}
         />
         <AudioButton text={currentWord.hiragana} />
       </div>

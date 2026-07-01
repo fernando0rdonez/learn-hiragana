@@ -5,11 +5,17 @@ const FETCH_TIMEOUT_MS = 8000;
 
 export type UnsplashStatus = "loading" | "loaded" | "error";
 
-export function useUnsplashImage(hiragana: string, imageQuery: string) {
+export function useUnsplashImage(hiragana: string, imageQuery: string, enabled: boolean = true) {
   const [status, setStatus] = useState<UnsplashStatus>("loading");
   const [image, setImage] = useState<UnsplashImage | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      setStatus("error");
+      setImage(null);
+      return;
+    }
+
     const cached = getCachedImage(hiragana);
     if (cached) {
       setImage(cached);
@@ -56,7 +62,7 @@ export function useUnsplashImage(hiragana: string, imageQuery: string) {
       clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [hiragana, imageQuery]);
+  }, [hiragana, imageQuery, enabled]);
 
   return { status, image };
 }
