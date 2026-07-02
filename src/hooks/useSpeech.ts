@@ -30,12 +30,12 @@ export function useSpeech(): UseSpeechResult {
   }, []);
 
   function speak(text: string) {
-    if (!voiceRef.current || typeof speechSynthesis === "undefined") return;
+    if (typeof speechSynthesis === "undefined") return;
 
     speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.voice = voiceRef.current;
+    if (voiceRef.current) utterance.voice = voiceRef.current;
     utterance.lang = "ja-JP";
     utterance.rate = 0.8;
 

@@ -240,23 +240,14 @@ interface PreviewViewProps {
   setView: (v: ViewName) => void;
 }
 
-function speakKana(kana: string) {
-  const audio = new Audio(`/audio/${kana}.mp3`);
-  audio.play().catch(() => {
-    const utt = new SpeechSynthesisUtterance(kana);
-    utt.lang = "ja-JP";
-    utt.rate = 0.8;
-    speechSynthesis.speak(utt);
-  });
-}
-
 function PreviewView({ previewRows, pendingStartRef, setView }: PreviewViewProps) {
   const [playedKanas, setPlayedKanas] = useState<Set<string>>(new Set());
   const totalChars = previewRows.reduce((sum, r) => sum + r.chars.length, 0);
+  const { speak } = useSpeech();
 
   function handleTileClick(kana: string) {
     setPlayedKanas((prev) => new Set(prev).add(kana));
-    speakKana(kana);
+    speak(kana);
   }
 
   return (
