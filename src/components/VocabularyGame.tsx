@@ -353,8 +353,8 @@ export default function VocabularyGame({
         />
       </div>
 
-      {/* Image + audio */}
-      <div className="mt-2 flex flex-col items-center gap-2">
+      {/* Image */}
+      <div className="mt-2">
         <VocabImage
           hiragana={currentWord.hiragana}
           imageQuery={currentWord.imageQuery}
@@ -362,20 +362,28 @@ export default function VocabularyGame({
           label={currentWord.meaning}
           imagePath={currentWord.generated ? currentWord.imagePath : undefined}
         />
-        <AudioButton text={currentWord.hiragana} />
       </div>
 
-      {/* Romaji hint */}
-      {showRomaji && (
-        <p className="text-stone-400 text-sm tracking-wide">{currentWord.romaji}</p>
-      )}
-
-      {/* Significado: siempre visible para reforzar la asociación imagen–palabra */}
-      <p className="text-sm font-medium text-[#8B7FA8]">{currentWord.meaning}</p>
-
-      {/* Fox */}
-      <div className="w-full h-20 flex items-end justify-end pr-2 mb-1">
-        <img src={foxPose} alt="" className="w-20 h-20 object-contain transition-opacity" />
+      {/* Palabra (romaji + significado, siempre visible para reforzar la asociación imagen–palabra) + audio + fox */}
+      <div className="w-full flex items-end justify-between gap-3">
+        <div className="flex items-baseline gap-1.5 rounded-2xl px-4 py-3 flex-1 min-w-0" style={{ backgroundColor: "#F5F3FF" }}>
+          {showRomaji && (
+            <>
+              <span
+                className="text-lg font-bold tracking-wide truncate"
+                style={{ color: "#7B4FD4", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                {currentWord.romaji}
+              </span>
+              <span className="text-sm" style={{ color: "#C9C0E8" }}>·</span>
+            </>
+          )}
+          <span className="text-sm font-medium truncate" style={{ color: "#8B7FA8" }}>
+            {currentWord.meaning}
+          </span>
+        </div>
+        <AudioButton text={currentWord.hiragana} className="shrink-0" />
+        <img src={foxPose} alt="" className="w-20 h-20 object-contain shrink-0 transition-opacity" />
       </div>
 
       {/* Word slots */}
