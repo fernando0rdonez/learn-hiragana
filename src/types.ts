@@ -12,7 +12,9 @@ export interface CharWithRow extends CharData {
 
 // ── Progress ───────────────────────────────────────────────────────────────
 
-export type ItemMode = "recognition" | "production" | "word" | "phonetics";
+export type VocabPracticeMode = "spell" | "meaning" | "listening";
+
+export type ItemMode = "recognition" | "production" | "word" | "phonetics" | VocabPracticeMode;
 
 export interface ItemProgress {
   box: number;
@@ -39,6 +41,7 @@ export interface ProgressData {
   streak?: StreakData;
   dailyProgress?: DailyProgress;
   settings?: { showRomaji: boolean };
+  schemaVersion?: number;
 }
 
 export type CharStatus = "untested" | "developing" | "weak" | "mastered";

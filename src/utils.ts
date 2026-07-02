@@ -1,4 +1,4 @@
-import type { CharWithRow, ProgressItems, SessionMode, QueueItem, CharStatus, QuizMode } from "./types";
+import type { CharWithRow, ProgressItems, SessionMode, QueueItem, CharStatus, QuizMode, VocabPracticeMode } from "./types";
 import { buildSessionQueue } from "./leitner";
 import { getConfusablePairs } from "./confusedPairs";
 import { ALL_ROW_GROUPS, ALL_CHARS } from "./data";
@@ -97,6 +97,34 @@ export function charStatus(items: ProgressItems, kana: string): CharStatus {
   if (!p || p.attempts === 0) return "untested";
   const acc = p.correct / p.attempts;
   if (p.attempts >= 3 && acc >= 0.85) return "mastered";
+  if (acc < 0.5) return "weak";
+  return "developing";
+}
+
+const VOCAB_MODES: VocabPracticeMode[] = ["spell", "meaning", "listening"];
+
+export function vocabProgressKey(mode: VocabPracticeMode, hiragana: string): string {
+  return `${mode}:${hiragana}`;
+}
+
+/**
+ * Same thresholds as charStatus, but summed across all VOCAB_MODES and
+ * gated by mode coverage: "mastered" requires attempts spanning >=2 of the
+ * 3 vocab modes, not just raw attempts/accuracy.
+ */
+export function vocabStatus(items: ProgressItems, hiragana: string): CharStatus {
+  let attempts = 0, correct = 0, modesUsed = 0;
+  for (const mode of VOCAB_MODES) {
+    const p = items[vocabProgressKey(mode, hiragana)];
+    if (p && p.attempts > 0) {
+      attempts += p.attempts;
+      correct += p.correct;
+      modesUsed++;
+    }
+  }
+  if (attempts === 0) return "untested";
+  const acc = correct / attempts;
+  if (attempts >= 3 && acc >= 0.85 && modesUsed >= 2) return "mastered";
   if (acc < 0.5) return "weak";
   return "developing";
 }

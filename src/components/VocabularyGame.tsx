@@ -4,6 +4,7 @@ import AudioButton from "./AudioButton";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
 import { INTERVALS, isDue } from "../leitner";
+import { vocabProgressKey } from "../utils";
 import { getDistractors } from "../utils/distractors";
 import { playChime, playBuzz } from "../utils/audio";
 import VocabImage from "./VocabImage";
@@ -100,7 +101,7 @@ export default function VocabularyGame({
     const due: VocabWord[] = [];
     const notDue: VocabWord[] = [];
     for (const w of vocabulary) {
-      const p = progress[`word:${w.hiragana}`];
+      const p = progress[vocabProgressKey("spell", w.hiragana)];
       if (!p || p.attempts === 0 || isDue(p.nextDue, today)) {
         due.push(w);
       } else {
@@ -127,7 +128,7 @@ export default function VocabularyGame({
   }
 
   function recordResult(word: VocabWord, isCorrect: boolean, usedHint: boolean) {
-    const key = `word:${word.hiragana}`;
+    const key = vocabProgressKey("spell", word.hiragana);
     const prevP: ItemProgress = progress[key] ?? {
       box: 0,
       nextDue: today,
