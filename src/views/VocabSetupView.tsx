@@ -1,118 +1,265 @@
-import { ArrowLeft, Play } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Check, Play } from "lucide-react";
 import type { VocabWord } from "../vocabulary";
-import type { ViewName } from "../data";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
+import type { ViewName } from "../data";
+import type { ProgressItems, VocabSessionLength } from "../types";
+import { vocabCategoryStats, notMasteredVocab, resolveVocabSession } from "../utils";
 import { getVocabImageUrl } from "../vocabImages";
+import foxImg from "../assets/character/fox-neutral.png";
 
 interface Props {
-  selectedVocabCategory: string | null;
-  setSelectedVocabCategory: (id: string | null) => void;
-  vocabSessionLimit: 20 | 50 | "all";
-  setVocabSessionLimit: (n: 20 | 50 | "all") => void;
+  progress: ProgressItems;
+  selectedVocabCategories: Set<string>;
+  toggleVocabCategory: (id: string) => void;
+  setSelectedVocabCategories: (ids: Set<string>) => void;
+  vocabSessionLength: VocabSessionLength;
+  setVocabSessionLength: (n: VocabSessionLength) => void;
   filteredVocabulary: VocabWord[];
   setView: (v: ViewName) => void;
 }
 
+// ── Design tokens (mismo sistema que HomeView/HiraganaSetupView — coral es el color del módulo Vocabulario) ──
+
+const CORAL       = "#E85D3A";
+const CORAL_DARK  = "#C03A1E";
+const CORAL_LIGHT = "#FFEEEA";
+const BORDER      = "#EEEEEE";
+const TEXT_MAIN   = "#1A1A2E";
+const TEXT_SECOND = "#8B7FA8";
+const TEXT_MUTED  = "#AAAAAA";
+
+const LAST_SESSION_KEY = "vocab_last_session";
+
+interface VocabLastSession {
+  categoryIds: string[];
+  length: VocabSessionLength;
+}
+
+function isVocabLastSession(v: unknown): v is VocabLastSession {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  return Array.isArray(o.categoryIds)
+    && (o.length === 10 || o.length === 20 || o.length === "all" || o.length === "repasar");
+}
+
+function lengthLabel(length: VocabSessionLength): string {
+  return length === "all" ? "Todas" : length === "repasar" ? "Repasar" : String(length);
+}
+
 export default function VocabSetupView({
-  selectedVocabCategory, setSelectedVocabCategory,
-  vocabSessionLimit, setVocabSessionLimit,
-  filteredVocabulary, setView,
+  progress,
+  selectedVocabCategories, toggleVocabCategory, setSelectedVocabCategories,
+  vocabSessionLength, setVocabSessionLength,
+  filteredVocabulary,
+  setView,
 }: Props) {
+  const [lastSession] = useState<VocabLastSession | null>(() => {
+    const raw = localStorage.getItem(LAST_SESSION_KEY);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      return isVocabLastSession(parsed) ? parsed : null;
+    } catch {
+      return null; // valor corrupto en localStorage
+    }
+  });
+
+  // Pre-select the last session's categories on a fresh load (e.g. after a
+  // page reload, when in-memory selection state resets but localStorage
+  // doesn't) so the "Última sesión" pills and the grid below agree. Only
+  // fires once and only when nothing's been picked yet this page load —
+  // never overwrites an in-progress selection.
+  useEffect(() => {
+    if (lastSession && selectedVocabCategories.size === 0) {
+      setSelectedVocabCategories(new Set(lastSession.categoryIds));
+      setVocabSessionLength(lastSession.length);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const allSelected = selectedVocabCategories.size === VOCAB_CATEGORIES.length;
+  const notMastered = notMasteredVocab(progress, filteredVocabulary);
+  const { limit: sessionSize } = resolveVocabSession(filteredVocabulary, vocabSessionLength, progress);
+
+  function toggleSelectAll() {
+    setSelectedVocabCategories(allSelected ? new Set() : new Set(VOCAB_CATEGORIES.map((c) => c.id)));
+  }
+
+  function handleStartSession() {
+    localStorage.setItem(LAST_SESSION_KEY, JSON.stringify({
+      categoryIds: [...selectedVocabCategories],
+      length: vocabSessionLength,
+    } satisfies VocabLastSession));
+    setView("spellIt");
+  }
+
+  function handleContinue() {
+    if (!lastSession) return;
+    const pool = VOCABULARY.filter((w) => lastSession.categoryIds.includes(w.category));
+    const { limit } = resolveVocabSession(pool, lastSession.length, progress);
+    if (limit === 0) return; // p.ej. "repasar" y ya no queda nada sin dominar
+    setSelectedVocabCategories(new Set(lastSession.categoryIds));
+    setVocabSessionLength(lastSession.length);
+    setView("spellIt");
+  }
+
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => setView("home")} className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700">
+      <div className="flex items-center gap-3 mb-4">
+        <button onClick={() => setView("home")} className="flex items-center gap-1 text-sm hover:opacity-70" style={{ color: TEXT_SECOND }}>
           <ArrowLeft size={14} /> Inicio
         </button>
       </div>
-      <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif" }}>
-        🎴 Vocabulario
+      <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif", color: TEXT_MAIN }}>
+        Vocabulario
       </h2>
 
-      {/* Category picker */}
-      <div className="mt-5">
-        <span className="text-sm font-medium text-stone-600">Categoría</span>
-        <div className="grid grid-cols-2 gap-2 mt-2">
+      {/* ── Última sesión ── */}
+      {lastSession && (
+        <div
+          className="relative rounded-3xl p-5 pb-7 mt-5 text-white shadow-lg"
+          style={{ background: `linear-gradient(135deg, ${CORAL}, ${CORAL_DARK})`, overflow: "visible" }}
+        >
+          <div className="text-[11px] font-semibold tracking-wide uppercase opacity-80">Última sesión</div>
+          <div className="flex flex-wrap gap-1.5 mt-2 pr-14">
+            {lastSession.categoryIds.map((id) => {
+              const cat = VOCAB_CATEGORIES.find((c) => c.id === id);
+              if (!cat) return null;
+              return (
+                <span key={id} className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/20">
+                  {cat.label}
+                </span>
+              );
+            })}
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/20">
+              ×{lengthLabel(lastSession.length)}
+            </span>
+          </div>
           <button
-            onClick={() => setSelectedVocabCategory(null)}
-            className={`text-left rounded-xl border-2 p-3 transition-colors ${
-              selectedVocabCategory === null
-                ? "border-indigo-700 bg-indigo-50"
-                : "border-stone-200 bg-white hover:border-stone-300"
-            }`}
+            onClick={handleContinue}
+            className="mt-3 flex items-center gap-2 bg-white rounded-xl px-4 py-2.5 text-sm font-semibold"
+            style={{ color: CORAL_DARK }}
           >
-            <div className="text-2xl">🌐</div>
-            <div className="text-sm font-medium text-stone-700 mt-1">Todas</div>
-            <div className="text-xs text-stone-400">{VOCABULARY.length} palabras</div>
+            <Play size={14} /> Continuar
           </button>
+          <img
+            src={foxImg}
+            alt=""
+            className="absolute pointer-events-none select-none"
+            style={{ width: 60, height: "auto", bottom: -14, right: 14, zIndex: 2 }}
+          />
+        </div>
+      )}
+
+      {/* ── Configurar sesión ── */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Configurar sesión</div>
+          <button onClick={toggleSelectAll} className="text-xs font-semibold" style={{ color: CORAL }}>
+            {allSelected ? "Limpiar" : "Seleccionar todas"}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 mt-3">
           {VOCAB_CATEGORIES.map((cat) => {
-            const count = VOCABULARY.filter((w) => w.category === cat.id).length;
-            const selected = selectedVocabCategory === cat.id;
+            const stats = vocabCategoryStats(progress, cat.id);
+            const isSelected = selectedVocabCategories.has(cat.id);
             const imageUrl = cat.image ? getVocabImageUrl(cat.image) : undefined;
+            const pct = stats.total > 0 ? Math.round((stats.mastered / stats.total) * 100) : 0;
+
             return (
               <button
                 key={cat.id}
-                onClick={() => setSelectedVocabCategory(cat.id)}
-                className={`text-left rounded-xl border-2 p-3 transition-colors ${
-                  selected
-                    ? "border-indigo-700 bg-indigo-50"
-                    : "border-stone-200 bg-white hover:border-stone-300"
-                }`}
+                onClick={() => toggleVocabCategory(cat.id)}
+                className={`relative text-left rounded-2xl border-2 p-3 transition-colors ${!isSelected ? "hover:border-[#F0C4B4] hover:bg-[#FFFAF8]" : ""}`}
+                style={isSelected
+                  ? { backgroundColor: CORAL_LIGHT, borderColor: CORAL, boxShadow: "0 4px 14px rgba(232,93,58,0.18)" }
+                  : { backgroundColor: "#FFFFFF", borderColor: BORDER }
+                }
               >
-                {imageUrl ? (
-                  <img src={imageUrl} alt={cat.label} className="w-9 h-9 rounded-lg object-cover" />
-                ) : (
-                  <div className="text-2xl">{cat.emoji}</div>
+                {isSelected && (
+                  <span
+                    className="absolute -top-2 -right-2 w-[22px] h-[22px] rounded-full flex items-center justify-center shadow-sm"
+                    style={{ backgroundColor: CORAL }}
+                  >
+                    <Check size={13} className="text-white" strokeWidth={3} />
+                  </span>
                 )}
-                <div className="text-sm font-medium text-stone-700 mt-1">{cat.label}</div>
-                <div className="text-xs text-stone-400">{count} palabras</div>
+                <div className="w-full aspect-square rounded-xl overflow-hidden flex items-center justify-center" style={{ backgroundColor: "#F5F0EA" }}>
+                  {imageUrl ? (
+                    <img src={imageUrl} alt={cat.label} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl">{cat.emoji}</span>
+                  )}
+                </div>
+                <div className="text-sm font-semibold mt-2" style={{ color: isSelected ? CORAL_DARK : TEXT_MAIN }}>
+                  {cat.label}
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: isSelected ? CORAL_DARK : TEXT_SECOND }}>
+                  {stats.mastered}/{stats.total} dominadas
+                </div>
+                <div className="w-full h-1 rounded-full mt-1.5 overflow-hidden" style={{ backgroundColor: "#F0EAE3" }}>
+                  <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: CORAL }} />
+                </div>
               </button>
             );
           })}
         </div>
-      </div>
 
-      {/* Session length */}
-      <div className="mt-6">
-        <span className="text-sm font-medium text-stone-600">Palabras por sesión</span>
-        <div className="flex gap-2 mt-2">
-          {([20, 50] as const).map((n) => {
-            const max = filteredVocabulary.length;
-            return (
+        {/* Preguntas */}
+        <div className="mt-5">
+          <span className="text-sm font-medium" style={{ color: TEXT_MAIN }}>Preguntas</span>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {([10, 20] as const).map((n) => (
               <button
                 key={n}
-                disabled={max < n}
-                onClick={() => setVocabSessionLimit(n)}
-                className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors disabled:opacity-40 ${
-                  vocabSessionLimit === n
-                    ? "border-indigo-700 bg-indigo-50 text-indigo-700"
-                    : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
-                }`}
+                onClick={() => setVocabSessionLength(n)}
+                className="py-2.5 rounded-xl border-2 text-sm font-medium transition-colors"
+                style={vocabSessionLength === n
+                  ? { borderColor: CORAL, backgroundColor: CORAL_LIGHT, color: CORAL_DARK }
+                  : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+                }
               >
                 {n}
               </button>
-            );
-          })}
-          <button
-            onClick={() => setVocabSessionLimit("all")}
-            className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-              vocabSessionLimit === "all"
-                ? "border-indigo-700 bg-indigo-50 text-indigo-700"
-                : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
-            }`}
-          >
-            Todas ({filteredVocabulary.length})
-          </button>
+            ))}
+            <button
+              onClick={() => setVocabSessionLength("all")}
+              className="py-2.5 rounded-xl border-2 text-sm font-medium transition-colors"
+              style={vocabSessionLength === "all"
+                ? { borderColor: CORAL, backgroundColor: CORAL_LIGHT, color: CORAL_DARK }
+                : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+              }
+            >
+              Todas ({filteredVocabulary.length})
+            </button>
+            <button
+              disabled={notMastered.length === 0}
+              onClick={() => setVocabSessionLength("repasar")}
+              className="py-2.5 rounded-xl border-2 text-sm font-medium transition-colors disabled:opacity-40"
+              style={vocabSessionLength === "repasar"
+                ? { borderColor: CORAL, backgroundColor: CORAL_LIGHT, color: CORAL_DARK }
+                : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+              }
+            >
+              Repasar ({notMastered.length})
+            </button>
+          </div>
         </div>
-      </div>
 
-      <button
-        disabled={filteredVocabulary.length === 0}
-        onClick={() => setView("spellIt")}
-        className="w-full mt-4 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
-      >
-        <Play size={18} /> Comenzar vocabulario
-      </button>
+        <button
+          disabled={sessionSize === 0}
+          onClick={handleStartSession}
+          className="w-full mt-6 py-3.5 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+          style={{ backgroundColor: CORAL }}
+        >
+          <Play size={16} /> Comenzar sesión
+        </button>
+        <p className="text-center text-xs mt-2" style={{ color: TEXT_MUTED }}>
+          {selectedVocabCategories.size} categoría{selectedVocabCategories.size === 1 ? "" : "s"} seleccionada{selectedVocabCategories.size === 1 ? "" : "s"} · {sessionSize} palabra{sessionSize === 1 ? "" : "s"} · {notMastered.length} sin dominar
+        </p>
+      </div>
     </div>
   );
 }

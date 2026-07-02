@@ -1,8 +1,9 @@
-import type { CharWithRow, ProgressItems, SessionMode, QueueItem, CharStatus, QuizMode, VocabPracticeMode } from "./types";
+import type { CharWithRow, ProgressItems, SessionMode, QueueItem, CharStatus, QuizMode, VocabPracticeMode, VocabSessionLength } from "./types";
 import { buildSessionQueue } from "./leitner";
 import { getConfusablePairs } from "./confusedPairs";
 import { ALL_ROW_GROUPS, ALL_CHARS } from "./data";
 import { WORDS } from "./words";
+import { VOCABULARY, type VocabWord } from "./vocabulary";
 
 export function toISODate(d: Date = new Date()): string {
   return [
@@ -108,25 +109,56 @@ export function vocabProgressKey(mode: VocabPracticeMode, hiragana: string): str
 }
 
 /**
- * Same thresholds as charStatus, but summed across all VOCAB_MODES and
- * gated by mode coverage: "mastered" requires attempts spanning >=2 of the
- * 3 vocab modes, not just raw attempts/accuracy.
+ * Same thresholds as charStatus, summed across all VOCAB_MODES that have
+ * data. Only "spell" is implemented today ("meaning"/"listening" are
+ * unwritten), so this naturally reduces to spell-only for now and picks up
+ * the other modes automatically once they exist.
  */
 export function vocabStatus(items: ProgressItems, hiragana: string): CharStatus {
-  let attempts = 0, correct = 0, modesUsed = 0;
+  let attempts = 0, correct = 0;
   for (const mode of VOCAB_MODES) {
     const p = items[vocabProgressKey(mode, hiragana)];
     if (p && p.attempts > 0) {
       attempts += p.attempts;
       correct += p.correct;
-      modesUsed++;
     }
   }
   if (attempts === 0) return "untested";
   const acc = correct / attempts;
-  if (attempts >= 3 && acc >= 0.85 && modesUsed >= 2) return "mastered";
+  if (attempts >= 3 && acc >= 0.85) return "mastered";
   if (acc < 0.5) return "weak";
   return "developing";
+}
+
+// NOTE: a handful of hiragana strings repeat across categories (e.g. "はな"
+// = "flor" in naturaleza and "nariz" in cuerpo). Progress is keyed by
+// hiragana alone, so those words share one progress record and will show
+// coupled mastery stats — a known, pre-existing data-shape limitation, not
+// a bug in the stats below.
+
+/** Per-category mastery aggregate for the vocab category picker cards. */
+export function vocabCategoryStats(progress: ProgressItems, categoryId: string): { total: number; mastered: number } {
+  const words = VOCABULARY.filter((w) => w.category === categoryId);
+  const mastered = words.filter((w) => vocabStatus(progress, w.hiragana) === "mastered").length;
+  return { total: words.length, mastered };
+}
+
+export function notMasteredVocab(progress: ProgressItems, words: VocabWord[]): VocabWord[] {
+  return words.filter((w) => vocabStatus(progress, w.hiragana) !== "mastered");
+}
+
+/** Resolves a chosen session length into the actual word pool + count to play. */
+export function resolveVocabSession(
+  words: VocabWord[],
+  length: VocabSessionLength,
+  progress: ProgressItems
+): { pool: VocabWord[]; limit: number } {
+  if (length === "repasar") {
+    const pool = notMasteredVocab(progress, words);
+    return { pool, limit: pool.length };
+  }
+  if (length === "all") return { pool: words, limit: words.length };
+  return { pool: words, limit: Math.min(length, words.length) };
 }
 
 export function rowStats(progress: ProgressItems, rowId: string) {

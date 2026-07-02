@@ -13,7 +13,7 @@ export default function KanaChip({ kana, used, onClick }: Props) {
         ${
           used
             ? "opacity-25 cursor-not-allowed border-stone-200 bg-stone-50 text-stone-400"
-            : "border-indigo-300 bg-white text-stone-800 hover:border-indigo-500 hover:bg-indigo-50 active:scale-95"
+            : "border-[#E0D8F8] bg-white text-stone-800 hover:border-[#7B4FD4] hover:bg-[#F0EDF8] active:scale-95"
         }`}
       style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
     >

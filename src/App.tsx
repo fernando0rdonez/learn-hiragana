@@ -3,6 +3,7 @@ import type {
   CharWithRow,
   ProgressItems,
   SessionMode,
+  VocabSessionLength,
 } from "./types";
 import { buildSessionQueue } from "./leitner";
 import { CONFUSED_PAIRS } from "./confusedPairs";
@@ -13,7 +14,7 @@ import { getAvailablePhonetics } from "./phonetics";
 import VocabularyGame from "./components/VocabularyGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
 import { type ViewName, ALL_CHARS } from "./data";
-import { toISODate, buildQueueItems, charStatus, rowStats } from "./utils";
+import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
@@ -40,8 +41,8 @@ export default function HiraganaTrainer() {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
   const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
-  const [vocabSessionLimit, setVocabSessionLimit] = useState<20 | 50 | "all">(50);
-  const [selectedVocabCategory, setSelectedVocabCategory] = useState<string | null>(null);
+  const [selectedVocabCategories, setSelectedVocabCategories] = useState<Set<string>>(new Set());
+  const [vocabSessionLength, setVocabSessionLength] = useState<VocabSessionLength>(20);
 
   const {
     previewRows, pendingStartRef,
@@ -66,6 +67,14 @@ export default function HiraganaTrainer() {
 
   function toggleRow(id: string) {
     setSelectedRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleVocabCategory(id: string) {
+    setSelectedVocabCategories((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -133,9 +142,10 @@ export default function HiraganaTrainer() {
 
   const phoneticPool = getAvailablePhonetics(selectedPhenomena);
 
-  const filteredVocabulary = selectedVocabCategory
-    ? VOCABULARY.filter((w) => w.category === selectedVocabCategory)
-    : VOCABULARY;
+  const filteredVocabulary = selectedVocabCategories.size > 0
+    ? VOCABULARY.filter((w) => selectedVocabCategories.has(w.category))
+    : [];
+  const { pool: vocabSessionPool, limit: vocabSessionLimit } = resolveVocabSession(filteredVocabulary, vocabSessionLength, progress);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-stone-50 text-stone-400">Cargando progreso…</div>;
@@ -235,10 +245,12 @@ export default function HiraganaTrainer() {
         {/* ── Vocabulario: selector de categoría ── */}
         {view === "vocabCategory" && (
           <VocabSetupView
-            selectedVocabCategory={selectedVocabCategory}
-            setSelectedVocabCategory={setSelectedVocabCategory}
-            vocabSessionLimit={vocabSessionLimit}
-            setVocabSessionLimit={setVocabSessionLimit}
+            progress={progress}
+            selectedVocabCategories={selectedVocabCategories}
+            toggleVocabCategory={toggleVocabCategory}
+            setSelectedVocabCategories={setSelectedVocabCategories}
+            vocabSessionLength={vocabSessionLength}
+            setVocabSessionLength={setVocabSessionLength}
             filteredVocabulary={filteredVocabulary}
             setView={setView}
           />
@@ -247,10 +259,10 @@ export default function HiraganaTrainer() {
         {/* ── Vocabulario ── */}
         {view === "spellIt" && (
           <VocabularyGame
-            vocabulary={filteredVocabulary}
+            vocabulary={vocabSessionPool}
             progress={progress}
             showRomaji={showRomaji}
-            sessionLimit={vocabSessionLimit === "all" ? filteredVocabulary.length : vocabSessionLimit}
+            sessionLimit={vocabSessionLimit}
             onProgressUpdate={(updates) => {
               const merged = { ...progress, ...updates };
               setProgress(merged);

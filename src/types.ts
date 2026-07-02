@@ -52,6 +52,8 @@ export type SessionMode = "recognition" | "production" | "both";
 
 export type QuizMode = "recognition" | "production" | "word";
 
+export type VocabSessionLength = 10 | 20 | "all" | "repasar";
+
 export interface QueueItem {
   char: CharWithRow;
   mode: QuizMode;

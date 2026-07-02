@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, RotateCcw, Lightbulb } from "lucide-react";
+import { ArrowLeft, RotateCcw } from "lucide-react";
 import AudioButton from "./AudioButton";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
@@ -10,6 +10,10 @@ import { playChime, playBuzz } from "../utils/audio";
 import VocabImage from "./VocabImage";
 import KanaChip from "./KanaChip";
 import WordSlots from "./WordSlots";
+import foxCalmImg from "../assets/character/fox-calm.png";
+import foxNeutralImg from "../assets/character/fox-neutral.png";
+import foxCelebratingImg from "../assets/character/fox-celebrating.png";
+import foxSadImg from "../assets/character/fox-sad.png";
 
 function toISODate(d: Date = new Date()): string {
   return [
@@ -32,7 +36,6 @@ interface Chip {
 interface SessionResult {
   word: VocabWord;
   correct: boolean;
-  hintUsed: boolean;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -91,10 +94,14 @@ export default function VocabularyGame({
   const [failCount, setFailCount] = useState(0);
   const [phase, setPhase] = useState<GamePhase>("playing");
   const [animClass, setAnimClass] = useState("");
-  const [hintUsed, setHintUsed] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
 
   const today = toISODate();
+
+  const foxPose =
+    phase === "correct" ? foxCelebratingImg :
+    phase === "wrong" || phase === "reveal" ? foxSadImg :
+    foxNeutralImg;
 
   // Build session queue on mount: due/new words first, then not-yet-due — always include all
   useEffect(() => {
@@ -122,12 +129,11 @@ export default function VocabularyGame({
     setSlots(Array(wordLen).fill(null));
     setSlotChipIds(Array(wordLen).fill(null));
     setFailCount(0);
-    setHintUsed(false);
     setPhase("playing");
     setAnimClass("");
   }
 
-  function recordResult(word: VocabWord, isCorrect: boolean, usedHint: boolean) {
+  function recordResult(word: VocabWord, isCorrect: boolean) {
     const key = vocabProgressKey("spell", word.hiragana);
     const prevP: ItemProgress = progress[key] ?? {
       box: 0,
@@ -138,14 +144,13 @@ export default function VocabularyGame({
 
     let newBox = prevP.box;
     let newNextDue = prevP.nextDue;
-    if (isCorrect && !usedHint) {
+    if (isCorrect) {
       newBox = Math.min(prevP.box + 1, INTERVALS.length - 1);
       newNextDue = addDays(today, INTERVALS[newBox]);
-    } else if (!isCorrect) {
+    } else {
       newBox = Math.max(prevP.box - 1, 0);
       newNextDue = today;
     }
-    // isCorrect && usedHint → neutral: box/nextDue stay the same
 
     const newP: ItemProgress = {
       box: newBox,
@@ -154,7 +159,7 @@ export default function VocabularyGame({
       correct: prevP.correct + (isCorrect ? 1 : 0),
     };
     onProgressUpdate({ [key]: newP });
-    setSessionResults((prev) => [...prev, { word, correct: isCorrect, hintUsed: usedHint }]);
+    setSessionResults((prev) => [...prev, { word, correct: isCorrect }]);
   }
 
   const currentWord = queue[queueIndex] ?? null;
@@ -175,7 +180,7 @@ export default function VocabularyGame({
   }
 
   const checkAnswer = useCallback(
-    (filledSlots: (string | null)[], word: VocabWord, currentFail: number, usedHint: boolean) => {
+    (filledSlots: (string | null)[], word: VocabWord, currentFail: number) => {
       const answer = filledSlots.join("");
       const isCorrect = answer === word.hiragana;
 
@@ -183,7 +188,7 @@ export default function VocabularyGame({
         playChime();
         triggerAnim("correct-flash", 600);
         setPhase("correct");
-        recordResult(word, true, usedHint);
+        recordResult(word, true);
         setTimeout(() => advanceToNext(), 1500);
       } else {
         playBuzz();
@@ -192,7 +197,7 @@ export default function VocabularyGame({
         if (newFail >= 2) {
           triggerAnim("error-shake", 500);
           setPhase("reveal");
-          recordResult(word, false, usedHint);
+          recordResult(word, false);
           setTimeout(() => advanceToNext(), 2500);
         } else {
           triggerAnim("error-shake", 500);
@@ -233,7 +238,7 @@ export default function VocabularyGame({
     setChips(newChips);
 
     if (newSlots.every((s) => s !== null)) {
-      checkAnswer(newSlots, currentWord, failCount, hintUsed);
+      checkAnswer(newSlots, currentWord, failCount);
     }
   }
 
@@ -272,20 +277,33 @@ export default function VocabularyGame({
 
   if (phase === "done" || queue.length === 0) {
     const missed = sessionResults.filter((r) => !r.correct);
+    const answered = sessionResults.length;
+    const correctCount = answered - missed.length;
+    const pct = answered > 0 ? Math.round((correctCount / answered) * 100) : 0;
+
     return (
       <div className="flex flex-col items-center gap-6 pt-8">
-        <div className="text-5xl">🎉</div>
+        {answered > 0 && (
+          <img
+            src={pct >= 80 ? foxCelebratingImg : foxCalmImg}
+            alt=""
+            className="w-24 h-24 object-contain"
+          />
+        )}
         <h2
           className="text-2xl font-bold text-stone-800"
           style={{ fontFamily: "'Shippori Mincho', serif" }}
         >
           Sesión completa
         </h2>
-        <p className="text-stone-500 text-sm">
-          {queue.length === 0
-            ? "No hay palabras disponibles."
-            : `Completaste ${queue.length} palabra${queue.length === 1 ? "" : "s"} de esta sesión.`}
-        </p>
+        {answered > 0 ? (
+          <div className="w-full max-w-xs rounded-xl bg-white border border-[#E0D8F8] p-5 text-center">
+            <span className="text-5xl font-bold text-[#7B4FD4]">{pct}%</span>
+            <p className="text-stone-500 text-sm mt-1">{correctCount} de {answered} correctas</p>
+          </div>
+        ) : (
+          <p className="text-stone-500 text-sm">No hay palabras disponibles.</p>
+        )}
         {missed.length > 0 && (
           <div className="w-full max-w-xs">
             <p className="text-xs font-medium text-stone-600 mb-2">Palabras falladas:</p>
@@ -294,7 +312,6 @@ export default function VocabularyGame({
                 <li key={i} className="flex items-center justify-between text-sm text-stone-600">
                   <span style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{r.word.hiragana}</span>
                   <span className="text-stone-400">{r.word.meaning}</span>
-                  {r.hintUsed && <span title="Usó pista">💡</span>}
                 </li>
               ))}
             </ul>
@@ -302,7 +319,8 @@ export default function VocabularyGame({
         )}
         <button
           onClick={onBack}
-          className="mt-4 px-8 py-3 rounded-xl bg-indigo-700 text-white font-semibold"
+          className="mt-4 px-8 py-3 rounded-xl text-white font-semibold"
+          style={{ background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
         >
           Volver
         </button>
@@ -320,18 +338,18 @@ export default function VocabularyGame({
   return (
     <div className="flex flex-col items-center gap-6">
       {/* Header */}
-      <div className="w-full flex items-center justify-between text-xs text-stone-500">
-        <button onClick={onBack} className="flex items-center gap-1 hover:text-stone-700">
+      <div className="w-full flex items-center justify-between text-xs text-[#8B7FA8]">
+        <button onClick={onBack} className="flex items-center gap-1 hover:opacity-70">
           <ArrowLeft size={14} /> Salir
         </button>
         <span>
           {queueIndex + 1} / {totalWords}
         </span>
       </div>
-      <div className="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-[#F0EDF8] rounded-full overflow-hidden">
         <div
-          className="h-full bg-indigo-700 transition-all"
-          style={{ width: `${progressPct}%` }}
+          className="h-full transition-all"
+          style={{ width: `${progressPct}%`, background: "linear-gradient(90deg, #7B4FD4, #9B7CE8)" }}
         />
       </div>
 
@@ -352,45 +370,38 @@ export default function VocabularyGame({
         <p className="text-stone-400 text-sm tracking-wide">{currentWord.romaji}</p>
       )}
 
-      {/* Hint button / meaning reveal */}
-      {phase === "playing" && !hintUsed && (
-        <button
-          onClick={() => setHintUsed(true)}
-          className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700"
-        >
-          <Lightbulb size={14} /> Ver pista 💡
-        </button>
-      )}
-      {hintUsed && phase === "playing" && (
-        <p className="text-xs text-amber-600">{currentWord.meaning}</p>
-      )}
+      {/* Significado: siempre visible para reforzar la asociación imagen–palabra */}
+      <p className="text-sm font-medium text-[#8B7FA8]">{currentWord.meaning}</p>
+
+      {/* Fox */}
+      <div className="w-full h-20 flex items-end justify-end pr-2 mb-1">
+        <img src={foxPose} alt="" className="w-20 h-20 object-contain transition-opacity" />
+      </div>
 
       {/* Word slots */}
       <WordSlots
         slots={slots}
         animClass={animClass}
+        status={phase === "correct" ? "correct" : phase === "wrong" || phase === "reveal" ? "wrong" : "idle"}
         onTapSlot={handleSlotTap}
       />
 
       {/* Phase feedback */}
       {phase === "correct" && (
-        <p className="text-emerald-600 font-semibold text-sm">
-          ✅ ¡Correcto! — {currentWord.meaning}
-        </p>
+        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto!</p>
       )}
       {phase === "wrong" && (
-        <p className="text-rose-600 font-semibold text-sm">❌ Inténtalo de nuevo</p>
+        <p className="text-[#C03A1E] font-semibold text-sm">❌ Inténtalo de nuevo</p>
       )}
       {phase === "reveal" && (
         <div className="text-center">
-          <p className="text-rose-600 font-semibold text-sm mb-1">❌ La respuesta era:</p>
+          <p className="text-[#C03A1E] font-semibold text-sm mb-1">❌ La respuesta era:</p>
           <p
             className="text-4xl"
             style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
           >
             {currentWord.hiragana}
           </p>
-          <p className="text-stone-400 text-sm mt-1">{currentWord.meaning}</p>
         </div>
       )}
 
