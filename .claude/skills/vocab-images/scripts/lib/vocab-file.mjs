@@ -47,6 +47,39 @@ export function markGenerated(fileText, hiragana, category, imagePath) {
   return lines.join("\n");
 }
 
+// Each category entry is authored as a single line, e.g.:
+//   { id: "numeros", label: "Números", emoji: "🔢" },
+// id is unique within VOCAB_CATEGORIES, unlike hiragana in VOCABULARY.
+export function findCategoryLine(fileText, categoryId) {
+  const lines = fileText.split("\n");
+  const idNeedle = `id: "${categoryId}"`;
+  const index = lines.findIndex((line) => line.includes(idNeedle));
+  if (index === -1) {
+    throw new Error(`Could not find VOCAB_CATEGORIES entry for id="${categoryId}"`);
+  }
+  return { lines, index };
+}
+
+// Marks a single category as having a generated image by rewriting its line
+// in place. Idempotent, same as markGenerated for words. `emoji` is left
+// untouched — it stays as the runtime fallback if the image fails to load.
+export function markCategoryGenerated(fileText, categoryId, image) {
+  const { lines, index } = findCategoryLine(fileText, categoryId);
+  let line = lines[index];
+
+  line = line.replace(/,\s*image:\s*"[^"]*"/, "");
+
+  const insertion = `, image: "${image}"`;
+  const closingBraceIndex = line.lastIndexOf("}");
+  if (closingBraceIndex === -1) {
+    throw new Error(`Unexpected line shape, no closing brace: ${line}`);
+  }
+  line = line.slice(0, closingBraceIndex) + insertion + " " + line.slice(closingBraceIndex);
+
+  lines[index] = line;
+  return lines.join("\n");
+}
+
 export function readVocabTsText() {
   return fs.readFileSync(VOCAB_TS_PATH, "utf8");
 }

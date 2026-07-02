@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "vocab:classify": "tsx .claude/skills/vocab-images/scripts/classify.mjs",
-    "vocab:generate-images": "node --env-file-if-exists=.env --import tsx .claude/skills/vocab-images/scripts/generate-images.mjs"
+    "vocab:generate-images": "node --env-file-if-exists=.env --import tsx .claude/skills/vocab-images/scripts/generate-images.mjs",
+    "vocab:classify-categories": "tsx .claude/skills/vocab-images/scripts/classify-categories.mjs",
+    "vocab:generate-category-images": "node --env-file-if-exists=.env --import tsx .claude/skills/vocab-images/scripts/generate-category-images.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.1",

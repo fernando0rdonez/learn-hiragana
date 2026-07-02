@@ -31,10 +31,12 @@ This is enforced two ways:
 
 - `reference/category-mapping.md` — category → visualType table (human-readable; the code copy is `scripts/lib/classify-rules.mjs`)
 - `reference/action-fewshot.md` — 24 approved actionPrompt examples used as few-shot context, plus a "flagged" list of verbs that need special handling
-- `.claude/prompts/{concrete,action,symbolic}.md` — the 3 validated prompt templates (outside this skill dir, shared/reusable)
+- `.claude/prompts/{concrete,action,symbolic,category}.md` — the 4 validated prompt templates (outside this skill dir, shared/reusable)
 - `scripts/classify.mjs` — detection + classification, writes `state/drafts.json`
 - `scripts/generate-images.mjs` — turns approved drafts into images (gated, see above)
 - `state/drafts.json` — working state, gitignored, one entry per pending/approved/generated word
+- `scripts/classify-categories.mjs` / `scripts/generate-category-images.mjs` — same gated flow, for `VOCAB_CATEGORIES` badge icons instead of per-word images (see "Category images" below)
+- `state/category-drafts.json` — working state for category badges, gitignored
 
 ## Workflow
 
@@ -113,6 +115,37 @@ records provenance (prompt, model, quality, timestamp, slug) in
 
 Requires `OPENAI_API_KEY` in the environment (see `example.env`) — never
 bundled to the client, only read server-side by this Node script.
+
+## Category images
+
+`VOCAB_CATEGORIES` (the category picker on the vocabulary setup screen) has
+its own, much smaller image flow — separate from the per-word workflow
+above, but gated by the same hard rule: never generate without explicit
+approval in the same turn.
+
+A category ("Verbos", "Preguntas") isn't a single concrete noun, so there's
+no auto-classification step — every entry needs a hand-authored `subject`
+(a short visual metaphor for the whole category, e.g. numeros → "three
+colorful blocks of increasing height"), same as the `symbolic` word type.
+
+1. `npm run vocab:classify-categories` — scans `VOCAB_CATEGORIES` for
+   entries missing `image`, seeds `state/category-drafts.json` with
+   `status: "pending_review"` and `subject: null`.
+2. Draft a `subject` for each pending entry yourself and present the full
+   list to the user for review — don't skip this even though there's no
+   few-shot reference file for categories yet.
+3. Only for entries the user explicitly approves in this turn, set
+   `status: "approved"` in `state/category-drafts.json`.
+4. `npm run vocab:generate-category-images -- --confirm` — builds each
+   prompt from `.claude/prompts/category.md` + the approved `subject`, saves
+   to `src/assets/vocab-images/category-<id>.png` (the `category-` prefix
+   keeps it out of the word-slug keyspace, e.g. `category-numeros` vs.
+   `numeros-ichi`), writes `image: "category-<id>"` back into the matching
+   `VOCAB_CATEGORIES` entry in `vocabulary.ts`, and records provenance in
+   the same `src/generated/vocab-image-meta.json` under a `category::<id>`
+   key. `emoji` is left untouched as the runtime fallback (see
+   `VocabSetupView.tsx`, which renders the image if present and falls back
+   to `emoji` otherwise).
 
 ## Notes
 

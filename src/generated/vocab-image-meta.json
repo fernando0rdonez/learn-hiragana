@@ -1391,5 +1391,145 @@
     "quality": "low",
     "generatedAt": "2026-07-01T21:12:05.881Z",
     "slug": "misc-ongaku"
+  },
+  "category::numeros": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of counting numbers, shown as three colorful blocks of increasing height lined up in a row, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:02:54.234Z",
+    "slug": "category-numeros"
+  },
+  "category::tiempo": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of time, shown as a round alarm clock with clock hands and a small motion swirl, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:03:19.553Z",
+    "slug": "category-tiempo"
+  },
+  "category::familia": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of family, shown as three simple standing figures of different heights holding hands: a tall adult, a shorter adult, and a small child, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:03:44.764Z",
+    "slug": "category-familia"
+  },
+  "category::comida": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of Japanese food, shown as a bento box with a rice ball, a vegetable piece, and chopsticks resting on top, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:04:09.483Z",
+    "slug": "category-comida"
+  },
+  "category::animales": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of animals, shown as a friendly fox and a small bird sitting side by side, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:04:35.596Z",
+    "slug": "category-animales"
+  },
+  "category::lugares": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of places, shown as a folded paper map with a location pin marker on it, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:05:00.415Z",
+    "slug": "category-lugares"
+  },
+  "category::transporte": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of transportation, shown as a small train car with round windows and wheels, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:05:23.163Z",
+    "slug": "category-transporte"
+  },
+  "category::objetos": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of everyday objects, shown as a backpack with a front pocket and a zipper pull, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:05:46.890Z",
+    "slug": "category-objetos"
+  },
+  "category::ropa": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of clothing, shown as a folded kimono-style garment on a wooden hanger, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:06:08.852Z",
+    "slug": "category-ropa"
+  },
+  "category::colores": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of colors, shown as an artist's palette with three dabs of different colored paint and a paintbrush, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:06:32.454Z",
+    "slug": "category-colores"
+  },
+  "category::naturaleza": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of nature, shown as a tree branch with leaves and a small blooming flower, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:06:56.228Z",
+    "slug": "category-naturaleza"
+  },
+  "category::cuerpo": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of the human body, shown as a simple standing figure silhouette with a heart icon over the chest, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:07:18.987Z",
+    "slug": "category-cuerpo"
+  },
+  "category::verbos": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of action and motion, shown as a running figure with a speed streak trailing behind, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:07:41.569Z",
+    "slug": "category-verbos"
+  },
+  "category::adjetivos": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of descriptive qualities, shown as a sparkling star shape with radiating light lines, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:08:04.620Z",
+    "slug": "category-adjetivos"
+  },
+  "category::saludos": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of greetings, shown as two hands waving toward each other, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:08:26.955Z",
+    "slug": "category-saludos"
+  },
+  "category::pronombres": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of people and identity, shown as a simple rounded person silhouette with a small speech bubble, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:08:52.004Z",
+    "slug": "category-pronombres"
+  },
+  "category::cantidades": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of quantities and measurement, shown as a ruler beside a small stack of measuring blocks of different sizes, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:09:14.808Z",
+    "slug": "category-cantidades"
+  },
+  "category::preguntas": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of questions, shown as a large rounded question-mark shape with a small dot beneath it, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:09:37.218Z",
+    "slug": "category-preguntas"
+  },
+  "category::casa": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of home, shown as a simple house with a pitched roof, a door, and one window, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:10:02.961Z",
+    "slug": "category-casa"
+  },
+  "category::misc": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of a cardboard box with its flaps open, containing several different small items of different colors inside, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-02T16:10:26.833Z",
+    "slug": "category-misc"
   }
 }

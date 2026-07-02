@@ -12,30 +12,31 @@ export interface VocabWord {
 export interface VocabCategory {
   id: string;
   label: string;
-  emoji: string;
+  emoji: string;       // fallback if the generated image is missing
+  image?: string;      // slug key into getVocabImageUrl() (src/vocabImages.ts), e.g. "category-numeros"
 }
 
 export const VOCAB_CATEGORIES: VocabCategory[] = [
-  { id: "numeros",    label: "Números",     emoji: "🔢" },
-  { id: "tiempo",     label: "Tiempo",      emoji: "⏰" },
-  { id: "familia",    label: "Familia",     emoji: "👨‍👩‍👧" },
-  { id: "comida",     label: "Comida",      emoji: "🍱" },
-  { id: "animales",   label: "Animales",    emoji: "🐾" },
-  { id: "lugares",    label: "Lugares",     emoji: "🗺️" },
-  { id: "transporte", label: "Transporte",  emoji: "🚗" },
-  { id: "objetos",    label: "Objetos",     emoji: "🎒" },
-  { id: "ropa",       label: "Ropa",        emoji: "👗" },
-  { id: "colores",    label: "Colores",     emoji: "🎨" },
-  { id: "naturaleza", label: "Naturaleza",  emoji: "🌿" },
-  { id: "cuerpo",     label: "Cuerpo",      emoji: "🫀" },
-  { id: "verbos",     label: "Verbos",      emoji: "⚡" },
-  { id: "adjetivos",  label: "Adjetivos",   emoji: "✨" },
-  { id: "saludos",    label: "Saludos",     emoji: "👋" },
-  { id: "pronombres", label: "Pronombres",  emoji: "👤" },
-  { id: "cantidades", label: "Cantidades",  emoji: "📏" },
-  { id: "preguntas",  label: "Preguntas",   emoji: "❓" },
-  { id: "casa",       label: "Casa",        emoji: "🏠" },
-  { id: "misc",       label: "Misceláneos", emoji: "🎯" },
+  { id: "numeros",    label: "Números",     emoji: "🔢" , image: "category-numeros" },
+  { id: "tiempo",     label: "Tiempo",      emoji: "⏰" , image: "category-tiempo" },
+  { id: "familia",    label: "Familia",     emoji: "👨‍👩‍👧" , image: "category-familia" },
+  { id: "comida",     label: "Comida",      emoji: "🍱" , image: "category-comida" },
+  { id: "animales",   label: "Animales",    emoji: "🐾" , image: "category-animales" },
+  { id: "lugares",    label: "Lugares",     emoji: "🗺️" , image: "category-lugares" },
+  { id: "transporte", label: "Transporte",  emoji: "🚗" , image: "category-transporte" },
+  { id: "objetos",    label: "Objetos",     emoji: "🎒" , image: "category-objetos" },
+  { id: "ropa",       label: "Ropa",        emoji: "👗" , image: "category-ropa" },
+  { id: "colores",    label: "Colores",     emoji: "🎨" , image: "category-colores" },
+  { id: "naturaleza", label: "Naturaleza",  emoji: "🌿" , image: "category-naturaleza" },
+  { id: "cuerpo",     label: "Cuerpo",      emoji: "🫀" , image: "category-cuerpo" },
+  { id: "verbos",     label: "Verbos",      emoji: "⚡" , image: "category-verbos" },
+  { id: "adjetivos",  label: "Adjetivos",   emoji: "✨" , image: "category-adjetivos" },
+  { id: "saludos",    label: "Saludos",     emoji: "👋" , image: "category-saludos" },
+  { id: "pronombres", label: "Pronombres",  emoji: "👤" , image: "category-pronombres" },
+  { id: "cantidades", label: "Cantidades",  emoji: "📏" , image: "category-cantidades" },
+  { id: "preguntas",  label: "Preguntas",   emoji: "❓" , image: "category-preguntas" },
+  { id: "casa",       label: "Casa",        emoji: "🏠" , image: "category-casa" },
+  { id: "misc",       label: "Misceláneos", emoji: "🎯" , image: "category-misc" },
 ];
 
 // 200 most common JLPT N5 words written entirely in hiragana

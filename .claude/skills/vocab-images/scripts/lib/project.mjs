@@ -20,6 +20,7 @@ export const PROMPTS_DIR = path.join(ROOT, ".claude", "prompts");
 export const SKILL_DIR = path.join(ROOT, ".claude", "skills", "vocab-images");
 export const STATE_DIR = path.join(SKILL_DIR, "state");
 export const DRAFTS_PATH = path.join(STATE_DIR, "drafts.json");
+export const CATEGORY_DRAFTS_PATH = path.join(STATE_DIR, "category-drafts.json");
 export const IMAGE_META_PATH = path.join(ROOT, "src", "generated", "vocab-image-meta.json");
 // Under src/assets (not public/) so Vite's asset pipeline handles hashing and
 // the GitHub Pages base path ('/learn-hiragana/') automatically via

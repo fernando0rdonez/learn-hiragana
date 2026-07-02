@@ -2,6 +2,7 @@ import { ArrowLeft, Play } from "lucide-react";
 import type { VocabWord } from "../vocabulary";
 import type { ViewName } from "../data";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
+import { getVocabImageUrl } from "../vocabImages";
 
 interface Props {
   selectedVocabCategory: string | null;
@@ -47,6 +48,7 @@ export default function VocabSetupView({
           {VOCAB_CATEGORIES.map((cat) => {
             const count = VOCABULARY.filter((w) => w.category === cat.id).length;
             const selected = selectedVocabCategory === cat.id;
+            const imageUrl = cat.image ? getVocabImageUrl(cat.image) : undefined;
             return (
               <button
                 key={cat.id}
@@ -57,7 +59,11 @@ export default function VocabSetupView({
                     : "border-stone-200 bg-white hover:border-stone-300"
                 }`}
               >
-                <div className="text-2xl">{cat.emoji}</div>
+                {imageUrl ? (
+                  <img src={imageUrl} alt={cat.label} className="w-9 h-9 rounded-lg object-cover" />
+                ) : (
+                  <div className="text-2xl">{cat.emoji}</div>
+                )}
                 <div className="text-sm font-medium text-stone-700 mt-1">{cat.label}</div>
                 <div className="text-xs text-stone-400">{count} palabras</div>
               </button>

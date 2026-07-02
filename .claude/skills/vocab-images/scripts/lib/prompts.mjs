@@ -6,6 +6,7 @@ const TEMPLATE_FILES = {
   concrete: "concrete.md",
   action: "action.md",
   symbolic: "symbolic.md",
+  category: "category.md",
 };
 
 // action.md's placeholder is "[ACTION_EN, e.g. "..."]" (includes an inline
@@ -15,6 +16,7 @@ const PLACEHOLDER_PATTERNS = {
   concrete: /\[WORD_EN\]/,
   action: /\[ACTION_EN.*?\]/s,
   symbolic: /\[CONCEPT_EN\]/,
+  category: /\[CATEGORY_EN\]/,
 };
 
 export function loadTemplate(visualType) {
