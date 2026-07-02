@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent, RefObject } from "react";
-import { Check, X, RotateCcw, ArrowLeft } from "lucide-react";
+import { RotateCcw, ArrowLeft, Volume2 } from "lucide-react";
 import type { CharWithRow, CharData, QuizMode, QueueItem, Feedback, MissedItem } from "../types";
 import type { ViewName } from "../data";
 import { WORDS } from "../words";
 import ProductionCard from "../components/ProductionCard";
-import AudioButton from "../components/AudioButton";
+import { useSpeech } from "../hooks/useSpeech";
 import foxCalmImg from "../assets/character/fox-calm.png";
+import foxNeutral from "../assets/character/fox-neutral.png";
+import foxCelebrating from "../assets/character/fox-celebrating.png";
+import foxSad from "../assets/character/fox-sad.png";
 
 interface Props {
   view: "quiz" | "preview" | "summary";
@@ -47,6 +50,13 @@ export default function QuizView({
   const queueLen    = sessionQueue.length;
   const questionNum = sessionIndexRef.current + 1;
   const uniqueMissed = new Set(missedList.map((m) => `${m.mode}:${m.kana}`)).size;
+  const { speak } = useSpeech();
+
+  const [foxPose, setFoxPose] = useState(foxNeutral);
+  useEffect(() => {
+    if (!feedback) { setFoxPose(foxNeutral); return; }
+    setFoxPose(feedback.status === "correct" ? foxCelebrating : foxSad);
+  }, [feedback]);
 
   if (view === "preview") {
     return <PreviewView previewRows={previewRows} pendingStartRef={pendingStartRef} setView={setView} />;
@@ -56,31 +66,52 @@ export default function QuizView({
     return (
       <div className="flex flex-col items-center">
         {/* Header */}
-        <div className="w-full flex items-center justify-between text-xs text-stone-500 mb-2">
-          <button onClick={() => setView("home")} className="flex items-center gap-1 hover:text-stone-700">
+        <div className="w-full flex items-center justify-between text-xs text-[#8B7FA8] mb-2">
+          <button onClick={() => setView("home")} className="flex items-center gap-1 hover:opacity-70">
             <ArrowLeft size={14} /> Salir
           </button>
           <span>Pregunta {Math.min(questionNum, queueLen)} de {queueLen}</span>
         </div>
-        <div className="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden mb-10">
-          <div className="h-full bg-indigo-700 transition-all" style={{ width: `${((questionNum - 1) / queueLen) * 100}%` }} />
+        <div className="w-full h-1.5 bg-[#F0EDF8] rounded-full overflow-hidden mb-10">
+          <div
+            className="h-full transition-all"
+            style={{
+              width: `${((questionNum - 1) / queueLen) * 100}%`,
+              background: "linear-gradient(90deg, #7B4FD4, #9B7CE8)",
+            }}
+          />
         </div>
 
         {currentMode !== "production" ? (
           /* ── Recognition / word: kana → romaji ── */
           <>
-            <div className="flex flex-col items-center mb-10 gap-3">
+            <div className="flex flex-col items-center gap-3">
               <div
                 key={current.kana + "-rec"}
-                className={`select-none ${currentMode === "word" ? "text-6xl" : "text-9xl"}`}
+                className={`select-none text-center leading-none text-[96px] transition-colors ${
+                  feedback?.status === "correct" ? "text-[#15C0A0]" :
+                  feedback?.status === "wrong"   ? "text-[#E85D3A]" :
+                  "text-[#1A1A2E]"
+                }`}
                 style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
               >
                 {current.kana}
               </div>
-              <AudioButton text={current.kana} />
+              <button
+                onClick={() => speak(current.kana)}
+                aria-label="Escuchar pronunciación"
+                className="flex items-center justify-center w-9 h-9 rounded-full border-2 border-[#F0EDF8] text-[#8B7FA8] hover:border-[#7B4FD4] transition-colors"
+              >
+                <Volume2 size={16} />
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="w-full flex flex-col items-center gap-4">
+            {/* Fox */}
+            <div className="w-full h-20 flex items-end justify-end pr-2 mb-1">
+              <img src={foxPose} alt="" className="w-20 h-20 object-contain transition-opacity" />
+            </div>
+
+            <form onSubmit={handleSubmit} className="w-full flex flex-col items-center gap-3">
               <input
                 ref={inputRef}
                 value={input}
@@ -89,54 +120,68 @@ export default function QuizView({
                 placeholder="romaji"
                 autoComplete="off"
                 autoCapitalize="off"
-                className={`w-48 text-center text-xl py-2 px-3 rounded-lg border-2 outline-none transition-colors ${
-                  feedback?.status === "correct" ? "border-emerald-400 bg-emerald-50" :
-                  feedback?.status === "wrong"   ? "border-rose-400 bg-rose-50" :
-                  "border-stone-300 focus:border-indigo-600"
+                className={`w-full h-[52px] text-center text-[18px] rounded-[14px] outline-none border-2 transition-colors ${
+                  feedback?.status === "correct" ? "border-[#15C0A0] bg-[#E3FAF3] text-[#0A6E54]" :
+                  feedback?.status === "wrong"   ? "border-[#E85D3A] bg-[#FFEEEA] text-[#C03A1E]" :
+                  "border-[#E0D8F8] focus:border-[#7B4FD4]"
                 }`}
               />
 
-              {feedback?.status === "correct" && (
-                <div className="stamp-pop flex items-center gap-2 text-emerald-700 font-semibold">
-                  <span className="rounded-full border-2 border-emerald-600 p-1"><Check size={16} /></span>
-                  ¡Correcto!{currentMode === "word" && ` — ${WORDS.find((w) => w.kana === current.kana)?.meaning}`}
-                </div>
-              )}
-              {feedback?.status === "wrong" && (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2 text-rose-700 font-semibold">
-                    <span className="rounded-full border-2 border-rose-600 p-1"><X size={16} /></span>
-                    Era "{feedback.expected}"{currentMode === "word" && ` — ${WORDS.find((w) => w.kana === current.kana)?.meaning}`}
-                  </div>
-                  <button ref={nextBtnRef} type="submit" className="px-6 py-3 rounded-lg bg-rose-700 text-white text-sm font-medium">
-                    Siguiente →
-                  </button>
-                </div>
-              )}
-              {!feedback && (
-                <button type="submit" className="px-6 py-3 rounded-lg bg-indigo-700 text-white text-sm font-medium">
-                  Comprobar
-                </button>
-              )}
+              <div className="flex items-center gap-2 text-sm min-h-[20px]">
+                {feedback?.status === "correct" && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[#15C0A0]" />
+                    <span className="text-[#0A6E54]">
+                      ¡Correcto!{currentMode === "word" && ` — ${WORDS.find((w) => w.kana === current.kana)?.meaning}`}
+                    </span>
+                  </>
+                )}
+                {feedback?.status === "wrong" && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[#E85D3A]" />
+                    <span className="text-[#C03A1E]">
+                      Era "{feedback.expected}"{currentMode === "word" && ` — ${WORDS.find((w) => w.kana === current.kana)?.meaning}`}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <button
+                ref={feedback?.status === "wrong" ? nextBtnRef : undefined}
+                type="submit"
+                className={`w-full h-[50px] rounded-[14px] text-white font-bold ${
+                  feedback?.status === "correct" ? "bg-[#15C0A0]" :
+                  feedback?.status === "wrong"   ? "bg-[#E85D3A]" :
+                  ""
+                }`}
+                style={feedback ? undefined : { background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
+              >
+                {feedback ? "Siguiente →" : "Comprobar"}
+              </button>
             </form>
           </>
         ) : (
           /* ── Production: romaji → kana ── */
-          <ProductionCard
-            key={current.kana + "-prod"}
-            romaji={current.romaji}
-            choices={choices}
-            correctKana={current.kana}
-            selectedKana={selectedOption}
-            feedback={feedback}
-            onSelect={handleProductionAnswer}
-            onNext={handleProductionNext}
-            nextBtnRef={nextBtnRef}
-          />
+          <>
+            <div className="w-full h-20 flex items-end justify-end pr-2 mb-1">
+              <img src={foxPose} alt="" className="w-20 h-20 object-contain transition-opacity" />
+            </div>
+            <ProductionCard
+              key={current.kana + "-prod"}
+              romaji={current.romaji}
+              choices={choices}
+              correctKana={current.kana}
+              selectedKana={selectedOption}
+              feedback={feedback}
+              onSelect={handleProductionAnswer}
+              onNext={handleProductionNext}
+              nextBtnRef={nextBtnRef}
+            />
+          </>
         )}
 
-        <p className="text-xs text-stone-400 mt-10">
-          {correctCount}/{sessionIndexRef.current} correctas en esta sesión
+        <p className="mt-10 text-center text-[11px] text-[#CCCCCC]">
+          {correctCount}/{sessionIndexRef.current} correctas
         </p>
       </div>
     );
