@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Check, X, RotateCcw, Play, ArrowLeft } from "lucide-react";
 import type {
   CharWithRow,
@@ -15,8 +15,8 @@ import ProductionCard from "./components/ProductionCard";
 import VocabularyGame from "./components/VocabularyGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
 import AudioButton from "./components/AudioButton";
-import { type ViewName, ROWS, DAKUTEN_ROWS, COMPOUND_ROWS, ALL_ROW_GROUPS, ALL_CHARS } from "./data";
-import { toISODate, buildQueueItems, charStatus } from "./utils";
+import { type ViewName, ALL_CHARS } from "./data";
+import { toISODate, buildQueueItems, charStatus, rowStats } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
@@ -24,6 +24,7 @@ import HomeView from "./views/HomeView";
 import StatsView from "./views/StatsView";
 import VocabSetupView from "./views/VocabSetupView";
 import PhoneticSetupView from "./views/PhoneticSetupView";
+import HiraganaSetupView from "./views/HiraganaSetupView";
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -38,8 +39,6 @@ export default function HiraganaTrainer() {
   const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set());
   const [selectedPhenomena, setSelectedPhenomena] = useState<Set<string>>(new Set());
   const [view, setView]             = useState<ViewName>("home");
-  const [setupSlide, setSetupSlide] = useState(0);
-  const setupTouchX = useRef<number | null>(null);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
   const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
@@ -107,20 +106,8 @@ export default function HiraganaTrainer() {
     });
   }
 
-  function rowStats(rowId: string) {
-    const chars = ALL_ROW_GROUPS.find((r) => r.id === rowId)?.chars ?? [];
-    let attempts = 0, correct = 0, tested = 0;
-    chars.forEach((ch) => {
-      const p = progress[`recognition:${ch.kana}`];
-      if (p && p.attempts > 0) { tested++; attempts += p.attempts; correct += p.correct; }
-    });
-    const accuracy = attempts > 0 ? Math.round((correct / attempts) * 100) : null;
-    const mastered  = chars.every((ch) => charStatus(progress, ch.kana) === "mastered");
-    return { accuracy, tested, total: chars.length, mastered };
-  }
-
   function isRowReady(rowId: string): boolean {
-    return selectedRows.has(rowId) || selectedDakutenRows.has(rowId) || selectedCompoundRows.has(rowId) || rowStats(rowId).mastered;
+    return selectedRows.has(rowId) || selectedDakutenRows.has(rowId) || selectedCompoundRows.has(rowId) || rowStats(progress, rowId).mastered;
   }
 
   function resetProgress() {
@@ -184,287 +171,21 @@ export default function HiraganaTrainer() {
 
         {/* ── Hiragana Setup ── */}
         {view === "hiraganaSetup" && (
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <button onClick={() => setView("home")} className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700">
-                <ArrowLeft size={14} /> Inicio
-              </button>
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif" }}>
-              Hiragana
-            </h2>
-
-            {/* Row selector — 3-slide carousel */}
-            <div className="mt-5">
-              <div className="flex gap-1 bg-stone-100 rounded-xl p-1 mb-4">
-                {[
-                  { label: "Básico",        idx: 0 },
-                  { label: "Dakuten",       idx: 1 },
-                  { label: "Combinaciones", idx: 2 },
-                ].map(({ label, idx }) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSetupSlide(idx)}
-                    className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition-all ${
-                      setupSlide === idx
-                        ? "bg-white text-indigo-700 shadow-sm"
-                        : "text-stone-500"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              <div
-                className="overflow-hidden"
-                onTouchStart={(e) => { setupTouchX.current = e.touches[0].clientX; }}
-                onTouchEnd={(e) => {
-                  if (setupTouchX.current === null) return;
-                  const dx = e.changedTouches[0].clientX - setupTouchX.current;
-                  setupTouchX.current = null;
-                  if (Math.abs(dx) < 40) return;
-                  if (dx < 0) setSetupSlide((p) => Math.min(p + 1, 2));
-                  if (dx > 0) setSetupSlide((p) => Math.max(p - 1, 0));
-                }}
-              >
-                <div
-                  className="flex transition-transform duration-300 ease-in-out items-start"
-                  style={{ transform: `translateX(-${setupSlide * 100}%)` }}
-                >
-                  {/* Slide 0 — Básico */}
-                  <div className="w-full flex-shrink-0">
-                    <div className="flex justify-end mb-2 gap-3 text-xs">
-                      <button onClick={() => setSelectedRows(new Set(ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
-                      <button onClick={() => setSelectedRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {ROWS.map((row) => {
-                        const stats    = rowStats(row.id);
-                        const selected = selectedRows.has(row.id);
-                        return (
-                          <button
-                            key={row.id}
-                            onClick={() => toggleRow(row.id)}
-                            className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                          >
-                            <div className="flex items-baseline justify-between">
-                              <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
-                              {stats.mastered ? (
-                                <Check size={16} className="text-emerald-600" />
-                              ) : stats.accuracy !== null ? (
-                                <span className="text-xs text-stone-500">{stats.accuracy}%</span>
-                              ) : (
-                                <span className="text-xs text-stone-400">nuevo</span>
-                              )}
-                            </div>
-                            <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Slide 1 — Dakuten y Handakuten */}
-                  <div className="w-full flex-shrink-0">
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-xs text-stone-400">Consonantes sonoras (が・ざ・だ・ば) y semi-sonoras (ぱ).</p>
-                      <div className="flex gap-3 text-xs ml-2 shrink-0">
-                        <button onClick={() => setSelectedDakutenRows(new Set(DAKUTEN_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
-                        <button onClick={() => setSelectedDakutenRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {DAKUTEN_ROWS.map((row) => {
-                        const stats    = rowStats(row.id);
-                        const selected = selectedDakutenRows.has(row.id);
-                        return (
-                          <button
-                            key={row.id}
-                            onClick={() => toggleDakutenRow(row.id)}
-                            className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                          >
-                            <div className="flex items-baseline justify-between">
-                              <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
-                              {stats.mastered ? (
-                                <Check size={16} className="text-emerald-600" />
-                              ) : stats.accuracy !== null ? (
-                                <span className="text-xs text-stone-500">{stats.accuracy}%</span>
-                              ) : (
-                                <span className="text-xs text-stone-400">nuevo</span>
-                              )}
-                            </div>
-                            <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Slide 2 — Combinaciones */}
-                  <div className="w-full flex-shrink-0">
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-xs text-stone-400">Sílabas compuestas con や・ゆ・よ pequeñas.</p>
-                      <div className="flex gap-3 text-xs ml-2 shrink-0">
-                        <button onClick={() => setSelectedCompoundRows(new Set(COMPOUND_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
-                        <button onClick={() => setSelectedCompoundRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {COMPOUND_ROWS.map((row) => {
-                        const stats    = rowStats(row.id);
-                        const selected = selectedCompoundRows.has(row.id);
-                        return (
-                          <button
-                            key={row.id}
-                            onClick={() => toggleCompoundRow(row.id)}
-                            className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                          >
-                            <div className="flex items-baseline justify-between">
-                              <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
-                              {stats.mastered ? (
-                                <Check size={16} className="text-emerald-600" />
-                              ) : stats.accuracy !== null ? (
-                                <span className="text-xs text-stone-500">{stats.accuracy}%</span>
-                              ) : (
-                                <span className="text-xs text-stone-400">nuevo</span>
-                              )}
-                            </div>
-                            <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Mode selector */}
-            <div className="mt-6">
-              <span className="text-sm font-medium text-stone-600">Modo</span>
-              <div className="flex gap-2 mt-2">
-                {(["recognition", "production", "both"] as SessionMode[]).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setSessionMode(m)}
-                    className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                      sessionMode === m
-                        ? "border-indigo-700 bg-indigo-50 text-indigo-700"
-                        : "border-stone-200 bg-white text-stone-600"
-                    }`}
-                  >
-                    {m === "recognition" ? "Reconocer" : m === "production" ? "Producir" : "Ambos"}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-stone-400 mt-1">
-                {sessionMode === "recognition" && "Ves el kana, escribes el romaji."}
-                {sessionMode === "production"  && "Ves el romaji, eliges el kana correcto."}
-                {sessionMode === "both"        && "Mezcla de reconocimiento y producción."}
-              </p>
-            </div>
-
-            {/* Session length */}
-            <div className="mt-6">
-              <span className="text-sm font-medium text-stone-600">Largo de la sesión</span>
-              <div className="flex gap-2 mt-2">
-                {([10, 20] as const).map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setSessionLength(n)}
-                    className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                      sessionLength === n
-                        ? "border-indigo-700 bg-indigo-50 text-indigo-700"
-                        : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setSessionLength("all")}
-                  className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                    sessionLength === "all"
-                      ? "border-indigo-700 bg-indigo-50 text-indigo-700"
-                      : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
-                  }`}
-                >
-                  Todas ({availableItems.length})
-                </button>
-              </div>
-            </div>
-
-            <button
-              disabled={availableItems.length === 0}
-              onClick={() => launchSession(poolForSelected, () => startSession(poolForSelected, sessionLength === "all" ? availableItems.length : Math.min(sessionLength, availableItems.length)))}
-              className="w-full mt-4 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
-            >
-              <Play size={18} /> Comenzar sesión
-            </button>
-
-            {/* Modos adicionales */}
-            <div className="mt-8 pt-6 border-t border-stone-200">
-              <span className="text-sm font-medium text-stone-600">Modos adicionales</span>
-              <p className="text-xs text-stone-400 mt-1">Usan las mismas filas que elegiste arriba.</p>
-            </div>
-
-            {/* Confused pairs */}
-            <div className="mt-4">
-              <span className="text-sm font-medium text-stone-600">Pares confusos</span>
-              <p className="text-xs text-stone-400 mt-1">Practica solo los kana que más se confunden entre sí.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                {CONFUSED_PAIRS.map((group, idx) => {
-                  const selected = selectedPairs.has(idx);
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => togglePair(idx)}
-                      className={`rounded-lg border-2 py-3 text-lg transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                      style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
-                    >
-                      {group.join("/")}
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                disabled={selectedPairs.size === 0 || availablePairItems.length === 0}
-                onClick={() => launchSession(poolForPairs, () => startSession(poolForPairs, availablePairItems.length, "recognition"))}
-                className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
-              >
-                <Play size={18} /> Pares confusos
-                {selectedPairs.size > 0 && ` (${availablePairItems.length})`}
-              </button>
-            </div>
-
-            {/* Sesión de romaji */}
-            <div className="mt-6">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-stone-600">Palabras en romaji</span>
-                <label className="flex items-center gap-2 text-xs text-stone-500 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={showRomaji}
-                    onChange={(e) => updateShowRomaji(e.target.checked)}
-                    className="accent-indigo-700"
-                  />
-                  Mostrar romaji
-                </label>
-              </div>
-              <p className="text-xs text-stone-400 mt-1">
-                Disponibles según las filas elegidas: {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
-              </p>
-              <button
-                disabled={availableWordItems.length === 0}
-                onClick={() => startWordSession(wordPool, availableWordItems.length)}
-                className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
-              >
-                <Play size={18} /> Sesión de romaji
-                {availableWordItems.length > 0 && ` (${availableWordItems.length})`}
-              </button>
-            </div>
-          </div>
+          <HiraganaSetupView
+            progress={progress}
+            selectedRows={selectedRows} toggleRow={toggleRow} setSelectedRows={setSelectedRows}
+            selectedDakutenRows={selectedDakutenRows} toggleDakutenRow={toggleDakutenRow} setSelectedDakutenRows={setSelectedDakutenRows}
+            selectedCompoundRows={selectedCompoundRows} toggleCompoundRow={toggleCompoundRow} setSelectedCompoundRows={setSelectedCompoundRows}
+            sessionMode={sessionMode} setSessionMode={setSessionMode}
+            sessionLength={sessionLength} setSessionLength={setSessionLength}
+            availableItems={availableItems} poolForSelected={poolForSelected}
+            launchSession={launchSession} startSession={startSession}
+            selectedPairs={selectedPairs} togglePair={togglePair}
+            poolForPairs={poolForPairs} availablePairItems={availablePairItems}
+            showRomaji={showRomaji} updateShowRomaji={updateShowRomaji}
+            wordPool={wordPool} availableWordItems={availableWordItems} startWordSession={startWordSession}
+            setView={setView}
+          />
         )}
 
         {/* ── Preview ── */}

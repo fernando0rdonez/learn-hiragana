@@ -1,7 +1,7 @@
 import type { CharWithRow, ProgressItems, SessionMode, QueueItem, CharStatus, QuizMode } from "./types";
 import { buildSessionQueue } from "./leitner";
 import { getConfusablePairs } from "./confusedPairs";
-import { ALL_CHARS } from "./data";
+import { ALL_ROW_GROUPS, ALL_CHARS } from "./data";
 import { WORDS } from "./words";
 
 export function toISODate(d: Date = new Date()): string {
@@ -99,4 +99,16 @@ export function charStatus(items: ProgressItems, kana: string): CharStatus {
   if (p.attempts >= 3 && acc >= 0.85) return "mastered";
   if (acc < 0.5) return "weak";
   return "developing";
+}
+
+export function rowStats(progress: ProgressItems, rowId: string) {
+  const chars = ALL_ROW_GROUPS.find((r) => r.id === rowId)?.chars ?? [];
+  let attempts = 0, correct = 0, tested = 0;
+  chars.forEach((ch) => {
+    const p = progress[`recognition:${ch.kana}`];
+    if (p && p.attempts > 0) { tested++; attempts += p.attempts; correct += p.correct; }
+  });
+  const accuracy = attempts > 0 ? Math.round((correct / attempts) * 100) : null;
+  const mastered  = chars.every((ch) => charStatus(progress, ch.kana) === "mastered");
+  return { accuracy, tested, total: chars.length, mastered };
 }
