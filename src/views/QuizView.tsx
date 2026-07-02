@@ -1,10 +1,12 @@
+import { useState } from "react";
 import type { FormEvent, RefObject } from "react";
-import { Check, X, RotateCcw, Play, ArrowLeft } from "lucide-react";
+import { Check, X, RotateCcw, ArrowLeft } from "lucide-react";
 import type { CharWithRow, CharData, QuizMode, QueueItem, Feedback, MissedItem } from "../types";
 import type { ViewName } from "../data";
 import { WORDS } from "../words";
 import ProductionCard from "../components/ProductionCard";
 import AudioButton from "../components/AudioButton";
+import foxCalmImg from "../assets/character/fox-calm.png";
 
 interface Props {
   view: "quiz" | "preview" | "summary";
@@ -47,56 +49,7 @@ export default function QuizView({
   const uniqueMissed = new Set(missedList.map((m) => `${m.mode}:${m.kana}`)).size;
 
   if (view === "preview") {
-    return (
-      <div className="flex flex-col items-center">
-        <div className="w-full flex items-center justify-between text-xs text-stone-500 mb-6">
-          <button onClick={() => setView("hiraganaSetup")} className="flex items-center gap-1 hover:text-stone-700">
-            <ArrowLeft size={14} /> Volver
-          </button>
-          <span>Repaso previo</span>
-        </div>
-
-        <p className="text-sm text-stone-500 mb-6 text-center">
-          {previewRows.length === 1
-            ? `La siguiente sesión incluye la fila "${previewRows[0].title.split("—")[1].trim()}", que es nueva para ti.`
-            : `La siguiente sesión incluye ${previewRows.length} filas nuevas para ti.`}
-        </p>
-
-        {previewRows.map((row) => (
-          <div key={row.id} className="w-full mb-8">
-            <p className="text-xs font-medium text-stone-400 uppercase tracking-widest mb-4 text-center">
-              {row.title.split("—")[1].trim()}
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {row.chars.map((ch) => (
-                <div key={ch.kana} className="flex flex-col items-center gap-1 w-16">
-                  <span className="text-5xl select-none" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
-                    {ch.kana}
-                  </span>
-                  <span className="text-sm text-stone-500">{ch.romaji}</span>
-                  <AudioButton text={ch.kana} className="mt-1" />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-
-        <div className="w-full flex flex-col gap-2 mt-4">
-          <button
-            onClick={() => { pendingStartRef.current?.(); }}
-            className="w-full py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2"
-          >
-            <Play size={18} /> Empezar test
-          </button>
-          <button
-            onClick={() => { pendingStartRef.current?.(); }}
-            className="w-full py-3 rounded-xl border-2 border-stone-300 text-stone-500 font-medium text-sm"
-          >
-            Ya me los sé, saltar repaso
-          </button>
-        </div>
-      </div>
-    );
+    return <PreviewView previewRows={previewRows} pendingStartRef={pendingStartRef} setView={setView} />;
   }
 
   if (view === "quiz" && current) {
@@ -228,6 +181,116 @@ export default function QuizView({
         </button>
         <button onClick={() => setView("stats")} className="w-full py-2 rounded-xl text-stone-500 text-sm">
           Ver estadísticas
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Preview: nuevos kana antes de practicar ─────────────────────────────────
+
+interface PreviewViewProps {
+  previewRows: { id: string; title: string; chars: CharData[] }[];
+  pendingStartRef: RefObject<(() => void) | null>;
+  setView: (v: ViewName) => void;
+}
+
+function speakKana(kana: string) {
+  const audio = new Audio(`/audio/${kana}.mp3`);
+  audio.play().catch(() => {
+    const utt = new SpeechSynthesisUtterance(kana);
+    utt.lang = "ja-JP";
+    utt.rate = 0.8;
+    speechSynthesis.speak(utt);
+  });
+}
+
+function PreviewView({ previewRows, pendingStartRef, setView }: PreviewViewProps) {
+  const [playedKanas, setPlayedKanas] = useState<Set<string>>(new Set());
+  const totalChars = previewRows.reduce((sum, r) => sum + r.chars.length, 0);
+
+  function handleTileClick(kana: string) {
+    setPlayedKanas((prev) => new Set(prev).add(kana));
+    speakKana(kana);
+  }
+
+  return (
+    <div className="flex flex-col" style={{ minHeight: "calc(100vh - 4rem)" }}>
+      {/* Header */}
+      <div className="flex items-start justify-between pb-4">
+        <button onClick={() => setView("hiraganaSetup")} className="flex items-center gap-1 text-sm mt-1" style={{ color: "#8B7FA8" }}>
+          <ArrowLeft size={14} /> Volver
+        </button>
+        <div className="text-right">
+          <div className="text-lg font-bold" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: "#1A1A2E" }}>Nuevos kana</div>
+          <div className="text-xs mt-0.5" style={{ color: "#8B7FA8" }}>Toca cada uno para escuchar</div>
+        </div>
+      </div>
+
+      {/* Hero strip */}
+      <div
+        className="relative rounded-2xl px-5 pt-4 text-white"
+        style={{ background: "linear-gradient(135deg, #7B4FD4, #5533A8)", overflow: "visible", paddingBottom: 80 }}
+      >
+        <div className="text-[11px] font-semibold tracking-wide uppercase opacity-80">Conoce antes de practicar</div>
+        <div className="mt-1 pr-16">
+          <span className="text-xl font-bold">{totalChars} caracteres</span>
+          <span className="text-sm opacity-80"> · {previewRows.length} fila{previewRows.length === 1 ? "" : "s"} nueva{previewRows.length === 1 ? "" : "s"}</span>
+        </div>
+        <img
+          src={foxCalmImg}
+          alt=""
+          className="absolute pointer-events-none select-none"
+          style={{ width: 95, height: 95, bottom: -28, right: 10, objectFit: "contain" }}
+        />
+      </div>
+
+      {/* Scroll area */}
+      <div className="flex-1 overflow-y-auto mt-6 pb-4">
+        {previewRows.map((row) => (
+          <div key={row.id} className="mb-6">
+            <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#8B7FA8" }}>
+              {row.title.split("—")[1].trim()}
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {row.chars.map((ch) => {
+                const played = playedKanas.has(ch.kana);
+                return (
+                  <button
+                    key={ch.kana}
+                    onClick={() => handleTileClick(ch.kana)}
+                    className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border-2 transition-colors"
+                    style={{
+                      paddingTop: 18, paddingBottom: 18,
+                      borderColor: played ? "#7B4FD4" : "#EEEEEE",
+                      backgroundColor: played ? "#EDE7F9" : "#FFFFFF",
+                    }}
+                  >
+                    <span
+                      className="select-none leading-none"
+                      style={{ fontFamily: "'Noto Sans JP', sans-serif", fontSize: 42, color: played ? "#5533A8" : "#1A1A2E" }}
+                    >
+                      {ch.kana}
+                    </span>
+                    <span className="text-xs" style={{ color: played ? "#7B4FD4" : "#8B7FA8" }}>{ch.romaji}</span>
+                    <span className="rounded-full" style={{ width: 7, height: 7, backgroundColor: played ? "#7B4FD4" : "#DDDDDD" }} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="sticky bottom-0 bg-white pt-2">
+        <p className="text-center" style={{ color: "#BBBBBB", fontSize: 11 }}>Escucha cada kana antes de continuar</p>
+        <button
+          onClick={() => { pendingStartRef.current?.(); }}
+          className="w-full mt-2 rounded-xl font-bold"
+          style={{ height: 42, border: "2px solid #E0D8F8", backgroundColor: "#FFFFFF", color: "#7B4FD4" }}
+        >
+          Continuar al test →
         </button>
       </div>
     </div>
