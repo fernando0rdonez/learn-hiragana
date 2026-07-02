@@ -142,7 +142,7 @@ export default function HiraganaTrainer() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-stone-100 text-stone-900 flex justify-center px-4 py-8">
+    <div className="min-h-screen bg-white text-stone-900 flex justify-center px-4 py-8">
       <style>{`
         @keyframes stampIn { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
         .stamp-pop { animation: stampIn 0.35s ease-out; }
