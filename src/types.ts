@@ -53,3 +53,15 @@ export interface QueueItem {
   char: CharWithRow;
   mode: QuizMode;
 }
+
+export interface Feedback {
+  status: "correct" | "wrong";
+  expected: string;
+}
+
+export interface MissedItem {
+  kana: string;
+  mode: QuizMode;
+  given: string;    // recognition/word: typed romaji · production: selected kana
+  expected: string; // recognition/word: correct romaji · production: correct kana
+}

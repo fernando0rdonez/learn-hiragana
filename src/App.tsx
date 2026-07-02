@@ -5,10 +5,11 @@ import type {
   ProgressItems, ItemProgress,
   CharStatus, SessionMode, QueueItem, QuizMode,
   StreakData, DailyProgress,
+  Feedback, MissedItem,
 } from "./types";
 import { loadProgress, saveProgress } from "./storage";
 import { advanceBox, buildSessionQueue } from "./leitner";
-import { getConfusablePairs, CONFUSED_PAIRS } from "./confusedPairs";
+import { CONFUSED_PAIRS } from "./confusedPairs";
 import { WORDS, getAvailableWords } from "./words";
 import { VOCABULARY, VOCAB_CATEGORIES } from "./vocabulary";
 import { recordCorrectAnswer, DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, DAILY_GOAL } from "./streak";
@@ -17,164 +18,8 @@ import ProductionCard from "./components/ProductionCard";
 import VocabularyGame from "./components/VocabularyGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
 import AudioButton from "./components/AudioButton";
-
-// ── Data ───────────────────────────────────────────────────────────────────
-
-const ROWS: { id: string; title: string; chars: CharData[] }[] = [
-  { id: "a",  title: "あ — fila A",      chars: [{ kana: "あ", romaji: "a" }, { kana: "い", romaji: "i" }, { kana: "う", romaji: "u" }, { kana: "え", romaji: "e" }, { kana: "お", romaji: "o" }] },
-  { id: "ka", title: "か — fila KA",     chars: [{ kana: "か", romaji: "ka" }, { kana: "き", romaji: "ki" }, { kana: "く", romaji: "ku" }, { kana: "け", romaji: "ke" }, { kana: "こ", romaji: "ko" }] },
-  { id: "sa", title: "さ — fila SA",     chars: [{ kana: "さ", romaji: "sa" }, { kana: "し", romaji: "shi" }, { kana: "す", romaji: "su" }, { kana: "せ", romaji: "se" }, { kana: "そ", romaji: "so" }] },
-  { id: "ta", title: "た — fila TA",     chars: [{ kana: "た", romaji: "ta" }, { kana: "ち", romaji: "chi" }, { kana: "つ", romaji: "tsu" }, { kana: "て", romaji: "te" }, { kana: "と", romaji: "to" }] },
-  { id: "na", title: "な — fila NA",     chars: [{ kana: "な", romaji: "na" }, { kana: "に", romaji: "ni" }, { kana: "ぬ", romaji: "nu" }, { kana: "ね", romaji: "ne" }, { kana: "の", romaji: "no" }] },
-  { id: "ha", title: "は — fila HA",     chars: [{ kana: "は", romaji: "ha" }, { kana: "ひ", romaji: "hi" }, { kana: "ふ", romaji: "fu" }, { kana: "へ", romaji: "he" }, { kana: "ほ", romaji: "ho" }] },
-  { id: "ma", title: "ま — fila MA",     chars: [{ kana: "ま", romaji: "ma" }, { kana: "み", romaji: "mi" }, { kana: "む", romaji: "mu" }, { kana: "め", romaji: "me" }, { kana: "も", romaji: "mo" }] },
-  { id: "ya", title: "や — fila YA",     chars: [{ kana: "や", romaji: "ya" }, { kana: "ゆ", romaji: "yu" }, { kana: "よ", romaji: "yo" }] },
-  { id: "ra", title: "ら — fila RA",     chars: [{ kana: "ら", romaji: "ra" }, { kana: "り", romaji: "ri" }, { kana: "る", romaji: "ru" }, { kana: "れ", romaji: "re" }, { kana: "ろ", romaji: "ro" }] },
-  { id: "wa", title: "わ — fila WA / N", chars: [{ kana: "わ", romaji: "wa" }, { kana: "を", romaji: "wo", accept: ["wo", "o"] }, { kana: "ん", romaji: "n" }] },
-];
-
-const DAKUTEN_ROWS: { id: string; title: string; chars: CharData[] }[] = [
-  { id: "ga", title: "が — fila GA", chars: [{ kana: "が", romaji: "ga" }, { kana: "ぎ", romaji: "gi" }, { kana: "ぐ", romaji: "gu" }, { kana: "げ", romaji: "ge" }, { kana: "ご", romaji: "go" }] },
-  { id: "za", title: "ざ — fila ZA", chars: [{ kana: "ざ", romaji: "za" }, { kana: "じ", romaji: "ji" }, { kana: "ず", romaji: "zu" }, { kana: "ぜ", romaji: "ze" }, { kana: "ぞ", romaji: "zo" }] },
-  { id: "da", title: "だ — fila DA", chars: [{ kana: "だ", romaji: "da" }, { kana: "ぢ", romaji: "di", accept: ["ji"] }, { kana: "づ", romaji: "du", accept: ["zu"] }, { kana: "で", romaji: "de" }, { kana: "ど", romaji: "do" }] },
-  { id: "ba", title: "ば — fila BA", chars: [{ kana: "ば", romaji: "ba" }, { kana: "び", romaji: "bi" }, { kana: "ぶ", romaji: "bu" }, { kana: "べ", romaji: "be" }, { kana: "ぼ", romaji: "bo" }] },
-  { id: "pa", title: "ぱ — fila PA", chars: [{ kana: "ぱ", romaji: "pa" }, { kana: "ぴ", romaji: "pi" }, { kana: "ぷ", romaji: "pu" }, { kana: "ぺ", romaji: "pe" }, { kana: "ぽ", romaji: "po" }] },
-];
-
-const COMPOUND_ROWS: { id: string; title: string; chars: CharData[] }[] = [
-  { id: "kya", title: "きゃ — KY", chars: [{ kana: "きゃ", romaji: "kya" }, { kana: "きゅ", romaji: "kyu" }, { kana: "きょ", romaji: "kyo" }] },
-  { id: "gya", title: "ぎゃ — GY", chars: [{ kana: "ぎゃ", romaji: "gya" }, { kana: "ぎゅ", romaji: "gyu" }, { kana: "ぎょ", romaji: "gyo" }] },
-  { id: "sha", title: "しゃ — SH", chars: [{ kana: "しゃ", romaji: "sha" }, { kana: "しゅ", romaji: "shu" }, { kana: "しょ", romaji: "sho" }] },
-  { id: "ja",  title: "じゃ — J",  chars: [{ kana: "じゃ", romaji: "ja" }, { kana: "じゅ", romaji: "ju" }, { kana: "じょ", romaji: "jo" }] },
-  { id: "cha", title: "ちゃ — CH", chars: [{ kana: "ちゃ", romaji: "cha" }, { kana: "ちゅ", romaji: "chu" }, { kana: "ちょ", romaji: "cho" }] },
-  { id: "nya", title: "にゃ — NY", chars: [{ kana: "にゃ", romaji: "nya" }, { kana: "にゅ", romaji: "nyu" }, { kana: "にょ", romaji: "nyo" }] },
-  { id: "hya", title: "ひゃ — HY", chars: [{ kana: "ひゃ", romaji: "hya" }, { kana: "ひゅ", romaji: "hyu" }, { kana: "ひょ", romaji: "hyo" }] },
-  { id: "bya", title: "びゃ — BY", chars: [{ kana: "びゃ", romaji: "bya" }, { kana: "びゅ", romaji: "byu" }, { kana: "びょ", romaji: "byo" }] },
-  { id: "pya", title: "ぴゃ — PY", chars: [{ kana: "ぴゃ", romaji: "pya" }, { kana: "ぴゅ", romaji: "pyu" }, { kana: "ぴょ", romaji: "pyo" }] },
-  { id: "mya", title: "みゃ — MY", chars: [{ kana: "みゃ", romaji: "mya" }, { kana: "みゅ", romaji: "myu" }, { kana: "みょ", romaji: "myo" }] },
-  { id: "rya", title: "りゃ — RY", chars: [{ kana: "りゃ", romaji: "rya" }, { kana: "りゅ", romaji: "ryu" }, { kana: "りょ", romaji: "ryo" }] },
-];
-
-const ALL_ROW_GROUPS = [...ROWS, ...DAKUTEN_ROWS, ...COMPOUND_ROWS];
-
-const ALL_CHARS: CharWithRow[] = ALL_ROW_GROUPS.flatMap((row) =>
-  row.chars.map((ch) => ({ ...ch, row: row.id }))
-);
-
-// ── Local types ────────────────────────────────────────────────────────────
-
-type ViewName = "home" | "hiraganaSetup" | "quiz" | "preview" | "summary" | "stats" | "vocabCategory" | "spellIt" | "phoneticSetup" | "phonetics";
-
-interface Feedback {
-  status: "correct" | "wrong";
-  expected: string;
-}
-
-interface MissedItem {
-  kana: string;
-  mode: QuizMode;
-  given: string;    // recognition/word: typed romaji · production: selected kana
-  expected: string; // recognition/word: correct romaji · production: correct kana
-}
-
-// ── Pure helpers ───────────────────────────────────────────────────────────
-
-export function toISODate(d: Date = new Date()): string {
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, "0"),
-    String(d.getDate()).padStart(2, "0"),
-  ].join("-");
-}
-
-function normalize(s: string): string {
-  return s.trim().toLowerCase();
-}
-
-function shuffleInPlace<T>(arr: T[]): void {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-}
-
-/**
- * Builds a session queue for the given mode.
- * "both" interleaves recognition + production items shuffled together.
- */
-function buildQueueItems(
-  pool: CharWithRow[],
-  mode: SessionMode,
-  length: number,
-  items: ProgressItems,
-  today: string,
-): QueueItem[] {
-  if (mode === "both") {
-    const half = Math.ceil(length / 2);
-    const rec  = buildSessionQueue(pool, items, "recognition", half, today).map((c): QueueItem => ({ char: c, mode: "recognition" }));
-    const prod = buildSessionQueue(pool, items, "production",  half, today).map((c): QueueItem => ({ char: c, mode: "production" }));
-    const combined = [...rec, ...prod];
-    shuffleInPlace(combined);
-    return combined.slice(0, length);
-  }
-  return buildSessionQueue(pool, items, mode, length, today).map((c): QueueItem => ({ char: c, mode }));
-}
-
-/**
- * Picks 4 answer choices for a production question:
- *   - 1 correct kana
- *   - ≥1 distractor from the confused-pairs list (when available in pool or ALL_CHARS)
- *   - remaining slots filled from pool, falling back to ALL_CHARS
- */
-function getChoices(kana: string, pool: CharWithRow[]): CharWithRow[] {
-  const correct = ALL_CHARS.find((c) => c.kana === kana)!;
-  const confusedKanas = getConfusablePairs(kana);
-
-  // Confused distractors — prefer pool, fallback to ALL_CHARS
-  const confusedChoices = confusedKanas
-    .map((k) => pool.find((c) => c.kana === k) ?? ALL_CHARS.find((c) => c.kana === k))
-    .filter((c): c is CharWithRow => !!c);
-  shuffleInPlace(confusedChoices);
-
-  // Other candidates: deduplicated, not the correct kana, not confused
-  const excluded = new Set([kana, ...confusedKanas]);
-  const others: CharWithRow[] = [];
-  for (const c of [...pool, ...ALL_CHARS]) {
-    if (!excluded.has(c.kana)) {
-      excluded.add(c.kana);
-      others.push(c);
-    }
-  }
-  shuffleInPlace(others);
-
-  const distractors: CharWithRow[] = [];
-  if (confusedChoices.length > 0) distractors.push(confusedChoices[0]);
-  for (const c of others) {
-    if (distractors.length >= 3) break;
-    distractors.push(c);
-  }
-
-  const result = [correct, ...distractors.slice(0, 3)];
-  shuffleInPlace(result);
-  return result;
-}
-
-function findQueueChar(kana: string, mode: QuizMode): CharWithRow | undefined {
-  if (mode === "word") {
-    const w = WORDS.find((entry) => entry.kana === kana);
-    return w ? { kana: w.kana, romaji: w.romaji, row: "word" } : undefined;
-  }
-  return ALL_CHARS.find((c) => c.kana === kana);
-}
-
-function charStatus(items: ProgressItems, kana: string): CharStatus {
-  const p = items[`recognition:${kana}`];
-  if (!p || p.attempts === 0) return "untested";
-  const acc = p.correct / p.attempts;
-  if (p.attempts >= 3 && acc >= 0.85) return "mastered";
-  if (acc < 0.5) return "weak";
-  return "developing";
-}
+import { type ViewName, ROWS, DAKUTEN_ROWS, COMPOUND_ROWS, ALL_ROW_GROUPS, ALL_CHARS } from "./data";
+import { toISODate, normalize, buildQueueItems, getChoices, findQueueChar, charStatus } from "./utils";
 
 const STATUS_STYLE: Record<CharStatus, string> = {
   untested:   "bg-stone-100 text-stone-400 border-stone-200",
