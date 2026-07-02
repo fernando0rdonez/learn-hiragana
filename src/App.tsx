@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { Check, X, RotateCcw, BarChart3, Play, Trash2, ArrowLeft, Flame, ChevronRight } from "lucide-react";
+import { Check, X, RotateCcw, Play, ArrowLeft } from "lucide-react";
 import type {
   CharWithRow,
   ProgressItems,
-  CharStatus, SessionMode,
+  SessionMode,
 } from "./types";
 import { buildSessionQueue } from "./leitner";
 import { CONFUSED_PAIRS } from "./confusedPairs";
 import { WORDS, getAvailableWords } from "./words";
 import { VOCABULARY, VOCAB_CATEGORIES } from "./vocabulary";
-import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, DAILY_GOAL } from "./streak";
+import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
 import { PHENOMENON_GROUPS, getAvailablePhonetics } from "./phonetics";
 import ProductionCard from "./components/ProductionCard";
 import VocabularyGame from "./components/VocabularyGame";
@@ -20,13 +20,8 @@ import { toISODate, buildQueueItems, charStatus } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
-
-const STATUS_STYLE: Record<CharStatus, string> = {
-  untested:   "bg-stone-100 text-stone-400 border-stone-200",
-  developing: "bg-amber-100 text-amber-800 border-amber-200",
-  weak:       "bg-rose-100 text-rose-700 border-rose-300",
-  mastered:   "bg-emerald-100 text-emerald-700 border-emerald-300",
-};
+import HomeView from "./views/HomeView";
+import StatsView from "./views/StatsView";
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -174,86 +169,15 @@ export default function HiraganaTrainer() {
 
         {/* ── Home ── */}
         {view === "home" && (
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif" }}>
-              ひらがな trainer
-            </h1>
-            {streak.current > 0 && (
-              <p className="text-stone-500 text-sm mt-1 flex items-center gap-1">
-                <Flame size={14} className="text-orange-500" />
-                Racha de {streak.current} día{streak.current === 1 ? "" : "s"}
-              </p>
-            )}
-
-            <div className="mt-8 flex flex-col gap-3">
-              {/* Hiragana card */}
-              <button
-                onClick={() => setView("hiraganaSetup")}
-                className="w-full text-left rounded-2xl border-2 border-stone-200 bg-white p-5 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl shrink-0" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>あ</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-lg font-semibold text-stone-800">Hiragana</div>
-                    <div className="text-sm text-stone-500 mt-0.5">{masteredTotal}/{ALL_CHARS.length} caracteres dominados</div>
-                    <div className="w-full h-1.5 bg-stone-200 rounded-full mt-2 overflow-hidden">
-                      <div className="h-full bg-indigo-700 rounded-full transition-all" style={{ width: `${(masteredTotal / ALL_CHARS.length) * 100}%` }} />
-                    </div>
-                  </div>
-                  <ChevronRight size={18} className="text-stone-400 shrink-0" />
-                </div>
-              </button>
-
-              {/* Vocabulario card */}
-              <button
-                onClick={() => setView("vocabCategory")}
-                className="w-full text-left rounded-2xl border-2 border-stone-200 bg-white p-5 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl shrink-0">🎴</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-lg font-semibold text-stone-800">Vocabulario</div>
-                    <div className="text-sm text-stone-500 mt-0.5">{VOCABULARY.length} palabras · {VOCAB_CATEGORIES.length} categorías</div>
-                  </div>
-                  <ChevronRight size={18} className="text-stone-400 shrink-0" />
-                </div>
-              </button>
-
-              {/* Fonética card */}
-              <button
-                onClick={() => setView("phoneticSetup")}
-                className="w-full text-left rounded-2xl border-2 border-stone-200 bg-white p-5 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl shrink-0">🎤</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-lg font-semibold text-stone-800">Fonética</div>
-                    <div className="text-sm text-stone-500 mt-0.5">Practica cómo suenan realmente las palabras</div>
-                  </div>
-                  <ChevronRight size={18} className="text-stone-400 shrink-0" />
-                </div>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between mt-8">
-              <button onClick={() => setView("stats")} className="text-sm text-stone-500 flex items-center gap-1 hover:text-stone-700">
-                <BarChart3 size={14} /> Ver estadísticas
-              </button>
-              {!resetConfirm ? (
-                <button onClick={() => setResetConfirm(true)} className="text-xs text-stone-400 hover:text-rose-600 flex items-center gap-1">
-                  <Trash2 size={12} /> Borrar progreso
-                </button>
-              ) : (
-                <button onClick={resetProgress} className="text-xs text-rose-600 font-medium">
-                  ¿Seguro? Confirmar borrado
-                </button>
-              )}
-            </div>
-
-            {saveError && (
-              <p className="text-xs text-rose-600 mt-3">No se pudo guardar el progreso. Tus respuestas de esta sesión podrían no persistir.</p>
-            )}
-          </div>
+          <HomeView
+            streak={streak}
+            masteredTotal={masteredTotal}
+            saveError={saveError}
+            resetConfirm={resetConfirm}
+            setResetConfirm={setResetConfirm}
+            resetProgress={resetProgress}
+            setView={setView}
+          />
         )}
 
         {/* ── Hiragana Setup ── */}
@@ -891,76 +815,14 @@ export default function HiraganaTrainer() {
 
         {/* ── Stats ── */}
         {view === "stats" && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold" style={{ fontFamily: "'Shippori Mincho', serif" }}>Tu progreso</h2>
-              <button onClick={() => setView("home")} className="text-sm text-indigo-700 flex items-center gap-1">
-                <ArrowLeft size={14} /> Inicio
-              </button>
-            </div>
-            <p className="text-stone-500 text-sm mb-4">{masteredTotal}/{ALL_CHARS.length} dominados (3+ intentos, ≥85% acierto)</p>
-            <p className="text-stone-500 text-sm mb-4">
-              Racha actual: {streak.current} día{streak.current === 1 ? "" : "s"} · Récord: {streak.longest} ·
-              Hoy: {Math.min(dailyProgress.date === today ? dailyProgress.correctToday : 0, DAILY_GOAL)}/{DAILY_GOAL} aciertos
-            </p>
-
-            {/* Basic rows */}
-            <div className="text-sm font-semibold text-stone-600 mb-2">Hiragana básico</div>
-            {ROWS.map((row) => (
-              <div key={row.id} className="mb-4">
-                <div className="text-xs font-medium text-stone-500 mb-1">{row.title}</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {row.chars.map((ch) => {
-                    const status = charStatus(progress, ch.kana);
-                    return (
-                      <div key={ch.kana} className={`w-12 h-14 rounded-lg border flex flex-col items-center justify-center ${STATUS_STYLE[status]}`}>
-                        <span className="text-lg" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{ch.kana}</span>
-                        <span className="text-[10px]">{ch.romaji}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-
-            {/* Dakuten / Handakuten rows */}
-            <div className="text-sm font-semibold text-stone-600 mt-2 mb-2">Dakuten y Handakuten</div>
-            {DAKUTEN_ROWS.map((row) => (
-              <div key={row.id} className="mb-4">
-                <div className="text-xs font-medium text-stone-500 mb-1">{row.title}</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {row.chars.map((ch) => {
-                    const status = charStatus(progress, ch.kana);
-                    return (
-                      <div key={ch.kana} className={`w-12 h-14 rounded-lg border flex flex-col items-center justify-center ${STATUS_STYLE[status]}`}>
-                        <span className="text-lg" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{ch.kana}</span>
-                        <span className="text-[10px]">{ch.romaji}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-
-            {/* Compound (拗音) rows */}
-            <div className="text-sm font-semibold text-stone-600 mt-2 mb-2">Combinaciones (拗音)</div>
-            {COMPOUND_ROWS.map((row) => (
-              <div key={row.id} className="mb-4">
-                <div className="text-xs font-medium text-stone-500 mb-1">{row.title}</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {row.chars.map((ch) => {
-                    const status = charStatus(progress, ch.kana);
-                    return (
-                      <div key={ch.kana} className={`w-12 h-14 rounded-lg border flex flex-col items-center justify-center ${STATUS_STYLE[status]}`}>
-                        <span className="text-lg" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{ch.kana}</span>
-                        <span className="text-[10px]">{ch.romaji}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
+          <StatsView
+            progress={progress}
+            streak={streak}
+            dailyProgress={dailyProgress}
+            masteredTotal={masteredTotal}
+            today={today}
+            setView={setView}
+          />
         )}
 
       </div>
