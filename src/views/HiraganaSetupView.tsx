@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Check, Play, ArrowLeft } from "lucide-react";
 import type { CharWithRow, ProgressItems, SessionMode, QueueItem } from "../types";
 import type { ViewName } from "../data";
-import { ROWS, DAKUTEN_ROWS, COMPOUND_ROWS } from "../data";
-import { rowStats } from "../utils";
+import { ROWS, DAKUTEN_ROWS, COMPOUND_ROWS, ALL_ROW_GROUPS, ALL_CHARS } from "../data";
+import { rowStats, buildQueueItems, toISODate } from "../utils";
 import { CONFUSED_PAIRS } from "../confusedPairs";
+import foxImg from "../assets/character/fox-neutral.png";
 
 interface Props {
   progress: ProgressItems;
@@ -37,6 +38,52 @@ interface Props {
   setView: (v: ViewName) => void;
 }
 
+// ── Design tokens (mismo sistema que HomeView) ──────────────────────────────
+
+const PURPLE       = "#7B4FD4";
+const PURPLE_DARK   = "#5533A8";
+const PURPLE_LIGHT  = "#EDE7F9";
+const CORAL        = "#E85D3A";
+const CORAL_LIGHT   = "#FFEEEA";
+const CORAL_DARK    = "#C03A1E";
+const BORDER        = "#EEEEEE";
+const TEXT_MAIN     = "#1A1A2E";
+const TEXT_SECOND   = "#8B7FA8";
+const TEXT_MUTED    = "#AAAAAA";
+
+type TabId = "basic" | "dakuten" | "compound";
+
+const TAB_LABEL: Record<TabId, string> = { basic: "Básico", dakuten: "Dakuten", compound: "Combinaciones" };
+const TAB_ROWS: Record<TabId, typeof ROWS> = { basic: ROWS, dakuten: DAKUTEN_ROWS, compound: COMPOUND_ROWS };
+
+const MODE_LABEL: Record<SessionMode, string> = { recognition: "Reconocer", production: "Producir", both: "Ambos" };
+const MODE_SUBTITLE: Record<SessionMode, string> = {
+  recognition: "Ves el kana, escribes el romaji.",
+  production: "Ves el romaji, produces el kana.",
+  both: "Mezcla de ambos modos.",
+};
+
+const LAST_SESSION_KEY = "hiragana_last_session";
+
+interface LastSession {
+  rowIds: string[];
+  tab: TabId;
+  mode: SessionMode;
+  length: 10 | 20 | "all";
+}
+
+function isLastSession(v: unknown): v is LastSession {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  return Array.isArray(o.rowIds) && (o.tab === "basic" || o.tab === "dakuten" || o.tab === "compound")
+    && (o.mode === "recognition" || o.mode === "production" || o.mode === "both")
+    && (o.length === 10 || o.length === 20 || o.length === "all");
+}
+
+function shortRowLabel(title: string): string {
+  return title.includes("—") ? title.split("—")[1].trim() : title;
+}
+
 export default function HiraganaSetupView({
   progress,
   selectedRows, toggleRow, setSelectedRows,
@@ -52,287 +99,316 @@ export default function HiraganaSetupView({
   wordPool, availableWordItems, startWordSession,
   setView,
 }: Props) {
-  const [setupSlide, setSetupSlide] = useState(0);
-  const setupTouchX = useRef<number | null>(null);
+  const [activeTab, setActiveTab] = useState<TabId>("basic");
+  const [lastSession] = useState<LastSession | null>(() => {
+    const raw = localStorage.getItem(LAST_SESSION_KEY);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      return isLastSession(parsed) ? parsed : null;
+    } catch {
+      return null; // valor corrupto en localStorage
+    }
+  });
+
+  const activeRows = TAB_ROWS[activeTab];
+  const activeSelected =
+    activeTab === "basic" ? selectedRows : activeTab === "dakuten" ? selectedDakutenRows : selectedCompoundRows;
+  const setActiveSelected =
+    activeTab === "basic" ? setSelectedRows : activeTab === "dakuten" ? setSelectedDakutenRows : setSelectedCompoundRows;
+  const toggleActiveRow =
+    activeTab === "basic" ? toggleRow : activeTab === "dakuten" ? toggleDakutenRow : toggleCompoundRow;
+  const allActiveSelected = activeRows.length > 0 && activeSelected.size === activeRows.length;
+
+  const totalSelectedRows = selectedRows.size + selectedDakutenRows.size + selectedCompoundRows.size;
+  const allPairsSelected = selectedPairs.size === CONFUSED_PAIRS.length;
+
+  function toggleSelectAllActive() {
+    setActiveSelected(allActiveSelected ? new Set() : new Set(activeRows.map((r) => r.id)));
+  }
+
+  function toggleAllPairs() {
+    CONFUSED_PAIRS.forEach((_, idx) => {
+      if (allPairsSelected === selectedPairs.has(idx)) togglePair(idx);
+    });
+  }
+
+  function handleStartSession() {
+    localStorage.setItem(LAST_SESSION_KEY, JSON.stringify({
+      rowIds: [...activeSelected],
+      tab: activeTab,
+      mode: sessionMode,
+      length: sessionLength,
+    } satisfies LastSession));
+    launchSession(poolForSelected, () =>
+      startSession(poolForSelected, sessionLength === "all" ? availableItems.length : Math.min(sessionLength, availableItems.length))
+    );
+  }
+
+  function handleContinue() {
+    if (!lastSession) return;
+    setActiveTab(lastSession.tab);
+    const setter =
+      lastSession.tab === "basic" ? setSelectedRows : lastSession.tab === "dakuten" ? setSelectedDakutenRows : setSelectedCompoundRows;
+    setter(new Set(lastSession.rowIds));
+    setSessionMode(lastSession.mode);
+    setSessionLength(lastSession.length);
+
+    const pool  = ALL_CHARS.filter((c) => lastSession.rowIds.includes(c.row));
+    const today = toISODate();
+    const items = buildQueueItems(pool, lastSession.mode, pool.length * 2, progress, today);
+    const length = lastSession.length === "all" ? items.length : Math.min(lastSession.length, items.length);
+    if (length === 0) return;
+    launchSession(pool, () => startSession(pool, length, lastSession.mode));
+  }
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => setView("home")} className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700">
+      <div className="flex items-center gap-3 mb-4">
+        <button onClick={() => setView("home")} className="flex items-center gap-1 text-sm hover:opacity-70" style={{ color: TEXT_SECOND }}>
           <ArrowLeft size={14} /> Inicio
         </button>
       </div>
-      <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif" }}>
+      <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: TEXT_MAIN }}>
         Hiragana
       </h2>
 
-      {/* Row selector — 3-slide carousel */}
-      <div className="mt-5">
-        <div className="flex gap-1 bg-stone-100 rounded-xl p-1 mb-4">
-          {[
-            { label: "Básico",        idx: 0 },
-            { label: "Dakuten",       idx: 1 },
-            { label: "Combinaciones", idx: 2 },
-          ].map(({ label, idx }) => (
+      {/* ── Última sesión ── */}
+      {lastSession && (
+        <div
+          className="relative rounded-3xl p-5 pb-7 mt-5 text-white shadow-lg"
+          style={{ background: `linear-gradient(135deg, ${PURPLE}, ${PURPLE_DARK})`, overflow: "visible" }}
+        >
+          <div className="text-[11px] font-semibold tracking-wide uppercase opacity-80">Última sesión</div>
+          <div className="flex flex-wrap gap-1.5 mt-2 pr-14">
+            {lastSession.rowIds.map((id) => {
+              const row = ALL_ROW_GROUPS.find((r) => r.id === id);
+              if (!row) return null;
+              return (
+                <span key={id} className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/20">
+                  {shortRowLabel(row.title)}
+                </span>
+              );
+            })}
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/20">{MODE_LABEL[lastSession.mode]}</span>
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/20">
+              ×{lastSession.length === "all" ? "Todas" : lastSession.length}
+            </span>
+          </div>
+          <button
+            onClick={handleContinue}
+            className="mt-3 flex items-center gap-2 bg-white rounded-xl px-4 py-2.5 text-sm font-semibold"
+            style={{ color: PURPLE_DARK }}
+          >
+            <Play size={14} /> Continuar
+          </button>
+          <img
+            src={foxImg}
+            alt=""
+            className="absolute pointer-events-none select-none"
+            style={{ width: 60, height: "auto", bottom: -14, right: 14, zIndex: 2 }}
+          />
+        </div>
+      )}
+
+      {/* ── Configurar sesión ── */}
+      <div className="mt-8">
+        <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Configurar sesión</div>
+
+        <div className="flex gap-1 rounded-xl p-1 mt-3" style={{ backgroundColor: "#F5F3FF" }}>
+          {(Object.keys(TAB_LABEL) as TabId[]).map((tab) => (
             <button
-              key={idx}
-              onClick={() => setSetupSlide(idx)}
-              className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition-all ${
-                setupSlide === idx
-                  ? "bg-white text-indigo-700 shadow-sm"
-                  : "text-stone-500"
-              }`}
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-1.5 text-xs rounded-lg font-semibold transition-all ${activeTab === tab ? "bg-white shadow-sm" : ""}`}
+              style={{ color: activeTab === tab ? PURPLE_DARK : TEXT_SECOND }}
             >
-              {label}
+              {TAB_LABEL[tab]}
             </button>
           ))}
         </div>
 
-        <div
-          className="overflow-hidden"
-          onTouchStart={(e) => { setupTouchX.current = e.touches[0].clientX; }}
-          onTouchEnd={(e) => {
-            if (setupTouchX.current === null) return;
-            const dx = e.changedTouches[0].clientX - setupTouchX.current;
-            setupTouchX.current = null;
-            if (Math.abs(dx) < 40) return;
-            if (dx < 0) setSetupSlide((p) => Math.min(p + 1, 2));
-            if (dx > 0) setSetupSlide((p) => Math.max(p - 1, 0));
-          }}
-        >
-          <div
-            className="flex transition-transform duration-300 ease-in-out items-start"
-            style={{ transform: `translateX(-${setupSlide * 100}%)` }}
-          >
-            {/* Slide 0 — Básico */}
-            <div className="w-full flex-shrink-0">
-              <div className="flex justify-end mb-2 gap-3 text-xs">
-                <button onClick={() => setSelectedRows(new Set(ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
-                <button onClick={() => setSelectedRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {ROWS.map((row) => {
-                  const stats    = rowStats(progress, row.id);
-                  const selected = selectedRows.has(row.id);
-                  return (
-                    <button
-                      key={row.id}
-                      onClick={() => toggleRow(row.id)}
-                      className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                    >
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
-                        {stats.mastered ? (
-                          <Check size={16} className="text-emerald-600" />
-                        ) : stats.accuracy !== null ? (
-                          <span className="text-xs text-stone-500">{stats.accuracy}%</span>
-                        ) : (
-                          <span className="text-xs text-stone-400">nuevo</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Slide 1 — Dakuten y Handakuten */}
-            <div className="w-full flex-shrink-0">
-              <div className="flex justify-between items-start mb-2">
-                <p className="text-xs text-stone-400">Consonantes sonoras (が・ざ・だ・ば) y semi-sonoras (ぱ).</p>
-                <div className="flex gap-3 text-xs ml-2 shrink-0">
-                  <button onClick={() => setSelectedDakutenRows(new Set(DAKUTEN_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
-                  <button onClick={() => setSelectedDakutenRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {DAKUTEN_ROWS.map((row) => {
-                  const stats    = rowStats(progress, row.id);
-                  const selected = selectedDakutenRows.has(row.id);
-                  return (
-                    <button
-                      key={row.id}
-                      onClick={() => toggleDakutenRow(row.id)}
-                      className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                    >
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
-                        {stats.mastered ? (
-                          <Check size={16} className="text-emerald-600" />
-                        ) : stats.accuracy !== null ? (
-                          <span className="text-xs text-stone-500">{stats.accuracy}%</span>
-                        ) : (
-                          <span className="text-xs text-stone-400">nuevo</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Slide 2 — Combinaciones */}
-            <div className="w-full flex-shrink-0">
-              <div className="flex justify-between items-start mb-2">
-                <p className="text-xs text-stone-400">Sílabas compuestas con や・ゆ・よ pequeñas.</p>
-                <div className="flex gap-3 text-xs ml-2 shrink-0">
-                  <button onClick={() => setSelectedCompoundRows(new Set(COMPOUND_ROWS.map((r) => r.id)))} className="text-indigo-700 hover:underline">Todas</button>
-                  <button onClick={() => setSelectedCompoundRows(new Set())} className="text-stone-400 hover:underline">Limpiar</button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {COMPOUND_ROWS.map((row) => {
-                  const stats    = rowStats(progress, row.id);
-                  const selected = selectedCompoundRows.has(row.id);
-                  return (
-                    <button
-                      key={row.id}
-                      onClick={() => toggleCompoundRow(row.id)}
-                      className={`text-left rounded-xl border-2 p-3 transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                    >
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{row.chars[0].kana}</span>
-                        {stats.mastered ? (
-                          <Check size={16} className="text-emerald-600" />
-                        ) : stats.accuracy !== null ? (
-                          <span className="text-xs text-stone-500">{stats.accuracy}%</span>
-                        ) : (
-                          <span className="text-xs text-stone-400">nuevo</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-stone-500 mt-1">{row.title.split("—")[1].trim()}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center justify-between mt-4 mb-2">
+          <span className="text-xs" style={{ color: TEXT_MUTED }}>Toca para seleccionar</span>
+          <button onClick={toggleSelectAllActive} className="text-xs font-semibold" style={{ color: PURPLE }}>
+            {allActiveSelected ? "Limpiar" : "Seleccionar todas"}
+          </button>
         </div>
-      </div>
 
-      {/* Mode selector */}
-      <div className="mt-6">
-        <span className="text-sm font-medium text-stone-600">Modo</span>
-        <div className="flex gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2">
+          {activeRows.map((row) => {
+            const stats      = rowStats(progress, row.id);
+            const isSelected = activeSelected.has(row.id);
+            const badge = stats.mastered
+              ? { label: `${stats.accuracy}%`, bg: "#E3FAF3", color: "#0E8F76" }
+              : stats.tested > 0
+              ? { label: "aprendiendo", bg: "#FFF4E5", color: "#B9790A" }
+              : { label: "nuevo", bg: "#F5F5F5", color: TEXT_MUTED };
+
+            return (
+              <button
+                key={row.id}
+                onClick={() => toggleActiveRow(row.id)}
+                className={`relative text-left rounded-2xl border-2 p-3 transition-colors ${!isSelected ? "hover:border-[#C9B8F0] hover:bg-[#FAF8FF]" : ""}`}
+                style={isSelected
+                  ? { backgroundColor: PURPLE_LIGHT, borderColor: PURPLE, boxShadow: "0 4px 14px rgba(123,79,212,0.18)" }
+                  : { backgroundColor: "#FFFFFF", borderColor: BORDER }
+                }
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-2xl" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: isSelected ? PURPLE_DARK : TEXT_MAIN }}>
+                    {row.chars[0].kana}
+                  </span>
+                  {isSelected ? (
+                    <span className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: PURPLE }}>
+                      <Check size={12} className="text-white" strokeWidth={3} />
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap" style={{ backgroundColor: badge.bg, color: badge.color }}>
+                      {badge.label}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs mt-1" style={{ color: isSelected ? PURPLE_DARK : TEXT_SECOND }}>
+                  {shortRowLabel(row.title)}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Modo */}
+        <div className="flex gap-2 mt-5">
           {(["recognition", "production", "both"] as SessionMode[]).map((m) => (
             <button
               key={m}
               onClick={() => setSessionMode(m)}
-              className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                sessionMode === m
-                  ? "border-indigo-700 bg-indigo-50 text-indigo-700"
-                  : "border-stone-200 bg-white text-stone-600"
-              }`}
+              className="flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors"
+              style={sessionMode === m
+                ? { borderColor: PURPLE, backgroundColor: PURPLE_LIGHT, color: PURPLE_DARK }
+                : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+              }
             >
-              {m === "recognition" ? "Reconocer" : m === "production" ? "Producir" : "Ambos"}
+              {MODE_LABEL[m]}
             </button>
           ))}
         </div>
-        <p className="text-xs text-stone-400 mt-1">
-          {sessionMode === "recognition" && "Ves el kana, escribes el romaji."}
-          {sessionMode === "production"  && "Ves el romaji, eliges el kana correcto."}
-          {sessionMode === "both"        && "Mezcla de reconocimiento y producción."}
+        <p className="text-xs mt-1.5" style={{ color: TEXT_MUTED }}>{MODE_SUBTITLE[sessionMode]}</p>
+
+        {/* Preguntas */}
+        <div className="flex items-center justify-between mt-5">
+          <span className="text-sm font-medium" style={{ color: TEXT_MAIN }}>Preguntas</span>
+          <div className="flex gap-2">
+            {([10, 20] as const).map((n) => (
+              <button
+                key={n}
+                onClick={() => setSessionLength(n)}
+                className="px-4 py-1.5 rounded-full border-2 text-sm font-medium transition-colors"
+                style={sessionLength === n
+                  ? { borderColor: PURPLE, backgroundColor: PURPLE_LIGHT, color: PURPLE_DARK }
+                  : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+                }
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              onClick={() => setSessionLength("all")}
+              className="px-4 py-1.5 rounded-full border-2 text-sm font-medium transition-colors"
+              style={sessionLength === "all"
+                ? { borderColor: PURPLE, backgroundColor: PURPLE_LIGHT, color: PURPLE_DARK }
+                : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+              }
+            >
+              Todas ({availableItems.length})
+            </button>
+          </div>
+        </div>
+
+        <button
+          disabled={availableItems.length === 0}
+          onClick={handleStartSession}
+          className="w-full mt-6 py-3.5 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+          style={{ backgroundColor: PURPLE }}
+        >
+          <Play size={16} /> Comenzar sesión
+        </button>
+        <p className="text-center text-xs mt-2" style={{ color: TEXT_MUTED }}>
+          {totalSelectedRows} fila{totalSelectedRows === 1 ? "" : "s"} seleccionada{totalSelectedRows === 1 ? "" : "s"} · {poolForSelected.length} caracteres
         </p>
       </div>
 
-      {/* Session length */}
-      <div className="mt-6">
-        <span className="text-sm font-medium text-stone-600">Largo de la sesión</span>
-        <div className="flex gap-2 mt-2">
-          {([10, 20] as const).map((n) => (
-            <button
-              key={n}
-              onClick={() => setSessionLength(n)}
-              className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                sessionLength === n
-                  ? "border-indigo-700 bg-indigo-50 text-indigo-700"
-                  : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
-              }`}
-            >
-              {n}
-            </button>
-          ))}
-          <button
-            onClick={() => setSessionLength("all")}
-            className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-              sessionLength === "all"
-                ? "border-indigo-700 bg-indigo-50 text-indigo-700"
-                : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
-            }`}
-          >
-            Todas ({availableItems.length})
+      <div className="h-px my-8" style={{ backgroundColor: "#F5F3FF" }} />
+
+      {/* ── Pares confusos ── */}
+      <div>
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-base font-semibold" style={{ color: TEXT_MAIN }}>Pares confusos</h3>
+            <p className="text-xs mt-0.5" style={{ color: TEXT_MUTED }}>Los kana que más se confunden</p>
+          </div>
+          <button onClick={toggleAllPairs} className="text-xs font-semibold shrink-0" style={{ color: CORAL }}>
+            {allPairsSelected ? "Limpiar" : "Todos"}
           </button>
         </div>
-      </div>
 
-      <button
-        disabled={availableItems.length === 0}
-        onClick={() => launchSession(poolForSelected, () => startSession(poolForSelected, sessionLength === "all" ? availableItems.length : Math.min(sessionLength, availableItems.length)))}
-        className="w-full mt-4 py-3 rounded-xl bg-indigo-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
-      >
-        <Play size={18} /> Comenzar sesión
-      </button>
-
-      {/* Modos adicionales */}
-      <div className="mt-8 pt-6 border-t border-stone-200">
-        <span className="text-sm font-medium text-stone-600">Modos adicionales</span>
-        <p className="text-xs text-stone-400 mt-1">Usan las mismas filas que elegiste arriba.</p>
-      </div>
-
-      {/* Confused pairs */}
-      <div className="mt-4">
-        <span className="text-sm font-medium text-stone-600">Pares confusos</span>
-        <p className="text-xs text-stone-400 mt-1">Practica solo los kana que más se confunden entre sí.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+        <div className="grid grid-cols-3 gap-2 mt-3">
           {CONFUSED_PAIRS.map((group, idx) => {
-            const selected = selectedPairs.has(idx);
+            const isSelected = selectedPairs.has(idx);
             return (
               <button
                 key={idx}
                 onClick={() => togglePair(idx)}
-                className={`rounded-lg border-2 py-3 text-lg transition-colors ${selected ? "border-indigo-700 bg-indigo-50" : "border-stone-200 bg-white hover:border-stone-300"}`}
-                style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+                className="rounded-xl border-2 py-3 text-base font-medium transition-colors"
+                style={{
+                  fontFamily: "'Noto Sans JP', sans-serif",
+                  ...(isSelected
+                    ? { borderColor: CORAL, backgroundColor: CORAL_LIGHT, color: CORAL_DARK, boxShadow: "0 4px 12px rgba(232,93,58,0.16)" }
+                    : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_MAIN }
+                  ),
+                }}
               >
                 {group.join("/")}
               </button>
             );
           })}
         </div>
+
         <button
           disabled={selectedPairs.size === 0 || availablePairItems.length === 0}
           onClick={() => launchSession(poolForPairs, () => startSession(poolForPairs, availablePairItems.length, "recognition"))}
-          className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
+          className="w-full mt-4 py-3.5 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+          style={{ backgroundColor: CORAL }}
         >
-          <Play size={18} /> Pares confusos
+          <Play size={16} /> Practicar pares
           {selectedPairs.size > 0 && ` (${availablePairItems.length})`}
         </button>
       </div>
 
-      {/* Sesión de romaji */}
-      <div className="mt-6">
+      {/* ── Sesión de romaji ── */}
+      <div className="mt-8 pt-6" style={{ borderTop: "1px solid #F5F3FF" }}>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-stone-600">Palabras en romaji</span>
-          <label className="flex items-center gap-2 text-xs text-stone-500 cursor-pointer select-none">
+          <span className="text-sm font-medium" style={{ color: TEXT_MAIN }}>Palabras en romaji</span>
+          <label className="flex items-center gap-2 text-xs cursor-pointer select-none" style={{ color: TEXT_SECOND }}>
             <input
               type="checkbox"
               checked={showRomaji}
               onChange={(e) => updateShowRomaji(e.target.checked)}
-              className="accent-indigo-700"
+              style={{ accentColor: PURPLE }}
             />
             Mostrar romaji
           </label>
         </div>
-        <p className="text-xs text-stone-400 mt-1">
+        <p className="text-xs mt-1" style={{ color: TEXT_MUTED }}>
           Disponibles según las filas elegidas: {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
         </p>
         <button
           disabled={availableWordItems.length === 0}
           onClick={() => startWordSession(wordPool, availableWordItems.length)}
-          className="w-full mt-3 py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 bg-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:border-stone-200 disabled:text-stone-400 hover:bg-indigo-50"
+          className="w-full mt-3 py-3 rounded-2xl border-2 font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+          style={{ borderColor: PURPLE, color: PURPLE, backgroundColor: "#FFFFFF" }}
         >
-          <Play size={18} /> Sesión de romaji
+          <Play size={16} /> Sesión de romaji
           {availableWordItems.length > 0 && ` (${availableWordItems.length})`}
         </button>
       </div>
