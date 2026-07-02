@@ -4,10 +4,8 @@ import type {
   CharWithRow, CharData,
   ProgressItems, ItemProgress,
   CharStatus, SessionMode, QueueItem, QuizMode,
-  StreakData, DailyProgress,
   Feedback, MissedItem,
 } from "./types";
-import { loadProgress, saveProgress } from "./storage";
 import { advanceBox, buildSessionQueue } from "./leitner";
 import { CONFUSED_PAIRS } from "./confusedPairs";
 import { WORDS, getAvailableWords } from "./words";
@@ -20,6 +18,8 @@ import PhoneticsDrill from "./components/PhoneticsDrill";
 import AudioButton from "./components/AudioButton";
 import { type ViewName, ROWS, DAKUTEN_ROWS, COMPOUND_ROWS, ALL_ROW_GROUPS, ALL_CHARS } from "./data";
 import { toISODate, normalize, buildQueueItems, getChoices, findQueueChar, charStatus } from "./utils";
+import { useProgress } from "./hooks/useProgress";
+import { useStreak } from "./hooks/useStreak";
 
 const STATUS_STYLE: Record<CharStatus, string> = {
   untested:   "bg-stone-100 text-stone-400 border-stone-200",
@@ -31,12 +31,10 @@ const STATUS_STYLE: Record<CharStatus, string> = {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function HiraganaTrainer() {
-  const [loading, setLoading]       = useState(true);
-  const [saveError, setSaveError]   = useState(false);
-  const [showRomaji, setShowRomaji] = useState(true);
-  const [progress, setProgress]     = useState<ProgressItems>({});
-  const [streak, setStreak]         = useState<StreakData>(DEFAULT_STREAK);
-  const [dailyProgress, setDailyProgress] = useState<DailyProgress>(DEFAULT_DAILY_PROGRESS);
+  const { streak, setStreak, dailyProgress, setDailyProgress } = useStreak();
+  const { loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji } = useProgress({
+    streak, dailyProgress, setStreak, setDailyProgress,
+  });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
   const [selectedCompoundRows, setSelectedCompoundRows] = useState<Set<string>>(new Set());
@@ -78,27 +76,12 @@ export default function HiraganaTrainer() {
     link.rel = "stylesheet";
     link.href = "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@500;700&display=swap";
     document.head.appendChild(link);
-    const data = loadProgress();
-    setProgress(data.items);
-    setStreak(data.streak ?? DEFAULT_STREAK);
-    setDailyProgress(data.dailyProgress ?? DEFAULT_DAILY_PROGRESS);
-    setShowRomaji(data.settings?.showRomaji ?? false);
-    setLoading(false);
     return () => { document.head.removeChild(link); };
   }, []);
 
   useEffect(() => {
     if (feedback?.status === "wrong" && nextBtnRef.current) nextBtnRef.current.focus();
   }, [feedback]);
-
-  // ── Persistence ──────────────────────────────────────────────────────────
-
-  function persist(newItems: ProgressItems, newStreak: StreakData = streak, newDaily: DailyProgress = dailyProgress) {
-    const ok = saveProgress({ items: newItems, streak: newStreak, dailyProgress: newDaily, settings: { showRomaji } });
-    setSaveError(!ok);
-    setStreak(newStreak);
-    setDailyProgress(newDaily);
-  }
 
   // ── Setup helpers ─────────────────────────────────────────────────────────
 
@@ -763,11 +746,7 @@ export default function HiraganaTrainer() {
                   <input
                     type="checkbox"
                     checked={showRomaji}
-                    onChange={(e) => {
-                      const val = e.target.checked;
-                      setShowRomaji(val);
-                      saveProgress({ items: progress, streak, dailyProgress, settings: { showRomaji: val } });
-                    }}
+                    onChange={(e) => updateShowRomaji(e.target.checked)}
                     className="accent-indigo-700"
                   />
                   Mostrar romaji
