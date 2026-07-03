@@ -7,6 +7,7 @@ import { advanceBox, isDue } from "../leitner";
 import { vocabProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
+import { fireConfetti } from "./ConfettiOverlay";
 import VocabImage from "./VocabImage";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
@@ -183,6 +184,7 @@ export default function VocabRecognizeGame({
     const isCorrect = option.hiragana === currentWord.hiragana;
     if (isCorrect) {
       playChime();
+      fireConfetti();
       setPhase("correct");
     } else {
       playBuzz();
