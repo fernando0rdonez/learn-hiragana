@@ -6,6 +6,7 @@ import { VOCABULARY } from "../vocabulary";
 import { advanceBox, isDue } from "../leitner";
 import { vocabProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
+import { useSpeech } from "../hooks/useSpeech";
 import VocabImage from "./VocabImage";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
@@ -31,6 +32,7 @@ const TIME_LIMIT = 10; // segundos por pregunta
 const WORRIED_AT = 4;  // el zorro se pone nervioso cuando quedan <= 4s
 const RING_RADIUS = 26;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+const PROMPT_PHRASE = "これはなに？";
 
 const CORAL      = "#E85D3A";
 const CORAL_DARK = "#C03A1E";
@@ -88,6 +90,7 @@ export default function VocabRecognizeGame({
   const [selected, setSelected] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
+  const { speak } = useSpeech();
 
   const today = toISODate();
 
@@ -122,6 +125,7 @@ export default function VocabRecognizeGame({
     setSelected(null);
     setTimeLeft(TIME_LIMIT);
     setPhase("playing");
+    speak(PROMPT_PHRASE);
   }
 
   const currentWord = queue[queueIndex] ?? null;
