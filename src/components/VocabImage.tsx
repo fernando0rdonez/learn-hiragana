@@ -16,7 +16,7 @@ export default function VocabImage({ hiragana, imageQuery, emojiBackup, label, i
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className="rounded-2xl overflow-hidden bg-stone-100 flex items-center justify-center">
+      <div className="w-44 h-44 rounded-2xl overflow-hidden bg-stone-100 flex items-center justify-center">
         {generatedUrl ? (
           <img src={generatedUrl} alt={label} className="w-full h-full object-cover" />
         ) : status === "loading" ? (
