@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 export interface UseSpeechResult {
-  speak: (text: string) => void;
+  speak: (text: string) => Promise<void>;
   isSpeaking: boolean;
   isAvailable: boolean;
 }
@@ -29,21 +29,31 @@ export function useSpeech(): UseSpeechResult {
     });
   }, []);
 
-  function speak(text: string) {
-    if (typeof speechSynthesis === "undefined") return;
+  // Resuelve cuando termina de hablar, para poder esperar antes de avanzar
+  // y evitar que se corte la pronunciación a mitad de frase.
+  function speak(text: string): Promise<void> {
+    if (typeof speechSynthesis === "undefined") return Promise.resolve();
 
     speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (voiceRef.current) utterance.voice = voiceRef.current;
-    utterance.lang = "ja-JP";
-    utterance.rate = 0.8;
+    return new Promise((resolve) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      if (voiceRef.current) utterance.voice = voiceRef.current;
+      utterance.lang = "ja-JP";
+      utterance.rate = 0.8;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        resolve();
+      };
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+        resolve();
+      };
 
-    speechSynthesis.speak(utterance);
+      speechSynthesis.speak(utterance);
+    });
   }
 
   return { speak, isSpeaking, isAvailable };

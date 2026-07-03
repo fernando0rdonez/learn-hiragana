@@ -33,6 +33,8 @@ const WORRIED_AT = 4;  // el zorro se pone nervioso cuando quedan <= 4s
 const RING_RADIUS = 26;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 const PROMPT_PHRASE = "これはなに？";
+const POST_ANSWER_SPEECH_DELAY = 500; // pausa tras terminar de leer la opción, antes de avanzar
+const TIMEOUT_DELAY = 2000; // sin selección: no hay nada que leer, se usa un delay fijo
 
 const CORAL      = "#E85D3A";
 const CORAL_DARK = "#C03A1E";
@@ -159,10 +161,17 @@ export default function VocabRecognizeGame({
     setSessionResults((prev) => [...prev, { word, correct: isCorrect }]);
   }
 
+  // Lee la opción seleccionada y espera a que termine antes de resolver, más un
+  // pequeño colchón, para que la pronunciación no se corte al avanzar de pregunta.
+  const speakAndWait = useCallback(
+    (text: string) => speak(text).then(() => new Promise<void>((resolve) => setTimeout(resolve, POST_ANSWER_SPEECH_DELAY))),
+    [speak]
+  );
+
   const finishAnswer = useCallback(
-    (word: VocabWord, isCorrect: boolean, delay: number) => {
+    (word: VocabWord, isCorrect: boolean, delay: Promise<void>) => {
       recordResult(word, isCorrect);
-      setTimeout(() => advanceToNext(), delay);
+      delay.then(() => advanceToNext());
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [queueIndex, queue]
@@ -175,12 +184,11 @@ export default function VocabRecognizeGame({
     if (isCorrect) {
       playChime();
       setPhase("correct");
-      finishAnswer(currentWord, true, 1200);
     } else {
       playBuzz();
       setPhase("wrong");
-      finishAnswer(currentWord, false, 2000);
     }
+    finishAnswer(currentWord, isCorrect, speakAndWait(option.hiragana));
   }
 
   // Countdown ticker
@@ -201,7 +209,7 @@ export default function VocabRecognizeGame({
     if (phase === "playing" && timeLeft <= 0 && currentWord) {
       playBuzz();
       setPhase("timeout");
-      finishAnswer(currentWord, false, 2000);
+      finishAnswer(currentWord, false, new Promise((resolve) => setTimeout(resolve, TIMEOUT_DELAY)));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, phase]);
