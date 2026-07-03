@@ -247,6 +247,11 @@ export default function VocabRecognizeGame({
         />
       </div>
 
+      {/* Traducción — algunas imágenes solas son ambiguas (conceptos abstractos, categorías como "preguntas" o "adjetivos") */}
+      <div className="flex items-baseline gap-1.5 rounded-full px-4 py-1.5" style={{ backgroundColor: "#F5F3FF" }}>
+        <span className="text-sm font-medium" style={{ color: "#8B7FA8" }}>{currentWord.meaning}</span>
+      </div>
+
       {/* Temporizador + zorro, uno al lado del otro */}
       <div className="flex items-center gap-3">
         <div className="relative w-16 h-16 shrink-0">

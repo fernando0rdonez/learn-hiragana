@@ -29,7 +29,7 @@ export default function VocabSessionSummary({ sessionResults, onBack }: Props) {
       )}
       <h2
         className="text-2xl font-bold text-stone-800"
-        style={{ fontFamily: "'Shippori Mincho', serif" }}
+        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
       >
         Sesión completa
       </h2>
