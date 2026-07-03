@@ -5,6 +5,7 @@ import type { PhoneticEntry } from "../phonetics";
 import { getPhoneticChoices } from "../phonetics";
 import { buildSessionQueue, INTERVALS } from "../leitner";
 import PhoneticCard from "./PhoneticCard";
+import { fireConfetti } from "./ConfettiOverlay";
 
 function toISODate(d: Date = new Date()): string {
   return [
@@ -103,7 +104,10 @@ export default function PhoneticsDrill({
     setSelected(choice);
     setFeedback({ status: isCorrect ? "correct" : "wrong" });
     recordResult(currentEntry, isCorrect);
-    if (isCorrect) setTimeout(() => advanceToNext(), 1400);
+    if (isCorrect) {
+      fireConfetti();
+      setTimeout(() => advanceToNext(), 1400);
+    }
   }
 
   function handleNext() {

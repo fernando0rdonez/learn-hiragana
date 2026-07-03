@@ -6,6 +6,7 @@ import type { ViewName } from "../data";
 import { WORDS } from "../words";
 import ProductionCard from "../components/ProductionCard";
 import { useSpeech } from "../hooks/useSpeech";
+import { fireConfetti } from "../components/ConfettiOverlay";
 import foxCalmImg from "../assets/character/fox-calm.png";
 import foxNeutral from "../assets/character/fox-neutral.png";
 import foxCelebrating from "../assets/character/fox-celebrating.png";
@@ -55,7 +56,12 @@ export default function QuizView({
   const [foxPose, setFoxPose] = useState(foxNeutral);
   useEffect(() => {
     if (!feedback) { setFoxPose(foxNeutral); return; }
-    setFoxPose(feedback.status === "correct" ? foxCelebrating : foxSad);
+    if (feedback.status === "correct") {
+      setFoxPose(foxCelebrating);
+      fireConfetti();
+    } else {
+      setFoxPose(foxSad);
+    }
   }, [feedback]);
 
   if (view === "preview") {

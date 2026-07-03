@@ -7,6 +7,7 @@ import { INTERVALS, isDue } from "../leitner";
 import { vocabProgressKey } from "../utils";
 import { getDistractors } from "../utils/distractors";
 import { playChime, playBuzz } from "../utils/audio";
+import { fireConfetti } from "./ConfettiOverlay";
 import VocabImage from "./VocabImage";
 import KanaChip from "./KanaChip";
 import WordSlots from "./WordSlots";
@@ -181,6 +182,7 @@ export default function VocabularyGame({
 
       if (isCorrect) {
         playChime();
+        fireConfetti();
         triggerAnim("correct-flash", 600);
         setPhase("correct");
         recordResult(word, true);

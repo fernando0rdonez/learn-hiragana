@@ -14,6 +14,7 @@ import { getAvailablePhonetics } from "./phonetics";
 import VocabularyGame from "./components/VocabularyGame";
 import VocabRecognizeGame from "./components/VocabRecognizeGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
+import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
 import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession } from "./utils";
 import { useProgress } from "./hooks/useProgress";
@@ -154,6 +155,7 @@ export default function HiraganaTrainer() {
 
   return (
     <div className="min-h-screen bg-white text-stone-900 flex justify-center px-4 py-8">
+      <ConfettiOverlay />
       <style>{`
         @keyframes stampIn { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
         .stamp-pop { animation: stampIn 0.35s ease-out; }
