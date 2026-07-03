@@ -12,6 +12,7 @@ import { VOCABULARY } from "./vocabulary";
 import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
 import { getAvailablePhonetics } from "./phonetics";
 import VocabularyGame from "./components/VocabularyGame";
+import VocabRecognizeGame from "./components/VocabRecognizeGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
 import { type ViewName, ALL_CHARS } from "./data";
 import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession } from "./utils";
@@ -262,6 +263,21 @@ export default function HiraganaTrainer() {
             vocabulary={vocabSessionPool}
             progress={progress}
             showRomaji={showRomaji}
+            sessionLimit={vocabSessionLimit}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("home")}
+          />
+        )}
+
+        {/* ── Vocabulario: reconocer ── */}
+        {view === "recognizeIt" && (
+          <VocabRecognizeGame
+            vocabulary={vocabSessionPool}
+            progress={progress}
             sessionLimit={vocabSessionLimit}
             onProgressUpdate={(updates) => {
               const merged = { ...progress, ...updates };

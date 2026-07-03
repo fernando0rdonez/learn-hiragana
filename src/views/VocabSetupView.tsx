@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Check, Play } from "lucide-react";
+import { ArrowLeft, Check, Play, PenLine, Eye } from "lucide-react";
 import type { VocabWord } from "../vocabulary";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
 import type { ViewName } from "../data";
@@ -31,16 +31,24 @@ const TEXT_MUTED  = "#AAAAAA";
 
 const LAST_SESSION_KEY = "vocab_last_session";
 
+type VocabGameMode = "spell" | "recognize";
+
 interface VocabLastSession {
   categoryIds: string[];
   length: VocabSessionLength;
+  mode: VocabGameMode;
 }
 
 function isVocabLastSession(v: unknown): v is VocabLastSession {
   if (!v || typeof v !== "object") return false;
   const o = v as Record<string, unknown>;
   return Array.isArray(o.categoryIds)
-    && (o.length === 10 || o.length === 20 || o.length === "all" || o.length === "repasar");
+    && (o.length === 10 || o.length === 20 || o.length === "all" || o.length === "repasar")
+    && (o.mode === "spell" || o.mode === "recognize" || o.mode === undefined); // undefined = sesión guardada antes de agregar modos
+}
+
+function viewForMode(mode: VocabGameMode): ViewName {
+  return mode === "recognize" ? "recognizeIt" : "spellIt";
 }
 
 function lengthLabel(length: VocabSessionLength): string {
@@ -59,11 +67,13 @@ export default function VocabSetupView({
     if (!raw) return null;
     try {
       const parsed = JSON.parse(raw);
-      return isVocabLastSession(parsed) ? parsed : null;
+      if (!isVocabLastSession(parsed)) return null;
+      return { ...parsed, mode: parsed.mode ?? "spell" }; // sesiones guardadas antes de agregar modos
     } catch {
       return null; // valor corrupto en localStorage
     }
   });
+  const [gameMode, setGameMode] = useState<VocabGameMode>(lastSession?.mode ?? "spell");
 
   // Pre-select the last session's categories on a fresh load (e.g. after a
   // page reload, when in-memory selection state resets but localStorage
@@ -90,8 +100,9 @@ export default function VocabSetupView({
     localStorage.setItem(LAST_SESSION_KEY, JSON.stringify({
       categoryIds: [...selectedVocabCategories],
       length: vocabSessionLength,
+      mode: gameMode,
     } satisfies VocabLastSession));
-    setView("spellIt");
+    setView(viewForMode(gameMode));
   }
 
   function handleContinue() {
@@ -101,7 +112,8 @@ export default function VocabSetupView({
     if (limit === 0) return; // p.ej. "repasar" y ya no queda nada sin dominar
     setSelectedVocabCategories(new Set(lastSession.categoryIds));
     setVocabSessionLength(lastSession.length);
-    setView("spellIt");
+    setGameMode(lastSession.mode);
+    setView(viewForMode(lastSession.mode));
   }
 
   return (
@@ -135,6 +147,9 @@ export default function VocabSetupView({
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/20">
               ×{lengthLabel(lastSession.length)}
             </span>
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/20">
+              {lastSession.mode === "recognize" ? "Reconocer" : "Deletrear"}
+            </span>
           </div>
           <button
             onClick={handleContinue}
@@ -154,7 +169,31 @@ export default function VocabSetupView({
 
       {/* ── Configurar sesión ── */}
       <div className="mt-8">
-        <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Modo</span>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          <button
+            onClick={() => setGameMode("spell")}
+            className="flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors"
+            style={gameMode === "spell"
+              ? { borderColor: CORAL, backgroundColor: CORAL_LIGHT, color: CORAL_DARK }
+              : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+            }
+          >
+            <PenLine size={14} /> Deletrear
+          </button>
+          <button
+            onClick={() => setGameMode("recognize")}
+            className="flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors"
+            style={gameMode === "recognize"
+              ? { borderColor: CORAL, backgroundColor: CORAL_LIGHT, color: CORAL_DARK }
+              : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+            }
+          >
+            <Eye size={14} /> Reconocer
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between mt-5">
           <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Configurar sesión</div>
           <button onClick={toggleSelectAll} className="text-xs font-semibold" style={{ color: CORAL }}>
             {allSelected ? "Limpiar" : "Seleccionar todas"}
