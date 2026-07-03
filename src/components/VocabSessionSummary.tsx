@@ -1,6 +1,5 @@
 import type { VocabWord } from "../vocabulary";
-import foxCalmImg from "../assets/character/fox-calm.png";
-import foxCelebratingImg from "../assets/character/fox-celebrating.png";
+import { summaryMascot } from "../mascot";
 
 export interface SessionResult {
   word: VocabWord;
@@ -22,7 +21,7 @@ export default function VocabSessionSummary({ sessionResults, onBack }: Props) {
     <div className="flex flex-col items-center gap-6 pt-8">
       {answered > 0 && (
         <img
-          src={pct >= 80 ? foxCelebratingImg : foxCalmImg}
+          src={summaryMascot(pct)}
           alt=""
           className="w-24 h-24 object-contain"
         />
