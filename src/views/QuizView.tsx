@@ -11,6 +11,16 @@ import foxCalmImg from "../assets/character/fox-calm.png";
 import foxNeutral from "../assets/character/fox-neutral.png";
 import foxCelebrating from "../assets/character/fox-celebrating.png";
 import foxSad from "../assets/character/fox-sad.png";
+import foxProud from "../assets/character/fox-proud.png";
+import foxWorried from "../assets/character/fox-worried.png";
+
+function summaryMascot(pct: number) {
+  if (pct >= 90) return foxCelebrating;
+  if (pct >= 70) return foxProud;
+  if (pct >= 50) return foxNeutral;
+  if (pct >= 30) return foxWorried;
+  return foxSad;
+}
 
 interface Props {
   view: "quiz" | "preview" | "summary";
@@ -193,26 +203,42 @@ export default function QuizView({
     );
   }
 
+  const total = sessionIndexRef.current;
+  const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
   return (
-    <div>
-      <h2 className="text-2xl font-bold" style={{ fontFamily: "'Shippori Mincho', serif" }}>Sesión completa</h2>
-      <div className="mt-4 rounded-xl bg-white border border-stone-200 p-5 text-center">
-        <span className="text-5xl font-bold text-indigo-700">
-          {sessionIndexRef.current > 0 ? Math.round((correctCount / sessionIndexRef.current) * 100) : 0}%
-        </span>
-        <p className="text-stone-500 text-sm mt-1">{correctCount} de {sessionIndexRef.current} correctas</p>
+    <div className="pb-4">
+      {/* Hero card */}
+      <div
+        className="relative rounded-3xl pt-6 px-6 pb-9 text-white shadow-lg"
+        style={{ background: "linear-gradient(135deg, #7B4FD4, #5533A8)", overflow: "visible" }}
+      >
+        <div className="text-xs font-semibold tracking-wide uppercase opacity-80">Sesión completa</div>
+        <div className="mt-2 text-5xl font-bold" style={{ fontFamily: "'Shippori Mincho', serif" }}>{pct}%</div>
+        <div className="text-sm opacity-90 mt-1">{correctCount} de {total} correctas</div>
+
+        <img
+          src={summaryMascot(pct)}
+          alt=""
+          className="absolute pointer-events-none select-none"
+          style={{ width: 110, height: 110, bottom: -30, right: 14, objectFit: "contain" }}
+        />
       </div>
 
       {missedList.length > 0 && (
-        <div className="mt-5">
-          <span className="text-sm font-medium text-stone-600">Fallos de esta sesión</span>
-          <div className="mt-2 space-y-1">
+        <div className="mt-10">
+          <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: "#8B7FA8" }}>Fallos de esta sesión</span>
+          <div className="mt-2 space-y-2">
             {[...new Map(missedList.map((m) => [`${m.mode}:${m.kana}`, m])).values()].map((m) => (
-              <div key={`${m.mode}:${m.kana}`} className="flex items-center justify-between gap-2 text-sm bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
-                <span className="text-xl shrink-0" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{m.kana}</span>
-                <span className="text-stone-400 text-xs shrink-0">{m.mode === "production" ? "→ kana" : "→ romaji"}</span>
-                <span className="text-stone-500 truncate">{m.mode === "production" ? "elegiste" : "escribiste"} "{m.given}"</span>
-                <span className="text-rose-700 font-medium shrink-0">
+              <div
+                key={`${m.mode}:${m.kana}`}
+                className="flex items-center justify-between gap-2 text-sm rounded-2xl px-3 py-2.5"
+                style={{ backgroundColor: "#FFEEEA", border: "1.5px solid #F4C4B4" }}
+              >
+                <span className="text-xl shrink-0" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: "#1A1A2E" }}>{m.kana}</span>
+                <span className="text-xs shrink-0" style={{ color: "#8B7FA8" }}>{m.mode === "production" ? "→ kana" : "→ romaji"}</span>
+                <span className="truncate" style={{ color: "#8B7FA8" }}>{m.mode === "production" ? "elegiste" : "escribiste"} "{m.given}"</span>
+                <span className="font-medium shrink-0" style={{ color: "#C03A1E" }}>
                   era "{m.expected}"{m.mode === "word" && ` — ${WORDS.find((w) => w.kana === m.kana)?.meaning}`}
                 </span>
               </div>
@@ -223,14 +249,22 @@ export default function QuizView({
 
       <div className="flex flex-col gap-2 mt-6">
         {missedList.length > 0 && (
-          <button onClick={reviewMisses} className="w-full py-3 rounded-xl bg-rose-700 text-white font-semibold flex items-center justify-center gap-2">
+          <button
+            onClick={reviewMisses}
+            className="w-full h-[50px] rounded-[14px] text-white font-bold flex items-center justify-center gap-2"
+            style={{ background: "linear-gradient(90deg, #E85D3A, #C03A1E)" }}
+          >
             <RotateCcw size={16} /> Repasar fallos ({uniqueMissed})
           </button>
         )}
-        <button onClick={() => setView("home")} className="w-full py-3 rounded-xl bg-indigo-700 text-white font-semibold">
+        <button
+          onClick={() => setView("home")}
+          className="w-full h-[50px] rounded-[14px] text-white font-bold"
+          style={{ background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
+        >
           Nueva sesión
         </button>
-        <button onClick={() => setView("stats")} className="w-full py-2 rounded-xl text-stone-500 text-sm">
+        <button onClick={() => setView("stats")} className="w-full py-2 rounded-xl text-sm" style={{ color: "#8B7FA8" }}>
           Ver estadísticas
         </button>
       </div>
