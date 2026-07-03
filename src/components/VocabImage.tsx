@@ -7,16 +7,18 @@ interface Props {
   emojiBackup: string;
   label: string;
   imagePath?: string;
+  size?: string;
+  hideAttribution?: boolean;
 }
 
-export default function VocabImage({ hiragana, imageQuery, emojiBackup, label, imagePath }: Props) {
+export default function VocabImage({ hiragana, imageQuery, emojiBackup, label, imagePath, size = "w-44 h-44", hideAttribution = false }: Props) {
   const generatedUrl = imagePath ? getVocabImageUrl(imagePath) : undefined;
   // Skip the Unsplash fetch entirely when we already have a generated image.
   const { status, image } = useUnsplashImage(hiragana, imageQuery, !generatedUrl);
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className="w-44 h-44 rounded-2xl overflow-hidden bg-stone-100 flex items-center justify-center">
+      <div className={`${size} rounded-2xl overflow-hidden bg-stone-100 flex items-center justify-center`}>
         {generatedUrl ? (
           <img src={generatedUrl} alt={label} className="w-full h-full object-cover" />
         ) : status === "loading" ? (
@@ -29,7 +31,7 @@ export default function VocabImage({ hiragana, imageQuery, emojiBackup, label, i
           </span>
         )}
       </div>
-      {!generatedUrl && status === "loaded" && image && (
+      {!hideAttribution && !generatedUrl && status === "loaded" && image && (
         <p className="text-[10px] text-stone-400">
           Photo by{" "}
           <a href={image.photographerUrl} target="_blank" rel="noreferrer" className="underline">
