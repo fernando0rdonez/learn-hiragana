@@ -11,7 +11,7 @@ calendario sino cumpliendo la **puerta de salida** de la fase (METODOLOGIA §2.6
 
 | Fase | Nivel | Duración estimada | Alcance | Estado en la app |
 |---|---|---|---|---|
-| 0 — Kana | pre-A1 | semanas 1–8 | hiragana + katakana + fonética básica | Hiragana ✅ · Fonética ✅ · Katakana ❌ (BACKLOG #1) |
+| 0 — Kana | pre-A1 | semanas 1–8 | hiragana + katakana + fonética básica | Hiragana ✅ · Fonética ✅ · Katakana ✅ |
 | 1 — Fundamentos | A1 ≈ N5 | meses 3–8 | 800 palabras, ~100 kanji, gramática N5, frases hechas | Vocab 200/800 ⚠️ (#3) · Frases ❌ (#4) · Kanji ❌ (#5) · Gramática ❌ (#6) |
 | 2 — Consolidación | A2 ≈ N4 | meses 8–16 | 1.500 palabras, ~300 kanji, forma て/plana, listening y lectura de frases | Listening frases ❌ (#7) · Lectura ❌ (#8) |
 | 3 — Independencia | B1 ≈ N3 | meses 16–28 | 3.700 palabras, ~650 kanji, gramática N3, párrafos, shadowing, producción | Lectura N3 ❌ (#8) · Mapa B1 ❌ (#9) |
@@ -31,7 +31,7 @@ sin kana automático, cada palabra posterior cuesta el doble.
    - Drill diario de **pares confundibles** (は/ほ, ね/れ/わ, る/ろ…) desde la semana 2 (módulo existente).
    - Palabras en kana (`src/words.ts`) desde la semana 3 para leer kana *en contexto*.
 2. **Semanas 3–6 — Fonética** (módulo existente): ensordecimiento y alargamiento, 5 min/día.
-3. **Semanas 5–8 — Katakana** (requiere BACKLOG #1): mismo método que hiragana.
+3. **Semanas 5–8 — Katakana** (módulo existente): mismo método que hiragana.
    Solapar con el mantenimiento SRS del hiragana, no esperar a "terminar" hiragana.
 
 ### Rutina de la fase
@@ -159,7 +159,7 @@ Para que la app siempre vaya **por delante** del estudiante:
 
 | Cuándo | Features (BACKLOG) |
 |---|---|
-| Ya / inmediato | #1 Katakana · #2 SRS 7 cajas · #10 Exportar progreso |
+| Ya / inmediato | #2 SRS 7 cajas · #10 Exportar progreso |
 | Antes del mes 3 | #3 Vocabulario 800 · #4 Frases con audio |
 | Antes del mes 4–5 | #5 Kanji N5 · #6 Gramática/construir frases |
 | Antes del mes 8 | #7 Listening de frases · #8 Lectura graduada |

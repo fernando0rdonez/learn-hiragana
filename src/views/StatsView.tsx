@@ -3,6 +3,7 @@ import { ArrowLeft, Flame, Check, AlertTriangle, ChevronDown, Info } from "lucid
 import type { ProgressItems, StreakData, DailyProgress, CharStatus } from "../types";
 import type { ViewName } from "../data";
 import { ROWS, DAKUTEN_ROWS, COMPOUND_ROWS, ALL_CHARS } from "../data";
+import { KATAKANA_ROWS, KATAKANA_DAKUTEN_ROWS, KATAKANA_COMPOUND_ROWS, KATAKANA_ALL_CHARS } from "../dataKatakana";
 import { charStatus } from "../utils";
 import { DAILY_GOAL } from "../streak";
 
@@ -10,6 +11,8 @@ import { DAILY_GOAL } from "../streak";
 
 const PURPLE      = "#7B4FD4";
 const PURPLE_DARK = "#5533A8";
+const BLUE        = "#2F6FE4";
+const BLUE_DARK   = "#1D4FB0";
 const BORDER      = "#EEEEEE";
 const TEXT_MAIN   = "#1A1A2E";
 const TEXT_SECOND = "#8B7FA8";
@@ -67,18 +70,68 @@ function rowMasteredCount(progress: ProgressItems, chars: { kana: string }[]) {
   return chars.filter((ch) => charStatus(progress, ch.kana) === "mastered").length;
 }
 
+type ScriptId = "hiragana" | "katakana";
+
+interface ScriptStats {
+  id: ScriptId;
+  label: string;
+  accent: string;
+  accentDark: string;
+  totalChars: number;
+  masteredTotal: number;
+  categories: { label: string; rows: RowGroup[] }[];
+  rowSections: { label: string; rows: RowGroup[] }[];
+}
+
 export default function StatsView({ progress, streak, dailyProgress, masteredTotal, today, setView }: Props) {
   const [showLegend, setShowLegend] = useState(false);
+  const [activeScript, setActiveScript] = useState<ScriptId>("hiragana");
 
-  const totalChars = ALL_CHARS.length;
-  const overallPct = totalChars > 0 ? Math.round((masteredTotal / totalChars) * 100) : 0;
   const todayCorrect = Math.min(dailyProgress.date === today ? dailyProgress.correctToday : 0, DAILY_GOAL);
 
-  const categories: { label: string; rows: RowGroup[] }[] = [
-    { label: "Básico", rows: ROWS },
-    { label: "Dakuten", rows: DAKUTEN_ROWS },
-    { label: "Combinaciones", rows: COMPOUND_ROWS },
-  ];
+  const masteredKataTotal = KATAKANA_ALL_CHARS.filter((c) => charStatus(progress, c.kana) === "mastered").length;
+
+  const scripts: Record<ScriptId, ScriptStats> = {
+    hiragana: {
+      id: "hiragana",
+      label: "Hiragana",
+      accent: PURPLE,
+      accentDark: PURPLE_DARK,
+      totalChars: ALL_CHARS.length,
+      masteredTotal,
+      categories: [
+        { label: "Básico", rows: ROWS },
+        { label: "Dakuten", rows: DAKUTEN_ROWS },
+        { label: "Combinaciones", rows: COMPOUND_ROWS },
+      ],
+      rowSections: [
+        { label: "Hiragana básico", rows: ROWS },
+        { label: "Dakuten y Handakuten", rows: DAKUTEN_ROWS },
+        { label: "Combinaciones (拗音)", rows: COMPOUND_ROWS },
+      ],
+    },
+    katakana: {
+      id: "katakana",
+      label: "Katakana",
+      accent: BLUE,
+      accentDark: BLUE_DARK,
+      totalChars: KATAKANA_ALL_CHARS.length,
+      masteredTotal: masteredKataTotal,
+      categories: [
+        { label: "Básico", rows: KATAKANA_ROWS },
+        { label: "Dakuten", rows: KATAKANA_DAKUTEN_ROWS },
+        { label: "Combinaciones", rows: KATAKANA_COMPOUND_ROWS },
+      ],
+      rowSections: [
+        { label: "Katakana básico", rows: KATAKANA_ROWS },
+        { label: "Dakuten y Handakuten", rows: KATAKANA_DAKUTEN_ROWS },
+        { label: "Combinaciones (拗音)", rows: KATAKANA_COMPOUND_ROWS },
+      ],
+    },
+  };
+
+  const active = scripts[activeScript];
+  const overallPct = active.totalChars > 0 ? Math.round((active.masteredTotal / active.totalChars) * 100) : 0;
 
   return (
     <div className="pb-8">
@@ -91,32 +144,49 @@ export default function StatsView({ progress, streak, dailyProgress, masteredTot
         Tu progreso
       </h2>
 
-      {/* ── Resumen general ── */}
+      {/* ── Racha (global, no depende del silabario activo) ── */}
+      <div className="flex items-center gap-4 mt-4 text-sm" style={{ color: TEXT_SECOND }}>
+        <span className="flex items-center gap-1.5">
+          <Flame size={14} style={{ color: "#F5A623" }} /> {streak.current} día{streak.current === 1 ? "" : "s"} · récord {streak.longest}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Check size={14} style={{ color: "#059669" }} /> Hoy {todayCorrect}/{DAILY_GOAL}
+        </span>
+      </div>
+
+      {/* ── Selector de silabario ── */}
+      <div className="flex gap-1 rounded-xl p-1 mt-4" style={{ backgroundColor: "#F5F5F7" }}>
+        {(Object.keys(scripts) as ScriptId[]).map((id) => (
+          <button
+            key={id}
+            onClick={() => setActiveScript(id)}
+            className={`flex-1 py-2 text-sm rounded-lg font-semibold transition-all ${activeScript === id ? "bg-white shadow-sm" : ""}`}
+            style={{ color: activeScript === id ? scripts[id].accentDark : TEXT_SECOND }}
+          >
+            {scripts[id].label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Resumen del silabario activo ── */}
       <div
-        className="relative rounded-3xl p-5 mt-5 text-white shadow-lg"
-        style={{ background: `linear-gradient(135deg, ${PURPLE}, ${PURPLE_DARK})` }}
+        key={active.id}
+        className="relative rounded-3xl p-5 mt-4 text-white shadow-lg"
+        style={{ background: `linear-gradient(135deg, ${active.accent}, ${active.accentDark})` }}
       >
-        <div className="text-[11px] font-semibold tracking-wide uppercase opacity-80">Hiragana dominado</div>
+        <div className="text-[11px] font-semibold tracking-wide uppercase opacity-80">{active.label} dominado</div>
         <div className="flex items-end justify-between mt-1">
           <div className="text-4xl font-bold">{overallPct}%</div>
-          <div className="text-sm opacity-90 mb-1">{masteredTotal}/{totalChars} caracteres</div>
+          <div className="text-sm opacity-90 mb-1">{active.masteredTotal}/{active.totalChars} caracteres</div>
         </div>
         <div className="w-full h-2 bg-white/25 rounded-full mt-3 overflow-hidden">
           <div className="h-full bg-white rounded-full transition-all" style={{ width: `${overallPct}%` }} />
-        </div>
-        <div className="flex items-center gap-4 mt-4 pt-4 text-sm" style={{ borderTop: "1px solid rgba(255,255,255,0.25)" }}>
-          <span className="flex items-center gap-1.5">
-            <Flame size={14} /> {streak.current} día{streak.current === 1 ? "" : "s"} · récord {streak.longest}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Check size={14} /> Hoy {todayCorrect}/{DAILY_GOAL}
-          </span>
         </div>
       </div>
 
       {/* ── Por categoría ── */}
       <div className="grid grid-cols-3 gap-2 mt-4">
-        {categories.map((cat) => {
+        {active.categories.map((cat) => {
           const { total, mastered } = categoryTotals(progress, cat.rows);
           const pct = total > 0 ? Math.round((mastered / total) * 100) : 0;
           return (
@@ -124,7 +194,7 @@ export default function StatsView({ progress, streak, dailyProgress, masteredTot
               <div className="text-xs font-semibold" style={{ color: TEXT_MAIN }}>{cat.label}</div>
               <div className="text-[11px] mt-0.5" style={{ color: TEXT_SECOND }}>{mastered}/{total} dominados</div>
               <div className="w-full h-1.5 rounded-full mt-2 overflow-hidden" style={{ backgroundColor: "#F0EAF9" }}>
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: PURPLE }} />
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: active.accent }} />
               </div>
             </div>
           );
@@ -157,22 +227,18 @@ export default function StatsView({ progress, streak, dailyProgress, masteredTot
         </div>
       )}
 
-      {/* ── Básico ── */}
-      <div className="text-sm font-semibold mt-6 mb-2" style={{ color: TEXT_MAIN }}>Hiragana básico</div>
-      {ROWS.map((row) => <RowBlock key={row.id} row={row} progress={progress} />)}
-
-      {/* ── Dakuten / Handakuten ── */}
-      <div className="text-sm font-semibold mt-2 mb-2" style={{ color: TEXT_MAIN }}>Dakuten y Handakuten</div>
-      {DAKUTEN_ROWS.map((row) => <RowBlock key={row.id} row={row} progress={progress} />)}
-
-      {/* ── Combinaciones (拗音) ── */}
-      <div className="text-sm font-semibold mt-2 mb-2" style={{ color: TEXT_MAIN }}>Combinaciones (拗音)</div>
-      {COMPOUND_ROWS.map((row) => <RowBlock key={row.id} row={row} progress={progress} />)}
+      {/* ── Filas del silabario activo ── */}
+      {active.rowSections.map((section) => (
+        <div key={section.label}>
+          <div className="text-sm font-semibold mt-6 mb-2" style={{ color: TEXT_MAIN }}>{section.label}</div>
+          {section.rows.map((row) => <RowBlock key={row.id} row={row} progress={progress} accent={active.accent} />)}
+        </div>
+      ))}
     </div>
   );
 }
 
-function RowBlock({ row, progress }: { row: RowGroup; progress: ProgressItems }) {
+function RowBlock({ row, progress, accent = PURPLE }: { row: RowGroup; progress: ProgressItems; accent?: string }) {
   const mastered = rowMasteredCount(progress, row.chars);
   const pct = row.chars.length > 0 ? Math.round((mastered / row.chars.length) * 100) : 0;
 
@@ -183,7 +249,7 @@ function RowBlock({ row, progress }: { row: RowGroup; progress: ProgressItems })
         <div className="text-[11px] font-semibold" style={{ color: TEXT_MUTED }}>{mastered}/{row.chars.length}</div>
       </div>
       <div className="w-full h-1 rounded-full overflow-hidden mb-2" style={{ backgroundColor: "#F0EAF9" }}>
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: PURPLE }} />
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: accent }} />
       </div>
       <div className="flex flex-wrap gap-1.5">
         {row.chars.map((ch) => {

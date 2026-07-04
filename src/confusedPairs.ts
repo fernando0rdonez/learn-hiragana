@@ -34,9 +34,9 @@ export const CONFUSED_PAIRS: readonly (readonly string[])[] = [
 ];
 
 /** Returns all kana that are visually confusable with the given kana. */
-export function getConfusablePairs(kana: string): string[] {
+export function getConfusablePairs(kana: string, pairs: readonly (readonly string[])[] = CONFUSED_PAIRS): string[] {
   const result: string[] = [];
-  for (const group of CONFUSED_PAIRS) {
+  for (const group of pairs) {
     if (group.includes(kana)) {
       result.push(...group.filter((k) => k !== kana));
     }

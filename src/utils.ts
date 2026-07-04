@@ -1,8 +1,11 @@
 import type { CharWithRow, ProgressItems, SessionMode, QueueItem, CharStatus, QuizMode, VocabPracticeMode, VocabSessionLength } from "./types";
 import { buildSessionQueue } from "./leitner";
-import { getConfusablePairs } from "./confusedPairs";
+import { CONFUSED_PAIRS, getConfusablePairs } from "./confusedPairs";
 import { ALL_ROW_GROUPS, ALL_CHARS } from "./data";
+import { KATAKANA_ALL_CHARS, isKatakanaRow } from "./dataKatakana";
+import { KATAKANA_CONFUSED_PAIRS } from "./confusedPairsKatakana";
 import { WORDS } from "./words";
+import { KATAKANA_WORDS } from "./wordsKatakana";
 import { VOCABULARY, type VocabWord } from "./vocabulary";
 
 export function toISODate(d: Date = new Date()): string {
@@ -53,19 +56,23 @@ export function buildQueueItems(
  *   - remaining slots filled from pool, falling back to ALL_CHARS
  */
 export function getChoices(kana: string, pool: CharWithRow[]): CharWithRow[] {
-  const correct = ALL_CHARS.find((c) => c.kana === kana)!;
-  const confusedKanas = getConfusablePairs(kana);
+  const kata     = pool[0] ? isKatakanaRow(pool[0].row) : false;
+  const universe = kata ? KATAKANA_ALL_CHARS : ALL_CHARS;
+  const pairs    = kata ? KATAKANA_CONFUSED_PAIRS : CONFUSED_PAIRS;
 
-  // Confused distractors — prefer pool, fallback to ALL_CHARS
+  const correct = universe.find((c) => c.kana === kana)!;
+  const confusedKanas = getConfusablePairs(kana, pairs);
+
+  // Confused distractors — prefer pool, fallback to the same-charset universe
   const confusedChoices = confusedKanas
-    .map((k) => pool.find((c) => c.kana === k) ?? ALL_CHARS.find((c) => c.kana === k))
+    .map((k) => pool.find((c) => c.kana === k) ?? universe.find((c) => c.kana === k))
     .filter((c): c is CharWithRow => !!c);
   shuffleInPlace(confusedChoices);
 
   // Other candidates: deduplicated, not the correct kana, not confused
   const excluded = new Set([kana, ...confusedKanas]);
   const others: CharWithRow[] = [];
-  for (const c of [...pool, ...ALL_CHARS]) {
+  for (const c of [...pool, ...universe]) {
     if (!excluded.has(c.kana)) {
       excluded.add(c.kana);
       others.push(c);
@@ -87,10 +94,10 @@ export function getChoices(kana: string, pool: CharWithRow[]): CharWithRow[] {
 
 export function findQueueChar(kana: string, mode: QuizMode): CharWithRow | undefined {
   if (mode === "word") {
-    const w = WORDS.find((entry) => entry.kana === kana);
+    const w = WORDS.find((entry) => entry.kana === kana) ?? KATAKANA_WORDS.find((entry) => entry.kana === kana);
     return w ? { kana: w.kana, romaji: w.romaji, row: "word" } : undefined;
   }
-  return ALL_CHARS.find((c) => c.kana === kana);
+  return ALL_CHARS.find((c) => c.kana === kana) ?? KATAKANA_ALL_CHARS.find((c) => c.kana === kana);
 }
 
 export function charStatus(items: ProgressItems, kana: string): CharStatus {
@@ -161,8 +168,8 @@ export function resolveVocabSession(
   return { pool: words, limit: Math.min(length, words.length) };
 }
 
-export function rowStats(progress: ProgressItems, rowId: string) {
-  const chars = ALL_ROW_GROUPS.find((r) => r.id === rowId)?.chars ?? [];
+export function rowStats(progress: ProgressItems, rowId: string, rowGroups: typeof ALL_ROW_GROUPS = ALL_ROW_GROUPS) {
+  const chars = rowGroups.find((r) => r.id === rowId)?.chars ?? [];
   let attempts = 0, correct = 0, tested = 0;
   chars.forEach((ch) => {
     const p = progress[`recognition:${ch.kana}`];
