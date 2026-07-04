@@ -3,12 +3,14 @@ import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine } from "
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
+import { KATAKANA_ALL_CHARS } from "../dataKatakana";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
 import foxImg from "../assets/character/fox-neutral.png";
 
 interface Props {
   streak: StreakData;
   masteredTotal: number;
+  masteredKataTotal: number;
   saveError: boolean;
   resetConfirm: boolean;
   setResetConfirm: (v: boolean) => void;
@@ -32,7 +34,7 @@ function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
   return { moduleId: "hiragana", wasStored: false };
 }
 
-export default function HomeView({ streak, masteredTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
   const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -143,6 +145,14 @@ export default function HomeView({ streak, masteredTotal, saveError, resetConfir
             title="Vocabulario"
             subtitle={`${VOCABULARY.length} palabras · ${VOCAB_CATEGORIES.length} categorías`}
             onClick={() => goTo("vocabCategory", "vocab")}
+          />
+
+          <ModuleCard
+            bg="#E7EFFD" border="#2F6FE4"
+            icon={<span className="text-xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>ア</span>}
+            title="Katakana"
+            subtitle={`${masteredKataTotal} de ${KATAKANA_ALL_CHARS.length} caracteres dominados`}
+            onClick={() => goTo("katakanaSetup")}
           />
 
           <ModuleCard

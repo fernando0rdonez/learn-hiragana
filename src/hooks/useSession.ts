@@ -9,6 +9,7 @@ import type {
 import { advanceBox, buildSessionQueue } from "../leitner";
 import { recordCorrectAnswer } from "../streak";
 import { ALL_ROW_GROUPS } from "../data";
+import { KATAKANA_ALL_ROW_GROUPS, isKatakanaRow } from "../dataKatakana";
 import { toISODate, normalize, buildQueueItems, getChoices, findQueueChar } from "../utils";
 import type { ViewName } from "../data";
 
@@ -80,8 +81,9 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
   // ── Session start ─────────────────────────────────────────────────────────
 
   function getNewRows(pool: CharWithRow[]): { id: string; title: string; chars: CharData[] }[] {
+    const rowGroups     = pool[0] && isKatakanaRow(pool[0].row) ? KATAKANA_ALL_ROW_GROUPS : ALL_ROW_GROUPS;
     const rowIdsInPool = new Set(pool.map((c) => c.row));
-    return ALL_ROW_GROUPS.filter((row) =>
+    return rowGroups.filter((row) =>
       rowIdsInPool.has(row.id) &&
       row.chars.every((ch) => {
         const p = progress[`recognition:${ch.kana}`];

@@ -7,7 +7,9 @@ import type {
 } from "./types";
 import { buildSessionQueue } from "./leitner";
 import { CONFUSED_PAIRS } from "./confusedPairs";
+import { KATAKANA_CONFUSED_PAIRS } from "./confusedPairsKatakana";
 import { getAvailableWords } from "./words";
+import { getAvailableKatakanaWords } from "./wordsKatakana";
 import { VOCABULARY } from "./vocabulary";
 import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
 import { getAvailablePhonetics } from "./phonetics";
@@ -18,6 +20,7 @@ import VocabCountingGame from "./components/VocabCountingGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
+import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS } from "./dataKatakana";
 import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
@@ -27,6 +30,7 @@ import StatsView from "./views/StatsView";
 import VocabSetupView from "./views/VocabSetupView";
 import PhoneticSetupView from "./views/PhoneticSetupView";
 import HiraganaSetupView from "./views/HiraganaSetupView";
+import KatakanaSetupView from "./views/KatakanaSetupView";
 import QuizView from "./views/QuizView";
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -40,6 +44,12 @@ export default function HiraganaTrainer() {
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
   const [selectedCompoundRows, setSelectedCompoundRows] = useState<Set<string>>(new Set());
   const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set());
+  const [selectedKataRows, setSelectedKataRows] = useState<Set<string>>(new Set());
+  const [selectedKataDakutenRows, setSelectedKataDakutenRows] = useState<Set<string>>(new Set());
+  const [selectedKataCompoundRows, setSelectedKataCompoundRows] = useState<Set<string>>(new Set());
+  const [selectedKataPairs, setSelectedKataPairs] = useState<Set<number>>(new Set());
+  const [kataSessionMode, setKataSessionMode] = useState<SessionMode>("recognition");
+  const [kataSessionLength, setKataSessionLength] = useState<10 | 20 | "all">(20);
   const [selectedPhenomena, setSelectedPhenomena] = useState<Set<string>>(new Set());
   const [view, setView]             = useState<ViewName>("home");
   const [resetConfirm, setResetConfirm] = useState(false);
@@ -117,8 +127,45 @@ export default function HiraganaTrainer() {
     });
   }
 
+  function toggleKataRow(id: string) {
+    setSelectedKataRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleKataDakutenRow(id: string) {
+    setSelectedKataDakutenRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleKataCompoundRow(id: string) {
+    setSelectedKataCompoundRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleKataPair(idx: number) {
+    setSelectedKataPairs((prev) => {
+      const next = new Set(prev);
+      next.has(idx) ? next.delete(idx) : next.add(idx);
+      return next;
+    });
+  }
+
   function isRowReady(rowId: string): boolean {
     return selectedRows.has(rowId) || selectedDakutenRows.has(rowId) || selectedCompoundRows.has(rowId) || rowStats(progress, rowId).mastered;
+  }
+
+  function isKataRowReady(rowId: string): boolean {
+    return selectedKataRows.has(rowId) || selectedKataDakutenRows.has(rowId) || selectedKataCompoundRows.has(rowId)
+      || rowStats(progress, rowId, KATAKANA_ALL_ROW_GROUPS).mastered;
   }
 
   function resetProgress() {
@@ -143,6 +190,18 @@ export default function HiraganaTrainer() {
   const wordPool: CharWithRow[] = getAvailableWords(isRowReady)
     .map((w): CharWithRow => ({ kana: w.kana, romaji: w.romaji, row: "word" }));
   const availableWordItems = buildSessionQueue(wordPool, progress, "word", wordPool.length * 2, today);
+
+  const poolForKataSelected = KATAKANA_ALL_CHARS.filter((c) => selectedKataRows.has(c.row) || selectedKataDakutenRows.has(c.row) || selectedKataCompoundRows.has(c.row));
+  const availableKataItems  = buildQueueItems(poolForKataSelected, kataSessionMode, poolForKataSelected.length * 2, progress, today);
+  const masteredKataTotal   = KATAKANA_ALL_CHARS.filter((c) => charStatus(progress, c.kana) === "mastered").length;
+
+  const pairKataKanaSet     = new Set([...selectedKataPairs].flatMap((idx) => KATAKANA_CONFUSED_PAIRS[idx]));
+  const poolForKataPairs    = KATAKANA_ALL_CHARS.filter((c) => pairKataKanaSet.has(c.kana));
+  const availableKataPairItems = buildQueueItems(poolForKataPairs, "recognition", poolForKataPairs.length * 2, progress, today);
+
+  const kataWordPool: CharWithRow[] = getAvailableKatakanaWords(isKataRowReady)
+    .map((w): CharWithRow => ({ kana: w.kana, romaji: w.romaji, row: "word" }));
+  const availableKataWordItems = buildSessionQueue(kataWordPool, progress, "word", kataWordPool.length * 2, today);
 
   const phoneticPool = getAvailablePhonetics(selectedPhenomena);
 
@@ -169,6 +228,7 @@ export default function HiraganaTrainer() {
           <HomeView
             streak={streak}
             masteredTotal={masteredTotal}
+            masteredKataTotal={masteredKataTotal}
             saveError={saveError}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
@@ -192,6 +252,24 @@ export default function HiraganaTrainer() {
             poolForPairs={poolForPairs} availablePairItems={availablePairItems}
             showRomaji={showRomaji} updateShowRomaji={updateShowRomaji}
             wordPool={wordPool} availableWordItems={availableWordItems} startWordSession={startWordSession}
+            setView={setView}
+          />
+        )}
+
+        {/* ── Katakana Setup ── */}
+        {view === "katakanaSetup" && (
+          <KatakanaSetupView
+            progress={progress}
+            selectedRows={selectedKataRows} toggleRow={toggleKataRow} setSelectedRows={setSelectedKataRows}
+            selectedDakutenRows={selectedKataDakutenRows} toggleDakutenRow={toggleKataDakutenRow} setSelectedDakutenRows={setSelectedKataDakutenRows}
+            selectedCompoundRows={selectedKataCompoundRows} toggleCompoundRow={toggleKataCompoundRow} setSelectedCompoundRows={setSelectedKataCompoundRows}
+            sessionMode={kataSessionMode} setSessionMode={setKataSessionMode}
+            sessionLength={kataSessionLength} setSessionLength={setKataSessionLength}
+            availableItems={availableKataItems} poolForSelected={poolForKataSelected}
+            launchSession={launchSession} startSession={startSession}
+            selectedPairs={selectedKataPairs} togglePair={toggleKataPair}
+            poolForPairs={poolForKataPairs} availablePairItems={availableKataPairItems}
+            wordPool={kataWordPool} availableWordItems={availableKataWordItems} startWordSession={startWordSession}
             setView={setView}
           />
         )}
