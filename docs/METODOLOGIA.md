@@ -42,14 +42,10 @@ implementen nuevas features (para que respeten estos principios).
 Cada ítem (kana, palabra, kanji, frase) se repasa justo antes de que se olvide.
 La app ya implementa un **sistema Leitner** en `src/leitner.ts`:
 
-- Cajas 0–4 con intervalos `0/1/3/7/14` días.
+- Cajas 0–6 con intervalos `0/1/3/7/14/30/60` días.
 - Acierto → sube de caja; fallo → vuelve a la caja 0 con repaso hoy.
 - La cola de sesión prioriza: **vencidos → nuevos → no vencidos** (`buildSessionQueue`).
 - El progreso se guarda por clave `"{modo}:{ítem}"` en `localStorage` (`src/storage.ts`).
-
-**Extensión prevista** (BACKLOG #2): añadir cajas 5–6 con intervalos `30/60` días. Con solo
-14 días de intervalo máximo, un ítem "dominado" reaparece demasiado seguido y roba tiempo
-a los ítems nuevos; en un plan de 2 años la cola de repasos se vuelve inmanejable.
 
 **Regla para el estudiante**: los repasos vencidos se hacen **siempre primero**, antes de
 introducir material nuevo. Si un día solo hay 15 minutos, se hacen solo repasos.

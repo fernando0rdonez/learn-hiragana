@@ -159,7 +159,7 @@ Para que la app siempre vaya **por delante** del estudiante:
 
 | Cuándo | Features (BACKLOG) |
 |---|---|
-| Ya / inmediato | #2 SRS 7 cajas · #10 Exportar progreso |
+| Ya / inmediato | #10 Exportar progreso |
 | Antes del mes 3 | #3 Vocabulario 800 · #4 Frases con audio |
 | Antes del mes 4–5 | #5 Kanji N5 · #6 Gramática/construir frases |
 | Antes del mes 8 | #7 Listening de frases · #8 Lectura graduada |
