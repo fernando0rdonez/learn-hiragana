@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 import { useSpeech } from "../hooks/useSpeech";
 
 interface Props {
@@ -32,8 +33,8 @@ export default function AudioButton({ text, className = "" }: Props) {
           }
         `}
       >
-        <span className={`text-xl leading-none ${isSpeaking ? "animate-pulse" : ""}`}>
-          {isAvailable ? "🔊" : "🔇"}
+        <span className={`leading-none ${isSpeaking ? "animate-pulse" : ""}`}>
+          {isAvailable ? <Volume2 size={20} /> : <VolumeX size={20} />}
         </span>
       </button>
 

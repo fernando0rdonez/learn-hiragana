@@ -125,7 +125,7 @@ export default function VocabSetupView({
           <ArrowLeft size={14} /> Inicio
         </button>
       </div>
-      <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif", color: TEXT_MAIN }}>
+      <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: TEXT_MAIN }}>
         Vocabulario
       </h2>
 
