@@ -18,7 +18,7 @@ export default function PhoneticSetupView({ selectedPhenomena, togglePhenomenon,
           <ArrowLeft size={14} /> Inicio
         </button>
       </div>
-      <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Shippori Mincho', serif" }}>
+      <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         🎤 Fonética
       </h2>
       <p className="text-stone-500 text-sm mt-1">Practica cómo suenan realmente las palabras japonesas.</p>
