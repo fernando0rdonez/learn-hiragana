@@ -1,8 +1,15 @@
-import type { VocabWord } from "../vocabulary";
 import { summaryMascot } from "../mascot";
 
+// Subconjunto estructural de VocabWord — permite que juegos que no usan
+// vocabulario (p. ej. el módulo Números) reutilicen este resumen.
+export interface SummaryWord {
+  hiragana: string;
+  romaji: string;
+  meaning: string;
+}
+
 export interface SessionResult {
-  word: VocabWord;
+  word: SummaryWord;
   correct: boolean;
 }
 

@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --import tsx --test src/*.test.ts",
     "preview": "vite preview",
     "vocab:classify": "tsx .claude/skills/vocab-images/scripts/classify.mjs",
     "vocab:generate-images": "node --env-file-if-exists=.env --import tsx .claude/skills/vocab-images/scripts/generate-images.mjs",
