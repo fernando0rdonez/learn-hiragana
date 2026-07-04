@@ -1,6 +1,6 @@
 import type { ProgressItems, ItemProgress } from "./types";
 
-export const INTERVALS = [0, 1, 3, 7, 14]; // days per box (0–4)
+export const INTERVALS = [0, 1, 3, 7, 14, 30, 60]; // days per box (0–6)
 
 /** Returns the updated box + nextDue after an answer. */
 export function advanceBox(
