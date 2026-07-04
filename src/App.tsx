@@ -14,6 +14,7 @@ import { getAvailablePhonetics } from "./phonetics";
 import VocabularyGame from "./components/VocabularyGame";
 import VocabRecognizeGame from "./components/VocabRecognizeGame";
 import VocabListeningGame from "./components/VocabListeningGame";
+import VocabCountingGame from "./components/VocabCountingGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
@@ -294,6 +295,21 @@ export default function HiraganaTrainer() {
         {/* ── Vocabulario: escuchar ── */}
         {view === "listenIt" && (
           <VocabListeningGame
+            vocabulary={vocabSessionPool}
+            progress={progress}
+            sessionLimit={vocabSessionLimit}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("home")}
+          />
+        )}
+
+        {/* ── Vocabulario: contar ── */}
+        {view === "countIt" && (
+          <VocabCountingGame
             vocabulary={vocabSessionPool}
             progress={progress}
             sessionLimit={vocabSessionLimit}

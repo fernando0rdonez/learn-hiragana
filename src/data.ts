@@ -2,7 +2,7 @@ import type { CharData, CharWithRow } from "./types";
 
 // ── Views ──────────────────────────────────────────────────────────────────
 
-export type ViewName = "home" | "hiraganaSetup" | "quiz" | "preview" | "summary" | "stats" | "vocabCategory" | "spellIt" | "recognizeIt" | "listenIt" | "phoneticSetup" | "phonetics";
+export type ViewName = "home" | "hiraganaSetup" | "quiz" | "preview" | "summary" | "stats" | "vocabCategory" | "spellIt" | "recognizeIt" | "listenIt" | "countIt" | "phoneticSetup" | "phonetics";
 
 // ── Kana data ──────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Check, Play, PenLine, Eye, Headphones } from "lucide-react";
+import { ArrowLeft, Check, Play, PenLine, Eye, Headphones, Hash } from "lucide-react";
 import type { VocabWord } from "../vocabulary";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
 import type { ViewName } from "../data";
@@ -32,7 +32,7 @@ const TEXT_MUTED  = "#AAAAAA";
 
 const LAST_SESSION_KEY = "vocab_last_session";
 
-type VocabGameMode = "spell" | "recognize" | "listen";
+type VocabGameMode = "spell" | "recognize" | "listen" | "count";
 
 interface VocabLastSession {
   categoryIds: string[];
@@ -45,12 +45,13 @@ function isVocabLastSession(v: unknown): v is VocabLastSession {
   const o = v as Record<string, unknown>;
   return Array.isArray(o.categoryIds)
     && (o.length === 10 || o.length === 20 || o.length === "all" || o.length === "repasar")
-    && (o.mode === "spell" || o.mode === "recognize" || o.mode === "listen" || o.mode === undefined); // undefined = sesión guardada antes de agregar modos
+    && (o.mode === "spell" || o.mode === "recognize" || o.mode === "listen" || o.mode === "count" || o.mode === undefined); // undefined = sesión guardada antes de agregar modos
 }
 
 function viewForMode(mode: VocabGameMode): ViewName {
   if (mode === "recognize") return "recognizeIt";
   if (mode === "listen") return "listenIt";
+  if (mode === "count") return "countIt";
   return "spellIt";
 }
 
@@ -152,7 +153,7 @@ export default function VocabSetupView({
               ×{lengthLabel(lastSession.length)}
             </span>
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/20">
-              {lastSession.mode === "recognize" ? "Reconocer" : lastSession.mode === "listen" ? "Escuchar" : "Deletrear"}
+              {lastSession.mode === "recognize" ? "Reconocer" : lastSession.mode === "listen" ? "Escuchar" : lastSession.mode === "count" ? "Contar" : "Deletrear"}
             </span>
           </div>
           <button
@@ -174,7 +175,7 @@ export default function VocabSetupView({
       {/* ── Configurar sesión ── */}
       <div className="mt-8">
         <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Modo</span>
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2 mt-2">
           <button
             onClick={() => setGameMode("spell")}
             className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors"
@@ -204,6 +205,16 @@ export default function VocabSetupView({
             }
           >
             <Headphones size={14} /> Escuchar
+          </button>
+          <button
+            onClick={() => setGameMode("count")}
+            className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors"
+            style={gameMode === "count"
+              ? { borderColor: CORAL, backgroundColor: CORAL_LIGHT, color: CORAL_DARK }
+              : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+            }
+          >
+            <Hash size={14} /> Contar
           </button>
         </div>
 
