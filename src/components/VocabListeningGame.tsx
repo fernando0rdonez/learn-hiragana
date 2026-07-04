@@ -60,6 +60,16 @@ function sharedCharCount(a: string, b: string): number {
   return count;
 }
 
+// Estas categorías son mayormente conceptos simbólicos/abstractos (p.ej. "hoy" y
+// "mañana" comparten casi la misma imagen de sol/calendario) que no se distinguen
+// de forma confiable solo con una imagen. Se excluyen únicamente en este modo:
+// Deletrear no depende de imágenes y Reconocer muestra la traducción como apoyo.
+const EXCLUDED_CATEGORIES = new Set(["tiempo", "preguntas", "cantidades"]);
+
+function isEligibleForListening(word: VocabWord): boolean {
+  return !EXCLUDED_CATEGORIES.has(word.category);
+}
+
 /**
  * 4 opciones: la palabra correcta + 3 distractores, priorizados por qué tan
  * fácil sería confundirlos con la respuesta correcta (misma sílaba inicial,
@@ -67,7 +77,7 @@ function sharedCharCount(a: string, b: string): number {
  * sí solas y hay que reconocer el hiragana/audio de verdad.
  */
 function buildOptions(word: VocabWord): VocabWord[] {
-  const candidates = VOCABULARY.filter((w) => w.hiragana !== word.hiragana);
+  const candidates = VOCABULARY.filter((w) => w.hiragana !== word.hiragana && isEligibleForListening(w));
   const scored = shuffle(candidates).map((w) => ({
     w,
     score:
@@ -128,7 +138,7 @@ export default function VocabListeningGame({
   useEffect(() => {
     const due: VocabWord[] = [];
     const notDue: VocabWord[] = [];
-    for (const w of vocabulary) {
+    for (const w of vocabulary.filter(isEligibleForListening)) {
       const p = progress[vocabProgressKey("listening", w.hiragana)];
       if (!p || p.attempts === 0 || isDue(p.nextDue, today)) {
         due.push(w);
