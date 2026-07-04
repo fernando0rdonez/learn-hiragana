@@ -6,6 +6,7 @@ import { getPhoneticChoices } from "../phonetics";
 import { buildSessionQueue, INTERVALS } from "../leitner";
 import PhoneticCard from "./PhoneticCard";
 import { fireConfetti } from "./ConfettiOverlay";
+import { summaryMascot } from "../mascot";
 
 function toISODate(d: Date = new Date()): string {
   return [
@@ -44,6 +45,7 @@ export default function PhoneticsDrill({
   const [selected, setSelected]       = useState<string | null>(null);
   const [feedback, setFeedback]       = useState<{ status: "correct" | "wrong" } | null>(null);
   const [done, setDone]               = useState(false);
+  const [sessionResults, setSessionResults] = useState<boolean[]>([]);
 
   const nextBtnRef = useRef<HTMLButtonElement>(null);
   const today = toISODate();
@@ -104,6 +106,7 @@ export default function PhoneticsDrill({
     setSelected(choice);
     setFeedback({ status: isCorrect ? "correct" : "wrong" });
     recordResult(currentEntry, isCorrect);
+    setSessionResults((prev) => [...prev, isCorrect]);
     if (isCorrect) {
       fireConfetti();
       setTimeout(() => advanceToNext(), 1400);
@@ -115,17 +118,25 @@ export default function PhoneticsDrill({
   }
 
   if (done || queue.length === 0) {
+    const answered = sessionResults.length;
+    const correctCount = sessionResults.filter(Boolean).length;
+    const pct = answered > 0 ? Math.round((correctCount / answered) * 100) : 0;
     return (
       <div className="flex flex-col items-center gap-6 pt-8">
-        <div className="text-5xl">🎉</div>
+        {answered > 0 && (
+          <img src={summaryMascot(pct)} alt="" className="w-24 h-24 object-contain" />
+        )}
         <h2 className="text-2xl font-bold text-stone-800" style={{ fontFamily: "'Shippori Mincho', serif" }}>
           Sesión completa
         </h2>
-        <p className="text-stone-500 text-sm">
-          {queue.length === 0
-            ? "No hay palabras disponibles. Selecciona un fenómeno."
-            : `Completaste ${queue.length} palabra${queue.length === 1 ? "" : "s"}.`}
-        </p>
+        {answered > 0 ? (
+          <div className="w-full max-w-xs rounded-xl bg-white border border-stone-200 p-5 text-center">
+            <span className="text-5xl font-bold text-indigo-700">{pct}%</span>
+            <p className="text-stone-500 text-sm mt-1">{correctCount} de {answered} correctas</p>
+          </div>
+        ) : (
+          <p className="text-stone-500 text-sm">No hay palabras disponibles. Selecciona un fenómeno.</p>
+        )}
         <button
           onClick={onBack}
           className="mt-4 px-8 py-3 rounded-xl bg-indigo-700 text-white font-semibold"
