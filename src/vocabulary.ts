@@ -7,6 +7,7 @@ export interface VocabWord {
   category: string;    // category id
   generated?: boolean; // true once an AI-generated vocab image exists
   imagePath?: string;  // slug key into getVocabImageUrl() (src/vocabImages.ts), e.g. "taberu" — NOT a URL
+  numberValue?: number; // 1-10, only set on category "numeros" entries — used by the counting game
 }
 
 export interface VocabCategory {
@@ -42,16 +43,16 @@ export const VOCAB_CATEGORIES: VocabCategory[] = [
 // 200 most common JLPT N5 words written entirely in hiragana
 export const VOCABULARY: VocabWord[] = [
   // --- NÚMEROS ---
-  { hiragana: "いち",       romaji: "ichi",     meaning: "uno",            imageQuery: "number one",        emojiBackup: "1️⃣", category: "numeros" , generated: true, imagePath: "numeros-ichi" },
-  { hiragana: "に",         romaji: "ni",       meaning: "dos",            imageQuery: "number two",        emojiBackup: "2️⃣", category: "numeros" , generated: true, imagePath: "numeros-ni" },
-  { hiragana: "さん",       romaji: "san",      meaning: "tres",           imageQuery: "number three",      emojiBackup: "3️⃣", category: "numeros" , generated: true, imagePath: "numeros-san" },
-  { hiragana: "し",         romaji: "shi",      meaning: "cuatro",         imageQuery: "number four",       emojiBackup: "4️⃣", category: "numeros" , generated: true, imagePath: "numeros-shi" },
-  { hiragana: "ご",         romaji: "go",       meaning: "cinco",          imageQuery: "number five",       emojiBackup: "5️⃣", category: "numeros" , generated: true, imagePath: "numeros-go" },
-  { hiragana: "ろく",       romaji: "roku",     meaning: "seis",           imageQuery: "number six",        emojiBackup: "6️⃣", category: "numeros" , generated: true, imagePath: "numeros-roku" },
-  { hiragana: "なな",       romaji: "nana",     meaning: "siete",          imageQuery: "number seven",      emojiBackup: "7️⃣", category: "numeros" , generated: true, imagePath: "numeros-nana" },
-  { hiragana: "はち",       romaji: "hachi",    meaning: "ocho",           imageQuery: "number eight",      emojiBackup: "8️⃣", category: "numeros" , generated: true, imagePath: "numeros-hachi" },
-  { hiragana: "きゅう",     romaji: "kyuu",     meaning: "nueve",          imageQuery: "number nine",       emojiBackup: "9️⃣", category: "numeros" , generated: true, imagePath: "numeros-kyuu" },
-  { hiragana: "じゅう",     romaji: "juu",      meaning: "diez",           imageQuery: "number ten",        emojiBackup: "🔟", category: "numeros" , generated: true, imagePath: "numeros-juu" },
+  { hiragana: "いち",       romaji: "ichi",     meaning: "uno",            imageQuery: "number one",        emojiBackup: "1️⃣", category: "numeros" , generated: true, imagePath: "numeros-ichi", numberValue: 1 },
+  { hiragana: "に",         romaji: "ni",       meaning: "dos",            imageQuery: "number two",        emojiBackup: "2️⃣", category: "numeros" , generated: true, imagePath: "numeros-ni", numberValue: 2 },
+  { hiragana: "さん",       romaji: "san",      meaning: "tres",           imageQuery: "number three",      emojiBackup: "3️⃣", category: "numeros" , generated: true, imagePath: "numeros-san", numberValue: 3 },
+  { hiragana: "し",         romaji: "shi",      meaning: "cuatro",         imageQuery: "number four",       emojiBackup: "4️⃣", category: "numeros" , generated: true, imagePath: "numeros-shi", numberValue: 4 },
+  { hiragana: "ご",         romaji: "go",       meaning: "cinco",          imageQuery: "number five",       emojiBackup: "5️⃣", category: "numeros" , generated: true, imagePath: "numeros-go", numberValue: 5 },
+  { hiragana: "ろく",       romaji: "roku",     meaning: "seis",           imageQuery: "number six",        emojiBackup: "6️⃣", category: "numeros" , generated: true, imagePath: "numeros-roku", numberValue: 6 },
+  { hiragana: "なな",       romaji: "nana",     meaning: "siete",          imageQuery: "number seven",      emojiBackup: "7️⃣", category: "numeros" , generated: true, imagePath: "numeros-nana", numberValue: 7 },
+  { hiragana: "はち",       romaji: "hachi",    meaning: "ocho",           imageQuery: "number eight",      emojiBackup: "8️⃣", category: "numeros" , generated: true, imagePath: "numeros-hachi", numberValue: 8 },
+  { hiragana: "きゅう",     romaji: "kyuu",     meaning: "nueve",          imageQuery: "number nine",       emojiBackup: "9️⃣", category: "numeros" , generated: true, imagePath: "numeros-kyuu", numberValue: 9 },
+  { hiragana: "じゅう",     romaji: "juu",      meaning: "diez",           imageQuery: "number ten",        emojiBackup: "🔟", category: "numeros" , generated: true, imagePath: "numeros-juu", numberValue: 10 },
 
   // --- TIEMPO ---
   { hiragana: "きょう",     romaji: "kyou",     meaning: "hoy",            imageQuery: "today calendar",    emojiBackup: "📅", category: "tiempo" , generated: true, imagePath: "tiempo-kyou" },

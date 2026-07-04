@@ -12,7 +12,7 @@ export interface CharWithRow extends CharData {
 
 // ── Progress ───────────────────────────────────────────────────────────────
 
-export type VocabPracticeMode = "spell" | "meaning" | "listening";
+export type VocabPracticeMode = "spell" | "meaning" | "listening" | "counting";
 
 export type ItemMode = "recognition" | "production" | "word" | "phonetics" | VocabPracticeMode;
 

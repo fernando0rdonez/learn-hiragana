@@ -102,7 +102,7 @@ export function charStatus(items: ProgressItems, kana: string): CharStatus {
   return "developing";
 }
 
-const VOCAB_MODES: VocabPracticeMode[] = ["spell", "meaning", "listening"];
+const VOCAB_MODES: VocabPracticeMode[] = ["spell", "meaning", "listening", "counting"];
 
 export function vocabProgressKey(mode: VocabPracticeMode, hiragana: string): string {
   return `${mode}:${hiragana}`;
