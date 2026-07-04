@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Check, Play, ArrowLeft } from "lucide-react";
 import type { CharWithRow, ProgressItems, SessionMode, QueueItem } from "../types";
 import type { ViewName } from "../data";
@@ -6,6 +6,7 @@ import { ROWS, DAKUTEN_ROWS, COMPOUND_ROWS, ALL_ROW_GROUPS, ALL_CHARS } from "..
 import { rowStats, buildQueueItems, toISODate } from "../utils";
 import { CONFUSED_PAIRS } from "../confusedPairs";
 import foxImg from "../assets/character/fox-neutral.png";
+import FloatingStartButton from "../components/FloatingStartButton";
 
 interface Props {
   progress: ProgressItems;
@@ -100,6 +101,7 @@ export default function HiraganaSetupView({
   setView,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("basic");
+  const startButtonRef = useRef<HTMLButtonElement>(null);
   const [lastSession] = useState<LastSession | null>(() => {
     const raw = localStorage.getItem(LAST_SESSION_KEY);
     if (!raw) return null;
@@ -121,6 +123,7 @@ export default function HiraganaSetupView({
   const allActiveSelected = activeRows.length > 0 && activeSelected.size === activeRows.length;
 
   const totalSelectedRows = selectedRows.size + selectedDakutenRows.size + selectedCompoundRows.size;
+  const startSessionCount = sessionLength === "all" ? availableItems.length : Math.min(sessionLength, availableItems.length);
   const allPairsSelected = selectedPairs.size === CONFUSED_PAIRS.length;
 
   function toggleSelectAllActive() {
@@ -326,6 +329,7 @@ export default function HiraganaSetupView({
         </div>
 
         <button
+          ref={startButtonRef}
           disabled={availableItems.length === 0}
           onClick={handleStartSession}
           className="w-full mt-6 py-3.5 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
@@ -412,6 +416,14 @@ export default function HiraganaSetupView({
           {availableWordItems.length > 0 && ` (${availableWordItems.length})`}
         </button>
       </div>
+
+      <FloatingStartButton
+        count={startSessionCount}
+        disabled={availableItems.length === 0}
+        onClick={handleStartSession}
+        accent={PURPLE}
+        targetRef={startButtonRef}
+      />
     </div>
   );
 }

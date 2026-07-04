@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Check, Play, PenLine, Eye, Headphones } from "lucide-react";
 import type { VocabWord } from "../vocabulary";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
@@ -7,6 +7,7 @@ import type { ProgressItems, VocabSessionLength } from "../types";
 import { vocabCategoryStats, notMasteredVocab, resolveVocabSession } from "../utils";
 import { getVocabImageUrl } from "../vocabImages";
 import foxImg from "../assets/character/fox-neutral.png";
+import FloatingStartButton from "../components/FloatingStartButton";
 
 interface Props {
   progress: ProgressItems;
@@ -76,6 +77,7 @@ export default function VocabSetupView({
     }
   });
   const [gameMode, setGameMode] = useState<VocabGameMode>(lastSession?.mode ?? "spell");
+  const startButtonRef = useRef<HTMLButtonElement>(null);
 
   // Pre-select the last session's categories on a fresh load (e.g. after a
   // page reload, when in-memory selection state resets but localStorage
@@ -300,6 +302,7 @@ export default function VocabSetupView({
         </div>
 
         <button
+          ref={startButtonRef}
           disabled={sessionSize === 0}
           onClick={handleStartSession}
           className="w-full mt-6 py-3.5 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
@@ -311,6 +314,14 @@ export default function VocabSetupView({
           {selectedVocabCategories.size} categoría{selectedVocabCategories.size === 1 ? "" : "s"} seleccionada{selectedVocabCategories.size === 1 ? "" : "s"} · {sessionSize} palabra{sessionSize === 1 ? "" : "s"} · {notMastered.length} sin dominar
         </p>
       </div>
+
+      <FloatingStartButton
+        count={sessionSize}
+        disabled={sessionSize === 0}
+        onClick={handleStartSession}
+        accent={CORAL}
+        targetRef={startButtonRef}
+      />
     </div>
   );
 }
