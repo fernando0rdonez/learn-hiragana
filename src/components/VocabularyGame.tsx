@@ -314,11 +314,11 @@ export default function VocabularyGame({
 
       {/* Palabra (romaji + significado, siempre visible para reforzar la asociación imagen–palabra) + audio + fox */}
       <div className="w-full flex items-end justify-between gap-3">
-        <div className="flex items-baseline gap-1.5 rounded-2xl px-4 py-3 flex-1 min-w-0" style={{ backgroundColor: "#F5F3FF" }}>
+        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 rounded-2xl px-4 py-3 flex-1 min-w-0" style={{ backgroundColor: "#F5F3FF" }}>
           {showRomaji && (
             <>
               <span
-                className="text-lg font-bold tracking-wide truncate"
+                className="text-lg font-bold tracking-wide"
                 style={{ color: "#7B4FD4", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
               >
                 {currentWord.romaji}
@@ -326,7 +326,7 @@ export default function VocabularyGame({
               <span className="text-sm" style={{ color: "#C9C0E8" }}>·</span>
             </>
           )}
-          <span className="text-sm font-medium truncate" style={{ color: "#8B7FA8" }}>
+          <span className="text-sm font-medium" style={{ color: "#8B7FA8" }}>
             {currentWord.meaning}
           </span>
         </div>
