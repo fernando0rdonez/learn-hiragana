@@ -348,6 +348,50 @@ en Vocabulario; build pasa.
 
 ---
 
+## #12 · Sección "Cómo estudiar" (metodología para el estudiante)
+
+**Fase**: transversal · **Tamaño**: S
+
+**Objetivo**: una vista informativa y estática dentro de la app donde el estudiante
+entienda la meta, por qué funciona el método (SRS, recuerdo activo, reconocimiento
+antes que producción), su rutina diaria y — crucial — qué debe hacer **fuera** de la
+app (shadowing, intercambio, tutor, diario) para llegar a B1 de verdad. Es contenido
+fijo igual para todos los usuarios: no lee `ProgressItems` ni calcula nada (a diferencia
+de #9, que es el dashboard cuantitativo de progreso real contra las puertas de fase).
+
+**Diseño**:
+- Nuevo `src/content/methodology.ts` con el copy en español, estructurado en secciones
+  reutilizando el contenido ya redactado en `METODOLOGIA.md` y `ROADMAP.md`:
+  1. **Meta y expectativas**: objetivo B1/N3, horas estimadas, ritmo realista
+     45–60 min/día (METODOLOGIA §1).
+  2. **Cómo funciona**: SRS/Leitner explicado en términos simples, recuerdo activo
+     (quiz antes que exposición), reconocimiento → escuchar → producir (§2.1–2.3).
+  3. **Tu rutina diaria**: tabla de los 4 bloques (repasos SRS → material nuevo →
+     oído y boca → lectura) con los tiempos de METODOLOGIA §3.
+  4. **Lo que la app no cubre** (honestidad pedagógica): tabla de las 4 destrezas
+     de METODOLOGIA §2.8 — qué cubre la app y qué debe hacerse fuera (shadowing desde
+     Fase 1; intercambio/tutor desde Fase 2; diario desde Fase 1).
+  5. (Opcional) resumen muy breve de las 4 fases del ROADMAP, con un enlace/nota que
+     apunte a #9 ("Camino a B1") para ver el % real una vez exista.
+- Nueva view `methodology` en `ViewName` (`src/data.ts`) y componente
+  `src/views/MethodologyView.tsx` (estático, sin quiz — única sección de la app
+  exenta de la regla "quiz primero" de METODOLOGIA §4, por ser meta-contenido sobre
+  la app y no un ítem de aprendizaje).
+- Entrada visible desde `HomeView`: icono/enlace tipo "?" o "Cómo estudiar" cerca del
+  header, o una `ModuleCard` adicional — no compite con los módulos de estudio.
+- Sin claves SRS, sin cambios de `schemaVersion` (no toca `ProgressItems`).
+
+**Aceptación**: la vista es accesible desde `HomeView`; cubre las 4 secciones listadas
+en español con el contenido fiel a METODOLOGIA.md; no persiste ni lee progreso; build
+pasa.
+
+> **Hecho (2026-07)** — `src/content/methodology.ts` + `MethodologyView.tsx`, accesible
+> desde un icono de ayuda junto a la racha en `HomeView`. Cubre las 4 secciones (meta,
+> principios, rutina diaria, cobertura de destrezas) más un resumen de las 4 fases del
+> ROADMAP.
+
+---
+
 ## Plantilla para nuevas specs
 
 Al añadir specs futuras a este backlog, incluir siempre: **Fase** del ROADMAP, **Objetivo**

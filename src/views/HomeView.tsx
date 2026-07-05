@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash } from "lucide-react";
+import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle } from "lucide-react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
@@ -54,13 +54,23 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
           <span style={{ color: "#1A1A2E" }}>にほん</span>
           <span style={{ color: "#7B4FD4" }}>go</span>
         </h1>
-        <span
-          className="flex items-center gap-1 text-sm font-semibold px-3 py-1 rounded-full"
-          style={{ backgroundColor: "#FFF4E5", color: "#F5A623" }}
-        >
-          <Flame size={14} />
-          {streak.current} día{streak.current === 1 ? "" : "s"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className="flex items-center gap-1 text-sm font-semibold px-3 py-1 rounded-full"
+            style={{ backgroundColor: "#FFF4E5", color: "#F5A623" }}
+          >
+            <Flame size={14} />
+            {streak.current} día{streak.current === 1 ? "" : "s"}
+          </span>
+          <button
+            onClick={() => setView("methodology")}
+            aria-label="Cómo estudiar"
+            className="w-8 h-8 rounded-full flex items-center justify-center border border-stone-200 hover:bg-stone-50 transition-colors"
+            style={{ color: "#8B7FA8" }}
+          >
+            <HelpCircle size={16} />
+          </button>
+        </div>
       </div>
 
       {/* ── Hero card ── */}
