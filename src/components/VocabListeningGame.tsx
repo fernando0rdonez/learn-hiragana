@@ -73,24 +73,33 @@ function isEligibleForListening(word: VocabWord): boolean {
 
 /**
  * 4 opciones: la palabra correcta + 3 distractores, priorizados por qué tan
- * fácil sería confundirlos con la respuesta correcta (misma sílaba inicial,
- * misma categoría, caracteres compartidos) — así las imágenes no bastan por
+ * fácil sería confundirlos con la respuesta correcta a nivel fonético (misma
+ * sílaba inicial, caracteres compartidos) — así las imágenes no bastan por
  * sí solas y hay que reconocer el hiragana/audio de verdad.
+ *
+ * A propósito NO se prioriza la misma categoría: varias palabras de "gente"
+ * (persona, persona formal, adulto, empleado...) no tienen un referente visual
+ * distinto y sus ilustraciones terminan siendo casi indistinguibles entre sí.
+ * Se prefieren distractores de OTRA categoría (misma dificultad fonética, arte
+ * distinto) y solo se recurre a la misma categoría si no alcanzan candidatos.
  */
 function buildOptions(word: VocabWord): VocabWord[] {
   const candidates = VOCABULARY.filter((w) => w.hiragana !== word.hiragana && isEligibleForListening(w));
   const scored = shuffle(candidates).map((w) => ({
     w,
+    sameCategory: w.category === word.category,
     score:
       (firstChar(w.hiragana) === firstChar(word.hiragana) ? 5 : 0) +
-      (w.category === word.category ? 2 : 0) +
       sharedCharCount(word.hiragana, w.hiragana),
   }));
   scored.sort((a, b) => b.score - a.score);
 
+  const otherCategory = scored.filter((s) => !s.sameCategory);
+  const sameCategory = scored.filter((s) => s.sameCategory);
+
   const seen = new Set([word.hiragana]);
   const distractors: VocabWord[] = [];
-  for (const { w } of scored) {
+  for (const { w } of [...otherCategory, ...sameCategory]) {
     if (distractors.length >= 3) break;
     if (seen.has(w.hiragana)) continue;
     seen.add(w.hiragana);
