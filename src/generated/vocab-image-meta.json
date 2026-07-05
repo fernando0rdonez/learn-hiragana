@@ -4765,5 +4765,47 @@
     "quality": "low",
     "generatedAt": "2026-07-05T17:59:23.179Z",
     "slug": "adverbios-soredewa"
+  },
+  "category::gente": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of a rounded person silhouette wearing a simple name badge on the chest, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-05T18:50:09.890Z",
+    "slug": "category-gente"
+  },
+  "category::posiciones": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of a small cube with four arrows pointing up, down, left, and right around it, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-05T18:50:32.067Z",
+    "slug": "category-posiciones"
+  },
+  "category::escuela": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of an open book with a pencil resting diagonally across its pages, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-05T18:50:54.635Z",
+    "slug": "category-escuela"
+  },
+  "category::verbos2": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of two hands passing a small wrapped gift box between them, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-05T18:51:19.346Z",
+    "slug": "category-verbos2"
+  },
+  "category::adjetivos2": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of a round speech bubble containing a small heart, a star, and a spark inside it, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-05T18:51:42.176Z",
+    "slug": "category-adjetivos2"
+  },
+  "category::adverbios": {
+    "prompt": "Flat vector icon illustration representing the vocabulary category of a circular repeat-loop arrow wrapped around a small clock face, in the style of a modern Japanese language-learning app category badge. Centered, 3/4 front view, plain white background, no text, no border, no shadow. Bold clean outlines, soft pastel palette, minimal flat shading, high contrast between outline and fill.",
+    "model": "gpt-image-1.5",
+    "quality": "low",
+    "generatedAt": "2026-07-05T18:52:06.117Z",
+    "slug": "category-adverbios"
   }
 }
