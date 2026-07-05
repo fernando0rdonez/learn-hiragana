@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, RefObject } from "react";
-import { RotateCcw, ArrowLeft, Volume2 } from "lucide-react";
+import { RotateCcw, ArrowLeft } from "lucide-react";
 import type { CharWithRow, CharData, QuizMode, QueueItem, Feedback, MissedItem } from "../types";
 import type { ViewName } from "../data";
 import { WORDS } from "../words";
 import ProductionCard from "../components/ProductionCard";
+import AudioButton from "../components/AudioButton";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "../components/ConfettiOverlay";
 import { summaryMascot, foxCalmImg, foxNeutral, foxCelebrating, foxSad } from "../mascot";
@@ -48,7 +49,6 @@ export default function QuizView({
   const queueLen    = sessionQueue.length;
   const questionNum = sessionIndexRef.current + 1;
   const uniqueMissed = new Set(missedList.map((m) => `${m.mode}:${m.kana}`)).size;
-  const { speak } = useSpeech();
 
   const [foxPose, setFoxPose] = useState(foxNeutral);
   useEffect(() => {
@@ -100,13 +100,14 @@ export default function QuizView({
               >
                 {current.kana}
               </div>
-              <button
-                onClick={() => speak(current.kana)}
-                aria-label="Escuchar pronunciación"
-                className="flex items-center justify-center w-9 h-9 rounded-full border-2 border-[#F0EDF8] text-[#8B7FA8] hover:border-[#7B4FD4] transition-colors"
-              >
-                <Volume2 size={16} />
-              </button>
+              <AudioButton
+                text={current.kana}
+                size={36}
+                iconSize={16}
+                accent="#7B4FD4"
+                idleBorder="#F0EDF8"
+                idleText="#8B7FA8"
+              />
             </div>
 
             {/* Fox */}
