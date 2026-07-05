@@ -385,6 +385,11 @@ de #9, que es el dashboard cuantitativo de progreso real contra las puertas de f
 en español con el contenido fiel a METODOLOGIA.md; no persiste ni lee progreso; build
 pasa.
 
+> **Hecho (2026-07)** — `src/content/methodology.ts` + `MethodologyView.tsx`, accesible
+> desde un icono de ayuda junto a la racha en `HomeView`. Cubre las 4 secciones (meta,
+> principios, rutina diaria, cobertura de destrezas) más un resumen de las 4 fases del
+> ROADMAP.
+
 ---
 
 ## Plantilla para nuevas specs
