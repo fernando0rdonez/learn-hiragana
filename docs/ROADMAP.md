@@ -12,7 +12,7 @@ calendario sino cumpliendo la **puerta de salida** de la fase (METODOLOGIA §2.6
 | Fase | Nivel | Duración estimada | Alcance | Estado en la app |
 |---|---|---|---|---|
 | 0 — Kana | pre-A1 | semanas 1–8 | hiragana + katakana + fonética básica | Hiragana ✅ · Fonética ✅ · Katakana ✅ |
-| 1 — Fundamentos | A1 ≈ N5 | meses 3–8 | 800 palabras, ~100 kanji, gramática N5, frases hechas | Vocab 200/800 ⚠️ (#3) · Números ❌ (#11) · Frases ❌ (#4) · Kanji ❌ (#5) · Gramática ❌ (#6) |
+| 1 — Fundamentos | A1 ≈ N5 | meses 3–8 | 800 palabras, ~100 kanji, gramática N5, frases hechas | Vocab ✅ (~650, N5 completo sin números — ver #3) · Números ✅ (#11) · Frases ❌ (#4) · Kanji ❌ (#5) · Gramática ❌ (#6) |
 | 2 — Consolidación | A2 ≈ N4 | meses 8–16 | 1.500 palabras, ~300 kanji, forma て/plana, listening y lectura de frases | Listening frases ❌ (#7) · Lectura ❌ (#8) |
 | 3 — Independencia | B1 ≈ N3 | meses 16–28 | 3.700 palabras, ~650 kanji, gramática N3, párrafos, shadowing, producción | Lectura N3 ❌ (#8) · Mapa B1 ❌ (#9) |
 
@@ -55,7 +55,9 @@ gustos y planes inmediatos. Aprobar (mentalmente) el JLPT N5.
 
 ### Contenido
 
-1. **Vocabulario: 200 → 800 palabras N5** (BACKLOG #3). Ritmo: 8–10 palabras nuevas/día,
+1. **Vocabulario N5 completo** (BACKLOG #3, hecho: ~650 palabras — la cifra "800" de las
+   listas N5 incluía ~100 números/contadores/fechas, que viven en el módulo Números #11).
+   Ritmo: 8–10 palabras nuevas/día,
    ciclo reconocer → escuchar → deletrear (METODOLOGIA §2.3).
    Los números van aparte: **módulo Números** (BACKLOG #11) — dominar los ~29 números
    clave (1–10, centenas, millares, 10000) con énfasis en las 5 formas irregulares
@@ -164,7 +166,7 @@ Para que la app siempre vaya **por delante** del estudiante:
 | Cuándo | Features (BACKLOG) |
 |---|---|
 | Ya / inmediato | #10 Exportar progreso · #11 Números (antes de #3: retira los números del vocabulario) |
-| Antes del mes 3 | #3 Vocabulario 800 · #4 Frases con audio |
+| Antes del mes 3 | #3 Vocabulario N5 ✅ · #4 Frases con audio |
 | Antes del mes 4–5 | #5 Kanji N5 · #6 Gramática/construir frases |
 | Antes del mes 8 | #7 Listening de frases · #8 Lectura graduada |
 | Antes del mes 16 | #8 ampliado a N3 · #9 Mapa de progreso B1 |
