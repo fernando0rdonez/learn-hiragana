@@ -37,20 +37,29 @@ export function useSpeech(): UseSpeechResult {
     speechSynthesis.cancel();
 
     return new Promise((resolve) => {
+      let settled = false;
+      const settle = () => {
+        if (settled) return;
+        settled = true;
+        setIsSpeaking(false);
+        clearTimeout(safetyTimeout);
+        resolve();
+      };
+
+      // Red de seguridad: en algunos navegadores, tras cancel(), speak() puede
+      // no disparar nunca onend/onerror (bug conocido de speechSynthesis), lo
+      // que dejaría esta promesa colgada para siempre y bloquearía el avance
+      // a la siguiente pregunta. Este timeout garantiza que siempre se resuelva.
+      const safetyTimeout = setTimeout(settle, Math.max(3000, text.length * 300));
+
       const utterance = new SpeechSynthesisUtterance(text);
       if (voiceRef.current) utterance.voice = voiceRef.current;
       utterance.lang = "ja-JP";
       utterance.rate = 0.8;
 
       utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        resolve();
-      };
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-        resolve();
-      };
+      utterance.onend = settle;
+      utterance.onerror = settle;
 
       speechSynthesis.speak(utterance);
     });
