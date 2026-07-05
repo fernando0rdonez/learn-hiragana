@@ -19,10 +19,20 @@ export const CATEGORY_VISUAL_TYPE = {
     visualType: "concrete",
     reviewNote: "Swatch/objeto sólido del color, no arte abstracto. Revisar antes de aprobar.",
   },
+  gente: {
+    visualType: "concrete",
+    reviewNote:
+      "Necesita ancla visual que distinga el rol/persona (amigo/vecino/extranjero/adulto/niño...). Revisar antes de aprobar.",
+  },
+  escuela: { visualType: "concrete" },
   verbos: { visualType: "action" },
+  verbos2: { visualType: "action" },
   tiempo: { visualType: "symbolic" },
   cantidades: { visualType: "symbolic" },
   adjetivos: { visualType: "symbolic" },
+  adjetivos2: { visualType: "symbolic" },
+  adverbios: { visualType: "symbolic" },
+  posiciones: { visualType: "symbolic" },
   pronombres: { visualType: "symbolic" },
   preguntas: { visualType: "symbolic" },
   saludos: {

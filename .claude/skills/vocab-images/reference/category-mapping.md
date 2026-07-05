@@ -9,8 +9,10 @@ If you change the mapping, update both places.
 | `comida`, `animales`, `lugares`, `transporte`, `objetos`, `ropa`, `naturaleza`, `casa`, `cuerpo` | `concrete` | objeto centrado, template estándar (`.claude/prompts/concrete.md`) |
 | `familia` | `concrete` (requiere regla específica) | necesita ancla visual que distinga mamá/papá/abuela/abuelo/hermano mayor/menor — revisar antes de aprobar |
 | `colores` | `concrete` (variante) | swatch/objeto sólido del color, no "arte abstracto" — revisar antes de aprobar |
-| `verbos` | `action` | personaje + prop que ancla la acción sin ambigüedad (ver `action-fewshot.md`) |
-| `tiempo`, `cantidades`, `adjetivos`, `pronombres`, `preguntas` | `symbolic` | ícono/metáfora visual, sin personaje con gesto facial — la metáfora la define el usuario a mano |
+| `gente` | `concrete` (requiere regla específica) | necesita ancla visual que distinga el rol/persona (amigo/vecino/extranjero/adulto/niño...) — revisar antes de aprobar |
+| `escuela` | `concrete` | objeto centrado, template estándar |
+| `verbos`, `verbos2` | `action` | personaje + prop que ancla la acción sin ambigüedad (ver `action-fewshot.md`) |
+| `tiempo`, `cantidades`, `adjetivos`, `adjetivos2`, `adverbios`, `posiciones`, `pronombres`, `preguntas` | `symbolic` | ícono/metáfora visual, sin personaje con gesto facial — la metáfora la define el usuario a mano |
 | `saludos` | `needs_review` (Action/Symbolic mixto) | revisar caso por caso (ej: "gracias" = manos juntas + corazón; "hola" = mano saludando) |
 | `misc` | `needs_review` (mixto) | dinero, trabajo, música son concrete; el resto varía — revisar caso por caso |
 
