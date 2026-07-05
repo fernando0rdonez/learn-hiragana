@@ -90,6 +90,9 @@ existente intactos.
   en `VOCAB_CATEGORIES`.
 - Palabras que en N5 se escriben con katakana (テレビ, レストラン…) : incluirlas una vez
   exista el módulo #1; mientras tanto, omitirlas (la app deletrea con fichas kana).
+- **Números quedan fuera del vocabulario**: los numerales (ひゃく, せん, まん, contadores
+  de cifras…) NO se añaden aquí — viven en el módulo Números (#11), que además retira
+  la categoría "numeros" existente. No re-añadir palabras de número en las tandas.
 - Evitar duplicados con las 200 existentes (comprobar por campo `hiragana`).
 - Imágenes: usar la skill `vocab-images` para las tandas nuevas; `emojiBackup` obligatorio.
 
@@ -263,6 +266,77 @@ se marca cumplida solo cuando todos sus criterios llegan al objetivo; build pasa
 
 **Aceptación**: ciclo exportar → borrar localStorage → importar deja el progreso idéntico
 (incluye racha y ajustes); un JSON inválido muestra error y no destruye nada; build pasa.
+
+---
+
+## #11 · Módulo Números (sección propia + formar números grandes)
+
+**Fase**: 0–1 (implementar **antes** de #3) · **Tamaño**: M
+
+**Objetivo**: sacar los números de Vocabulario a un módulo propio al nivel de
+Hiragana/Katakana, centrado en dominar primero los **números clave** — los ~29 bloques
+con los que se construye cualquier número — y después practicar formándolos: dado un
+número grande (p. ej. 4638), componerlo en hiragana con fichas, al estilo del modo
+Deletrear de vocabulario.
+
+**Números clave (el corazón del módulo)**:
+
+| Grupo | Ítems | Irregulares (énfasis especial) |
+|---|---|---|
+| Unidades 1–10 | いち…じゅう (se mudan de vocabulario) | 4=よん, 7=なな, 9=きゅう en compuestos |
+| Centenas 100–900 | ひゃく, にひゃく… | **300 さんびゃく · 600 ろっぴゃく · 800 はっぴゃく** |
+| Millares 1000–9000 | せん, にせん… | **3000 さんぜん · 8000 はっせん** |
+| Diez mil | 10000 いちまん | siempre con いち |
+
+Las 5 formas irregulares de centenas/millares son la "parte complicada" (rendaku/sokuon)
+y deben recibir trato preferente: aparecer marcadas visualmente en la tabla de estudio
+y sobre-representarse en la generación de ejercicios (mismo espíritu que los pares
+confundibles de kana).
+
+**Diseño**:
+- Nuevo `src/numbers.ts`:
+  - `KEY_NUMBERS`: `{ value, hiragana, romaji, irregular?: true }` para los ~29 bloques
+    de la tabla anterior.
+  - `numberToKana(n: number): string` — conversor puro 1–99 999 con todas las reglas
+    eufónicas (さんびゃく, ろっぴゃく, はっぴゃく, さんぜん, はっせん; よん/なな/きゅう).
+    **Con tests unitarios** que incluyan al menos: 2027 = にせんにじゅうなな,
+    1523 = せんごひゃくにじゅうさん, 7286, 5438, 4638, y las 5 irregulares aisladas.
+  - `numberToChips(n)`: descompone en bloques (4638 → よんせん・ろっぴゃく・さんじゅう・はち)
+    para las fichas del juego de formar.
+- **Tres modos** (nueva entrada "Números" en `HomeView` + setup view propio, plantilla
+  `VocabSetupView`):
+  1. **Números clave** (reconocer): cifra → elegir su hiragana entre 4 (plantilla
+     `VocabRecognizeGame`, con audio al corregir). Clave SRS `number-key:{value}`
+     (p. ej. `number-key:300`). Los distractores de un irregular son sus formas
+     "tentadoras" incorrectas (さんひゃく, ろくひゃく, はちひゃく…).
+  2. **Formar el número** (producción, estilo Deletrear): se muestra la cifra (p. ej.
+     4638), el usuario ordena fichas-bloque (más 2–3 distractores, incluidos los
+     irregulares mal formados) en los huecos (`WordSlots` con `flex-wrap` para números
+     largos). El número se genera aleatorio por nivel de dificultad: 2 cifras → 3 →
+     4 → con まん. El acierto/fallo acredita SRS **a cada número clave usado**
+     (`number-key:{value}` de cada bloque), no al número generado (los números
+     aleatorios no son ítems SRS estables).
+  3. **Contar** (ya existe): `VocabCountingGame` se muda aquí tal cual, conservando
+     sus claves `counting:{hiragana}` — sin migración.
+- **Desbloqueo pedagógico** (reconocimiento antes que producción, METODOLOGIA §2.2):
+  "Formar el número" de N cifras se habilita cuando los números clave de esa magnitud
+  están al menos en estado "developing"; la dificultad "con まん" requiere dominar
+  los millares.
+- Retirada de vocabulario: quitar las 10 palabras y la categoría `numeros` de
+  `src/vocabulary.ts` (+ tarjeta de categoría). El progreso viejo (`spell:いち`,
+  `meaning:いち`…) queda huérfano pero inerte — no requiere migración ni subir
+  `schemaVersion`; las claves `counting:` siguen vivas en el modo Contar.
+- UI: `ViewName` + vistas nuevas (`numberSetup`, `numberKeys`, `numberBuild`, `countIt`
+  se re-apunta aquí); tarjeta "Números" en `HomeView` (patrón Katakana). Nota:
+  `LAST_USED_MODULE_KEY` en `HomeView` solo conoce `hiragana|vocab` — ampliar o dejar
+  fuera del hero.
+- Audio: TTS del número completo al corregir en "Formar" (`useSpeech` con el kana).
+
+**Aceptación**: `numberToKana` pasa tests con los ejemplos listados; sesión completa de
+"Números clave" y de "Formar el número" con SRS persistente por número clave; los 5
+irregulares aparecen destacados y sobre-representados; el modo Contar funciona igual que
+antes desde la sección nueva conservando su progreso; la categoría Números ya no aparece
+en Vocabulario; build pasa.
 
 ---
 

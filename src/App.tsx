@@ -17,6 +17,8 @@ import VocabularyGame from "./components/VocabularyGame";
 import VocabRecognizeGame from "./components/VocabRecognizeGame";
 import VocabListeningGame from "./components/VocabListeningGame";
 import VocabCountingGame from "./components/VocabCountingGame";
+import NumberKeysGame from "./components/NumberKeysGame";
+import NumberBuildGame from "./components/NumberBuildGame";
 import PhoneticsDrill from "./components/PhoneticsDrill";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
@@ -28,6 +30,9 @@ import { useSession } from "./hooks/useSession";
 import HomeView from "./views/HomeView";
 import StatsView from "./views/StatsView";
 import VocabSetupView from "./views/VocabSetupView";
+import NumberSetupView, { type NumberKeysLength } from "./views/NumberSetupView";
+import type { BuildLevel } from "./numbers";
+import { KEY_NUMBERS, KEY_NUMBER_GROUPS, BUILD_LEVELS, numberKeyStatus } from "./numbers";
 import PhoneticSetupView from "./views/PhoneticSetupView";
 import HiraganaSetupView from "./views/HiraganaSetupView";
 import KatakanaSetupView from "./views/KatakanaSetupView";
@@ -57,6 +62,11 @@ export default function HiraganaTrainer() {
   const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
   const [selectedVocabCategories, setSelectedVocabCategories] = useState<Set<string>>(new Set());
   const [vocabSessionLength, setVocabSessionLength] = useState<VocabSessionLength>(20);
+  const [selectedNumberGroups, setSelectedNumberGroups] = useState<Set<string>>(
+    () => new Set(KEY_NUMBER_GROUPS.map((g) => g.id))
+  );
+  const [numberKeysLength, setNumberKeysLength] = useState<NumberKeysLength>(10);
+  const [numberBuildLevel, setNumberBuildLevel] = useState<BuildLevel>("2cifras");
 
   const {
     previewRows, pendingStartRef,
@@ -89,6 +99,14 @@ export default function HiraganaTrainer() {
 
   function toggleVocabCategory(id: string) {
     setSelectedVocabCategories((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleNumberGroup(id: string) {
+    setSelectedNumberGroups((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -210,6 +228,13 @@ export default function HiraganaTrainer() {
     : [];
   const { pool: vocabSessionPool, limit: vocabSessionLimit } = resolveVocabSession(filteredVocabulary, vocabSessionLength, progress);
 
+  const numberKeysPool = KEY_NUMBER_GROUPS
+    .filter((g) => selectedNumberGroups.has(g.id))
+    .flatMap((g) => g.numbers);
+  const numberKeysLimit = numberKeysLength === "all" ? numberKeysPool.length : numberKeysLength;
+  const numberBuildLevelDef = BUILD_LEVELS.find((l) => l.id === numberBuildLevel) ?? BUILD_LEVELS[0];
+  const masteredNumberKeys = KEY_NUMBERS.filter((k) => numberKeyStatus(progress, k.value) === "mastered").length;
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-stone-50 text-stone-400">Cargando progreso…</div>;
   }
@@ -229,6 +254,7 @@ export default function HiraganaTrainer() {
             streak={streak}
             masteredTotal={masteredTotal}
             masteredKataTotal={masteredKataTotal}
+            masteredNumberKeys={masteredNumberKeys}
             saveError={saveError}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
@@ -385,18 +411,62 @@ export default function HiraganaTrainer() {
           />
         )}
 
-        {/* ── Vocabulario: contar ── */}
-        {view === "countIt" && (
-          <VocabCountingGame
-            vocabulary={vocabSessionPool}
+        {/* ── Números: selector ── */}
+        {view === "numberSetup" && (
+          <NumberSetupView
             progress={progress}
-            sessionLimit={vocabSessionLimit}
+            selectedGroups={selectedNumberGroups}
+            toggleGroup={toggleNumberGroup}
+            keysLength={numberKeysLength}
+            setKeysLength={setNumberKeysLength}
+            buildLevel={numberBuildLevel}
+            setBuildLevel={setNumberBuildLevel}
+            setView={setView}
+          />
+        )}
+
+        {/* ── Números: números clave (reconocer) ── */}
+        {view === "numberKeys" && (
+          <NumberKeysGame
+            pool={numberKeysPool}
+            progress={progress}
+            sessionLimit={numberKeysLimit}
             onProgressUpdate={(updates) => {
               const merged = { ...progress, ...updates };
               setProgress(merged);
               persist(merged);
             }}
-            onBack={() => setView("home")}
+            onBack={() => setView("numberSetup")}
+          />
+        )}
+
+        {/* ── Números: formar el número ── */}
+        {view === "numberBuild" && (
+          <NumberBuildGame
+            level={numberBuildLevelDef}
+            progress={progress}
+            sessionLimit={10}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("numberSetup")}
+          />
+        )}
+
+        {/* ── Números: contar (objetos del vocabulario completo) ── */}
+        {view === "countIt" && (
+          <VocabCountingGame
+            vocabulary={VOCABULARY}
+            progress={progress}
+            sessionLimit={10}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("numberSetup")}
           />
         )}
 

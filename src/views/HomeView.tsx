@@ -1,16 +1,18 @@
 import { useState } from "react";
-import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine } from "lucide-react";
+import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash } from "lucide-react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
 import { KATAKANA_ALL_CHARS } from "../dataKatakana";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
+import { KEY_NUMBERS } from "../numbers";
 import foxImg from "../assets/character/fox-neutral.png";
 
 interface Props {
   streak: StreakData;
   masteredTotal: number;
   masteredKataTotal: number;
+  masteredNumberKeys: number;
   saveError: boolean;
   resetConfirm: boolean;
   setResetConfirm: (v: boolean) => void;
@@ -34,7 +36,7 @@ function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
   return { moduleId: "hiragana", wasStored: false };
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
   const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -153,6 +155,14 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, sav
             title="Katakana"
             subtitle={`${masteredKataTotal} de ${KATAKANA_ALL_CHARS.length} caracteres dominados`}
             onClick={() => goTo("katakanaSetup")}
+          />
+
+          <ModuleCard
+            bg="#FFF4E5" border="#F5A623"
+            icon={<Hash size={20} style={{ color: "#F5A623" }} />}
+            title="Números"
+            subtitle={`${masteredNumberKeys} de ${KEY_NUMBERS.length} números clave dominados`}
+            onClick={() => goTo("numberSetup")}
           />
 
           <ModuleCard

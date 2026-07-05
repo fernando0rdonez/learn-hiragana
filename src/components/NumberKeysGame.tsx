@@ -1,16 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
-import type { VocabWord } from "../vocabulary";
-import { VOCABULARY } from "../vocabulary";
-import type { NumberWord } from "../numbers";
-import { NUMBER_WORDS } from "../numbers";
-import { advanceBox } from "../leitner";
-import { vocabProgressKey } from "../utils";
+import type { KeyNumber } from "../numbers";
+import { buildKeyOptions, numberKeyProgressKey } from "../numbers";
+import { advanceBox, isDue } from "../leitner";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
-import { getVocabImageUrl } from "../vocabImages";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxCelebratingImg from "../assets/character/fox-celebrating.png";
@@ -28,24 +24,12 @@ function toISODate(d: Date = new Date()): string {
 
 type GamePhase = "playing" | "correct" | "wrong" | "done";
 
-interface Round {
-  numberWord: NumberWord; // la respuesta correcta (いち..じゅう)
-  object: VocabWord;      // el objeto que se repite en la imagen
-  options: NumberWord[];  // 4 números en hiragana, uno correcto
-}
-
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-// Categorías cuyas imágenes son un solo objeto concreto — se pueden repetir en
-// una grilla sin que quede raro (a diferencia de p.ej. "colores" o "verbos").
-const COUNTABLE_CATEGORIES = new Set([
-  "comida", "animales", "objetos", "ropa", "transporte", "naturaleza", "familia", "lugares", "casa",
-]);
-
-const PROMPT_PHRASE = "いくつ見えますか？";
 const POST_ANSWER_SPEECH_DELAY = 500;
 
-const CORAL_DARK = "#C03A1E";
+const AMBER      = "#F5A623";
+const AMBER_DARK = "#C77F00";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -58,22 +42,10 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-/** 4 opciones: el número correcto + 3 distractores tomados del resto de números. */
-function buildOptions(numberWords: NumberWord[], correct: NumberWord): NumberWord[] {
-  const distractors = shuffle(numberWords.filter((w) => w.hiragana !== correct.hiragana)).slice(0, 3);
-  return shuffle([correct, ...distractors]);
-}
-
-function buildRound(numberWords: NumberWord[], objectPool: VocabWord[]): Round {
-  const numberWord = numberWords[Math.floor(Math.random() * numberWords.length)];
-  const object = objectPool[Math.floor(Math.random() * objectPool.length)];
-  return { numberWord, object, options: buildOptions(numberWords, numberWord) };
-}
-
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 interface Props {
-  vocabulary: VocabWord[];
+  pool: KeyNumber[];
   progress: ProgressItems;
   sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
@@ -82,15 +54,16 @@ interface Props {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export default function VocabCountingGame({
-  vocabulary,
+export default function NumberKeysGame({
+  pool,
   progress,
   sessionLimit = 10,
   onProgressUpdate,
   onBack,
 }: Props) {
-  const [rounds, setRounds] = useState<Round[]>([]);
-  const [roundIndex, setRoundIndex] = useState(0);
+  const [queue, setQueue] = useState<KeyNumber[]>([]);
+  const [queueIndex, setQueueIndex] = useState(0);
+  const [options, setOptions] = useState<string[]>([]);
   const [phase, setPhase] = useState<GamePhase>("playing");
   const [selected, setSelected] = useState<string | null>(null);
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
@@ -103,46 +76,47 @@ export default function VocabCountingGame({
     phase === "wrong" ? foxSadImg :
     foxNeutralImg;
 
-  // Arma la sesión al montar: números 1-10 (módulo Números) como respuestas
-  // posibles, objetos concretos (con imagen generada) de las categorías
-  // seleccionadas como lo que hay que contar. Si la selección no deja objetos
-  // contables (p.ej. solo "Colores"), cae de vuelta al vocabulario completo.
+  // Cola al montar: vencidos/nuevos primero, luego no vencidos — nunca se bloquea
   useEffect(() => {
-    const numberWords = NUMBER_WORDS;
-    const objectPool = vocabulary.filter((w) => COUNTABLE_CATEGORIES.has(w.category) && w.generated && w.imagePath);
-    const fallbackPool = objectPool.length > 0
-      ? objectPool
-      : VOCABULARY.filter((w) => COUNTABLE_CATEGORIES.has(w.category) && w.generated && w.imagePath);
-
-    const built = Array.from({ length: sessionLimit }, () => buildRound(numberWords, fallbackPool));
-    setRounds(built);
-    setRoundIndex(0);
-    if (built.length > 0) initRound();
+    const due: KeyNumber[] = [];
+    const notDue: KeyNumber[] = [];
+    for (const k of pool) {
+      const p = progress[numberKeyProgressKey(k.value)];
+      if (!p || p.attempts === 0 || isDue(p.nextDue, today)) {
+        due.push(k);
+      } else {
+        notDue.push(k);
+      }
+    }
+    const keyQueue = [...shuffle(due), ...shuffle(notDue)].slice(0, sessionLimit);
+    setQueue(keyQueue);
+    setQueueIndex(0);
+    if (keyQueue.length > 0) initKey(keyQueue[0]);
     else setPhase("done");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function initRound() {
+  function initKey(key: KeyNumber) {
+    setOptions(buildKeyOptions(key));
     setSelected(null);
     setPhase("playing");
-    speak(PROMPT_PHRASE);
   }
 
-  const currentRound = rounds[roundIndex] ?? null;
+  const currentKey = queue[queueIndex] ?? null;
 
   function advanceToNext() {
-    const nextIndex = roundIndex + 1;
-    if (nextIndex >= rounds.length) {
+    const nextIndex = queueIndex + 1;
+    if (nextIndex >= queue.length) {
       setPhase("done");
       return;
     }
-    setRoundIndex(nextIndex);
-    initRound();
+    setQueueIndex(nextIndex);
+    initKey(queue[nextIndex]);
   }
 
-  function recordResult(numberWord: NumberWord, isCorrect: boolean) {
-    const key = vocabProgressKey("counting", numberWord.hiragana);
-    const prevP: ItemProgress = progress[key] ?? {
+  function recordResult(key: KeyNumber, isCorrect: boolean) {
+    const progressKey = numberKeyProgressKey(key.value);
+    const prevP: ItemProgress = progress[progressKey] ?? {
       box: 0,
       nextDue: today,
       attempts: 0,
@@ -155,28 +129,33 @@ export default function VocabCountingGame({
       attempts: prevP.attempts + 1,
       correct: prevP.correct + (isCorrect ? 1 : 0),
     };
-    onProgressUpdate({ [key]: newP });
-    setSessionResults((prev) => [...prev, { word: numberWord, correct: isCorrect }]);
+    onProgressUpdate({ [progressKey]: newP });
+    setSessionResults((prev) => [...prev, {
+      word: { hiragana: key.hiragana, romaji: key.romaji, meaning: key.value.toLocaleString("es") },
+      correct: isCorrect,
+    }]);
   }
 
+  // Lee siempre la forma correcta (la trampa de un irregular no es una palabra
+  // real que valga la pena escuchar) y espera antes de avanzar.
   const speakAndWait = useCallback(
     (text: string) => speak(text).then(() => new Promise<void>((resolve) => setTimeout(resolve, POST_ANSWER_SPEECH_DELAY))),
     [speak]
   );
 
   const finishAnswer = useCallback(
-    (numberWord: NumberWord, isCorrect: boolean, delay: Promise<void>) => {
-      recordResult(numberWord, isCorrect);
+    (key: KeyNumber, isCorrect: boolean, delay: Promise<void>) => {
+      recordResult(key, isCorrect);
       delay.then(() => advanceToNext());
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [roundIndex, rounds]
+    [queueIndex, queue]
   );
 
-  function handleAnswer(option: NumberWord) {
-    if (phase !== "playing" || !currentRound) return;
-    setSelected(option.hiragana);
-    const isCorrect = option.hiragana === currentRound.numberWord.hiragana;
+  function handleAnswer(option: string) {
+    if (phase !== "playing" || !currentKey) return;
+    setSelected(option);
+    const isCorrect = option === currentKey.hiragana;
     if (isCorrect) {
       playChime();
       fireConfetti();
@@ -185,21 +164,19 @@ export default function VocabCountingGame({
       playBuzz();
       setPhase("wrong");
     }
-    finishAnswer(currentRound.numberWord, isCorrect, speakAndWait(option.hiragana));
+    finishAnswer(currentKey, isCorrect, speakAndWait(currentKey.hiragana));
   }
 
   // ── Done screen ──────────────────────────────────────────────────────────────
 
-  if (phase === "done" || rounds.length === 0) {
+  if (phase === "done" || queue.length === 0) {
     return <VocabSessionSummary sessionResults={sessionResults} onBack={onBack} />;
   }
 
-  if (!currentRound) return null;
+  if (!currentKey) return null;
 
-  const totalRounds = rounds.length;
-  const progressPct = (roundIndex / totalRounds) * 100;
-  const objectImageUrl = getVocabImageUrl(currentRound.object.imagePath!);
-  const count = currentRound.numberWord.numberValue;
+  const totalKeys = queue.length;
+  const progressPct = (queueIndex / totalKeys) * 100;
 
   // ── Game screen ──────────────────────────────────────────────────────────────
 
@@ -211,60 +188,58 @@ export default function VocabCountingGame({
           <ArrowLeft size={14} /> Salir
         </button>
         <span>
-          {roundIndex + 1} / {totalRounds}
+          {queueIndex + 1} / {totalKeys}
         </span>
       </div>
       <div className="w-full h-1.5 bg-[#F0EDF8] rounded-full overflow-hidden">
         <div
           className="h-full transition-all"
-          style={{ width: `${progressPct}%`, background: "linear-gradient(90deg, #7B4FD4, #9B7CE8)" }}
+          style={{ width: `${progressPct}%`, background: `linear-gradient(90deg, ${AMBER}, #F7C05B)` }}
         />
       </div>
 
       {/* Pregunta */}
       <div className="flex flex-col items-center gap-1">
-        <p className="text-2xl font-bold" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: "#1A1A2E" }}>
-          {PROMPT_PHRASE}
-        </p>
-        <p className="text-sm" style={{ color: "#8B7FA8" }}>¿Cuántos ves?</p>
-      </div>
-
-      {/* Grilla de objetos a contar */}
-      <div
-        className="w-full max-w-xs grid grid-cols-5 gap-2 justify-items-center rounded-2xl p-4"
-        style={{ backgroundColor: "#F5F0EA" }}
-      >
-        {Array.from({ length: count }, (_, i) => (
-          <img
-            key={i}
-            src={objectImageUrl}
-            alt={currentRound.object.meaning}
-            className="w-12 h-12 rounded-lg object-cover"
-          />
-        ))}
+        <p className="text-sm" style={{ color: "#8B7FA8" }}>¿Cómo se lee?</p>
+        <div className="flex items-center gap-2">
+          <p
+            className="text-6xl font-bold tracking-tight"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: "#1A1A2E" }}
+          >
+            {currentKey.value.toLocaleString("es")}
+          </p>
+          {currentKey.irregular && (
+            <span
+              className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: "#FFF4E5", color: AMBER_DARK }}
+            >
+              ★ irregular
+            </span>
+          )}
+        </div>
       </div>
 
       <img src={foxPose} alt="" className="w-16 h-16 object-contain shrink-0 transition-opacity" />
 
       {/* 4 opciones en hiragana */}
       <div className="w-full grid grid-cols-2 gap-2.5">
-        {currentRound.options.map((opt) => {
-          const isCorrectOpt = opt.hiragana === currentRound.numberWord.hiragana;
-          const isSelectedOpt = opt.hiragana === selected;
+        {options.map((opt) => {
+          const isCorrectOpt = opt === currentKey.hiragana;
+          const isSelectedOpt = opt === selected;
           let style: React.CSSProperties = { borderColor: "#EEEEEE", backgroundColor: "#FFFFFF", color: "#1A1A2E" };
           if (phase !== "playing") {
             if (isCorrectOpt) style = { borderColor: "#0A6E54", backgroundColor: "#E9F7F1", color: "#0A6E54" };
-            else if (isSelectedOpt) style = { borderColor: CORAL_DARK, backgroundColor: "#FDEDEA", color: CORAL_DARK };
+            else if (isSelectedOpt) style = { borderColor: AMBER_DARK, backgroundColor: "#FDF2E3", color: AMBER_DARK };
           }
           return (
             <button
-              key={opt.hiragana}
+              key={opt}
               disabled={phase !== "playing"}
               onClick={() => handleAnswer(opt)}
-              className="w-full py-4 rounded-2xl border-2 text-2xl font-semibold text-center transition-colors disabled:opacity-100"
+              className="w-full py-4 rounded-2xl border-2 text-xl font-semibold text-center transition-colors disabled:opacity-100"
               style={{ ...style, fontFamily: "'Noto Sans JP', sans-serif" }}
             >
-              {opt.hiragana}
+              {opt}
             </button>
           );
         })}
@@ -272,10 +247,13 @@ export default function VocabCountingGame({
 
       {/* Feedback */}
       {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentRound.numberWord.romaji} · {currentRound.numberWord.meaning}</p>
+        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentKey.romaji}</p>
       )}
       {phase === "wrong" && (
-        <p className="text-[#C03A1E] font-semibold text-sm">❌ Era {currentRound.numberWord.romaji} · {currentRound.numberWord.meaning}</p>
+        <p className="font-semibold text-sm" style={{ color: AMBER_DARK }}>
+          ❌ Era {currentKey.hiragana} · {currentKey.romaji}
+          {currentKey.irregular ? " · ¡forma irregular!" : ""}
+        </p>
       )}
     </div>
   );
