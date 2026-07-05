@@ -259,7 +259,7 @@ export const VOCABULARY: VocabWord[] = [
   { hiragana: "うえ",       romaji: "ue",       meaning: "arriba / encima", imageQuery: "up arrow above",   emojiBackup: "⬆️", category: "posiciones" , generated: true, imagePath: "posiciones-ue" },
   { hiragana: "した",       romaji: "shita",    meaning: "abajo / debajo", imageQuery: "down arrow below",  emojiBackup: "⬇️", category: "posiciones" , generated: true, imagePath: "posiciones-shita" },
   { hiragana: "なか",       romaji: "naka",     meaning: "dentro",         imageQuery: "inside box",        emojiBackup: "📦", category: "posiciones" , generated: true, imagePath: "posiciones-naka" },
-  { hiragana: "そと",       romaji: "soto",     meaning: "fuera",          imageQuery: "outside outdoors",  emojiBackup: "🏞️", category: "posiciones" , generated: true, imagePath: "posiciones-soto" },
+  { hiragana: "そと",       romaji: "soto",     meaning: "fuera",          imageQuery: "outside outdoors",  emojiBackup: "🏞️", category: "posiciones"  , generated: true, imagePath: "posiciones-soto" },
   { hiragana: "まえ",       romaji: "mae",      meaning: "delante / antes", imageQuery: "front of building", emojiBackup: "🔼", category: "posiciones" , generated: true, imagePath: "posiciones-mae" },
   { hiragana: "うしろ",     romaji: "ushiro",   meaning: "detrás",         imageQuery: "behind back",       emojiBackup: "🔙", category: "posiciones" , generated: true, imagePath: "posiciones-ushiro" },
   { hiragana: "みぎ",       romaji: "migi",     meaning: "derecha",        imageQuery: "right arrow",       emojiBackup: "➡️", category: "posiciones" , generated: true, imagePath: "posiciones-migi" },
