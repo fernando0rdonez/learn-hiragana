@@ -100,6 +100,14 @@ existente intactos.
 en español y categoría válida; los tres juegos de vocabulario funcionan con las categorías
 nuevas; build pasa.
 
+> **Hecho (2026-07)** — implementado con ~650 palabras: la cifra "≥ 800" se estimó antes
+> de que #11 sacara del vocabulario los ~100 numerales, contadores y fechas numéricas
+> (ついたち…, 〜がつ, ひとつ…), que ahora viven en el módulo Números. La lista N5 completa
+> **sin esos ítems** ronda las 650; se añadieron 462 palabras y 6 categorías nuevas
+> (gente, posiciones, escuela, verbos2, adjetivos2, adverbios). Las imágenes AI de las
+> palabras nuevas quedan pendientes del flujo interactivo de la skill `vocab-images`
+> (requiere aprobación humana por prompt); mientras tanto rige el `emojiBackup`.
+
 ---
 
 ## #4 · Módulo Frases hechas y saludos (con audio)
