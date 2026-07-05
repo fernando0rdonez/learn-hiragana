@@ -8,6 +8,7 @@ import { WORDS } from "./words";
 import { KATAKANA_WORDS } from "./wordsKatakana";
 import { VOCABULARY, type VocabWord } from "./vocabulary";
 import { PHRASES, type Phrase } from "./phrases";
+import { KANJI, type KanjiEntry } from "./kanji";
 
 export function toISODate(d: Date = new Date()): string {
   return [
@@ -217,6 +218,56 @@ export function resolvePhraseSession(
   }
   if (length === "all") return { pool: phrases, limit: phrases.length };
   return { pool: phrases, limit: Math.min(length, phrases.length) };
+}
+
+export type KanjiPracticeMode = "kanji-meaning" | "kanji-reading";
+
+const KANJI_MODES: KanjiPracticeMode[] = ["kanji-meaning", "kanji-reading"];
+
+export function kanjiProgressKey(mode: KanjiPracticeMode, kanji: string): string {
+  return `${mode}:${kanji}`;
+}
+
+/** Same thresholds as vocabStatus/phraseStatus, summed across both kanji modes. */
+export function kanjiStatus(items: ProgressItems, kanji: string): CharStatus {
+  let attempts = 0, correct = 0;
+  for (const mode of KANJI_MODES) {
+    const p = items[kanjiProgressKey(mode, kanji)];
+    if (p && p.attempts > 0) {
+      attempts += p.attempts;
+      correct += p.correct;
+    }
+  }
+  if (attempts === 0) return "untested";
+  const acc = correct / attempts;
+  if (attempts >= 3 && acc >= 0.85) return "mastered";
+  if (acc < 0.5) return "weak";
+  return "developing";
+}
+
+/** Per-group mastery aggregate for the kanji group picker cards. */
+export function kanjiGroupStats(progress: ProgressItems, groupId: string): { total: number; mastered: number } {
+  const items = KANJI.filter((k) => k.group === groupId);
+  const mastered = items.filter((k) => kanjiStatus(progress, k.kanji) === "mastered").length;
+  return { total: items.length, mastered };
+}
+
+export function notMasteredKanji(progress: ProgressItems, items: KanjiEntry[]): KanjiEntry[] {
+  return items.filter((k) => kanjiStatus(progress, k.kanji) !== "mastered");
+}
+
+/** Resolves a chosen session length into the actual kanji pool + count to play. */
+export function resolveKanjiSession(
+  items: KanjiEntry[],
+  length: VocabSessionLength,
+  progress: ProgressItems
+): { pool: KanjiEntry[]; limit: number } {
+  if (length === "repasar") {
+    const pool = notMasteredKanji(progress, items);
+    return { pool, limit: pool.length };
+  }
+  if (length === "all") return { pool: items, limit: items.length };
+  return { pool: items, limit: Math.min(length, items.length) };
 }
 
 export function rowStats(progress: ProgressItems, rowId: string, rowGroups: typeof ALL_ROW_GROUPS = ALL_ROW_GROUPS) {

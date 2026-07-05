@@ -12,6 +12,7 @@ import { getAvailableWords } from "./words";
 import { getAvailableKatakanaWords } from "./wordsKatakana";
 import { VOCABULARY } from "./vocabulary";
 import { PHRASES } from "./phrases";
+import { KANJI } from "./kanji";
 import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
 import { getAvailablePhonetics } from "./phonetics";
 import VocabularyGame from "./components/VocabularyGame";
@@ -19,6 +20,9 @@ import VocabRecognizeGame from "./components/VocabRecognizeGame";
 import VocabListeningGame from "./components/VocabListeningGame";
 import PhraseMeaningGame from "./components/PhraseMeaningGame";
 import PhraseListeningGame from "./components/PhraseListeningGame";
+import KanjiMeaningGame from "./components/KanjiMeaningGame";
+import KanjiReadingGame from "./components/KanjiReadingGame";
+import KanjiMatchGame from "./components/KanjiMatchGame";
 import VocabCountingGame from "./components/VocabCountingGame";
 import NumberKeysGame from "./components/NumberKeysGame";
 import NumberBuildGame from "./components/NumberBuildGame";
@@ -26,7 +30,7 @@ import PhoneticsDrill from "./components/PhoneticsDrill";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
 import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS } from "./dataKatakana";
-import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, resolvePhraseSession, phraseStatus } from "./utils";
+import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
@@ -34,6 +38,7 @@ import HomeView from "./views/HomeView";
 import StatsView from "./views/StatsView";
 import VocabSetupView from "./views/VocabSetupView";
 import PhraseSetupView from "./views/PhraseSetupView";
+import KanjiSetupView from "./views/KanjiSetupView";
 import NumberSetupView, { type NumberKeysLength } from "./views/NumberSetupView";
 import type { BuildLevel } from "./numbers";
 import { KEY_NUMBERS, KEY_NUMBER_GROUPS, BUILD_LEVELS, numberKeyStatus } from "./numbers";
@@ -69,6 +74,8 @@ export default function HiraganaTrainer() {
   const [vocabSessionLength, setVocabSessionLength] = useState<VocabSessionLength>(20);
   const [selectedPhraseCategories, setSelectedPhraseCategories] = useState<Set<string>>(new Set());
   const [phraseSessionLength, setPhraseSessionLength] = useState<VocabSessionLength>(20);
+  const [selectedKanjiGroups, setSelectedKanjiGroups] = useState<Set<string>>(new Set());
+  const [kanjiSessionLength, setKanjiSessionLength] = useState<VocabSessionLength>(10);
   const [selectedNumberGroups, setSelectedNumberGroups] = useState<Set<string>>(
     () => new Set(KEY_NUMBER_GROUPS.map((g) => g.id))
   );
@@ -114,6 +121,14 @@ export default function HiraganaTrainer() {
 
   function togglePhraseCategory(id: string) {
     setSelectedPhraseCategories((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleKanjiGroup(id: string) {
+    setSelectedKanjiGroups((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -249,6 +264,12 @@ export default function HiraganaTrainer() {
   const { pool: phraseSessionPool, limit: phraseSessionLimit } = resolvePhraseSession(filteredPhrases, phraseSessionLength, progress);
   const masteredPhrasesTotal = PHRASES.filter((p) => phraseStatus(progress, p.id) === "mastered").length;
 
+  const filteredKanji = selectedKanjiGroups.size > 0
+    ? KANJI.filter((k) => selectedKanjiGroups.has(k.group))
+    : [];
+  const { pool: kanjiSessionPool, limit: kanjiSessionLimit } = resolveKanjiSession(filteredKanji, kanjiSessionLength, progress);
+  const masteredKanjiTotal = KANJI.filter((k) => kanjiStatus(progress, k.kanji) === "mastered").length;
+
   const numberKeysPool = KEY_NUMBER_GROUPS
     .filter((g) => selectedNumberGroups.has(g.id))
     .flatMap((g) => g.numbers);
@@ -277,6 +298,7 @@ export default function HiraganaTrainer() {
             masteredKataTotal={masteredKataTotal}
             masteredNumberKeys={masteredNumberKeys}
             masteredPhrasesTotal={masteredPhrasesTotal}
+            masteredKanjiTotal={masteredKanjiTotal}
             saveError={saveError}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
@@ -474,6 +496,58 @@ export default function HiraganaTrainer() {
               persist(merged);
             }}
             onBack={() => setView("home")}
+          />
+        )}
+
+        {/* ── Kanji: selector ── */}
+        {view === "kanjiSetup" && (
+          <KanjiSetupView
+            progress={progress}
+            selectedKanjiGroups={selectedKanjiGroups}
+            toggleKanjiGroup={toggleKanjiGroup}
+            setSelectedKanjiGroups={setSelectedKanjiGroups}
+            kanjiSessionLength={kanjiSessionLength}
+            setKanjiSessionLength={setKanjiSessionLength}
+            filteredKanji={filteredKanji}
+            setView={setView}
+          />
+        )}
+
+        {/* ── Kanji: significado ── */}
+        {view === "kanjiMeaning" && (
+          <KanjiMeaningGame
+            kanjiList={kanjiSessionPool}
+            progress={progress}
+            sessionLimit={kanjiSessionLimit}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("kanjiSetup")}
+          />
+        )}
+
+        {/* ── Kanji: lectura ── */}
+        {view === "kanjiReading" && (
+          <KanjiReadingGame
+            kanjiList={kanjiSessionPool}
+            progress={progress}
+            sessionLimit={kanjiSessionLimit}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("kanjiSetup")}
+          />
+        )}
+
+        {/* ── Kanji: emparejar (sin SRS) ── */}
+        {view === "kanjiMatch" && (
+          <KanjiMatchGame
+            kanjiList={filteredKanji}
+            onBack={() => setView("kanjiSetup")}
           />
         )}
 
