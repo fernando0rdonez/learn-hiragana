@@ -37,6 +37,7 @@ import PhoneticSetupView from "./views/PhoneticSetupView";
 import HiraganaSetupView from "./views/HiraganaSetupView";
 import KatakanaSetupView from "./views/KatakanaSetupView";
 import QuizView from "./views/QuizView";
+import MethodologyView from "./views/MethodologyView";
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -468,6 +469,11 @@ export default function HiraganaTrainer() {
             }}
             onBack={() => setView("numberSetup")}
           />
+        )}
+
+        {/* ── Cómo estudiar ── */}
+        {view === "methodology" && (
+          <MethodologyView setView={setView} />
         )}
 
         {/* ── Stats ── */}
