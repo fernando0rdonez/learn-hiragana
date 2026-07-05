@@ -167,6 +167,19 @@ vocabulario asociado ya conocido.
 **Aceptación**: 100 kanji con datos completos; los dos modos SRS persisten progreso;
 cada kanji muestra al menos 1 palabra de ejemplo existente en el vocabulario; build pasa.
 
+> **Hecho (2026-07)** — `src/kanji.ts` (100 kanji N5 en 10 grupos de 10: números,
+> calendario, tiempo, naturaleza, familia, cuerpo, escuela, lugares y direcciones,
+> adjetivos, verbos). Los `examples` de 90 kanji están anclados a palabras reales
+> de `src/vocabulary.ts` (verificado programáticamente); el grupo "números" es la
+> única excepción documentada — sus ejemplos usan la serie nativa de conteo
+> ひとつ・ふたつ… porque los números viven en su propio módulo (#11) desde que se
+> retiraron de vocabulary.ts. Tres modos: `KanjiMeaningGame` (significado, clave
+> `kanji-meaning:{kanji}`), `KanjiReadingGame` (palabra de ejemplo → lectura, clave
+> `kanji-reading:{kanji}`) y `KanjiMatchGame` (emparejar 5↔5 por rondas, sin SRS).
+> `KanjiSetupView` (plantilla `PhraseSetupView`) con selector de grupos, modo y
+> sesión de 10/20/todos/repasar. Tarjeta "Kanji" añadida a `HomeView`. No se
+> integró en `StatsView`, igual que Frases y Números.
+
 ---
 
 ## #6 · Módulo Gramática: construir frases y partículas

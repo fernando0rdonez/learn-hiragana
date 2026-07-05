@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle } from "lucide-react";
+import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle, GraduationCap } from "lucide-react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
@@ -7,6 +7,7 @@ import { KATAKANA_ALL_CHARS } from "../dataKatakana";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
 import { KEY_NUMBERS } from "../numbers";
 import { PHRASES } from "../phrases";
+import { KANJI } from "../kanji";
 import foxImg from "../assets/character/fox-neutral.png";
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
   masteredKataTotal: number;
   masteredNumberKeys: number;
   masteredPhrasesTotal: number;
+  masteredKanjiTotal: number;
   saveError: boolean;
   resetConfirm: boolean;
   setResetConfirm: (v: boolean) => void;
@@ -38,7 +40,7 @@ function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
   return { moduleId: "hiragana", wasStored: false };
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
   const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -191,6 +193,14 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             title="Frases"
             subtitle={`${masteredPhrasesTotal} de ${PHRASES.length} frases dominadas`}
             onClick={() => goTo("phraseSetup")}
+          />
+
+          <ModuleCard
+            bg="#FBEAEA" border="#B3261E"
+            icon={<GraduationCap size={20} style={{ color: "#B3261E" }} />}
+            title="Kanji"
+            subtitle={`${masteredKanjiTotal} de ${KANJI.length} kanji dominados`}
+            onClick={() => goTo("kanjiSetup")}
           />
 
           <ModuleCard
