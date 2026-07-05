@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle } from "lucide-react";
+import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle } from "lucide-react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
 import { KATAKANA_ALL_CHARS } from "../dataKatakana";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
 import { KEY_NUMBERS } from "../numbers";
+import { PHRASES } from "../phrases";
 import foxImg from "../assets/character/fox-neutral.png";
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
   masteredTotal: number;
   masteredKataTotal: number;
   masteredNumberKeys: number;
+  masteredPhrasesTotal: number;
   saveError: boolean;
   resetConfirm: boolean;
   setResetConfirm: (v: boolean) => void;
@@ -36,7 +38,7 @@ function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
   return { moduleId: "hiragana", wasStored: false };
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
   const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -181,6 +183,14 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             title="Fonética"
             subtitle="Cómo suenan las palabras"
             onClick={() => goTo("phoneticSetup")}
+          />
+
+          <ModuleCard
+            bg="#FCEAF3" border="#D14B8F"
+            icon={<MessageCircle size={20} style={{ color: "#D14B8F" }} />}
+            title="Frases"
+            subtitle={`${masteredPhrasesTotal} de ${PHRASES.length} frases dominadas`}
+            onClick={() => goTo("phraseSetup")}
           />
 
           <ModuleCard

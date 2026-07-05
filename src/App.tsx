@@ -11,11 +11,14 @@ import { KATAKANA_CONFUSED_PAIRS } from "./confusedPairsKatakana";
 import { getAvailableWords } from "./words";
 import { getAvailableKatakanaWords } from "./wordsKatakana";
 import { VOCABULARY } from "./vocabulary";
+import { PHRASES } from "./phrases";
 import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
 import { getAvailablePhonetics } from "./phonetics";
 import VocabularyGame from "./components/VocabularyGame";
 import VocabRecognizeGame from "./components/VocabRecognizeGame";
 import VocabListeningGame from "./components/VocabListeningGame";
+import PhraseMeaningGame from "./components/PhraseMeaningGame";
+import PhraseListeningGame from "./components/PhraseListeningGame";
 import VocabCountingGame from "./components/VocabCountingGame";
 import NumberKeysGame from "./components/NumberKeysGame";
 import NumberBuildGame from "./components/NumberBuildGame";
@@ -23,13 +26,14 @@ import PhoneticsDrill from "./components/PhoneticsDrill";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
 import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS } from "./dataKatakana";
-import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession } from "./utils";
+import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, resolvePhraseSession, phraseStatus } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
 import HomeView from "./views/HomeView";
 import StatsView from "./views/StatsView";
 import VocabSetupView from "./views/VocabSetupView";
+import PhraseSetupView from "./views/PhraseSetupView";
 import NumberSetupView, { type NumberKeysLength } from "./views/NumberSetupView";
 import type { BuildLevel } from "./numbers";
 import { KEY_NUMBERS, KEY_NUMBER_GROUPS, BUILD_LEVELS, numberKeyStatus } from "./numbers";
@@ -63,6 +67,8 @@ export default function HiraganaTrainer() {
   const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
   const [selectedVocabCategories, setSelectedVocabCategories] = useState<Set<string>>(new Set());
   const [vocabSessionLength, setVocabSessionLength] = useState<VocabSessionLength>(20);
+  const [selectedPhraseCategories, setSelectedPhraseCategories] = useState<Set<string>>(new Set());
+  const [phraseSessionLength, setPhraseSessionLength] = useState<VocabSessionLength>(20);
   const [selectedNumberGroups, setSelectedNumberGroups] = useState<Set<string>>(
     () => new Set(KEY_NUMBER_GROUPS.map((g) => g.id))
   );
@@ -100,6 +106,14 @@ export default function HiraganaTrainer() {
 
   function toggleVocabCategory(id: string) {
     setSelectedVocabCategories((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function togglePhraseCategory(id: string) {
+    setSelectedPhraseCategories((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -229,6 +243,12 @@ export default function HiraganaTrainer() {
     : [];
   const { pool: vocabSessionPool, limit: vocabSessionLimit } = resolveVocabSession(filteredVocabulary, vocabSessionLength, progress);
 
+  const filteredPhrases = selectedPhraseCategories.size > 0
+    ? PHRASES.filter((p) => selectedPhraseCategories.has(p.category))
+    : [];
+  const { pool: phraseSessionPool, limit: phraseSessionLimit } = resolvePhraseSession(filteredPhrases, phraseSessionLength, progress);
+  const masteredPhrasesTotal = PHRASES.filter((p) => phraseStatus(progress, p.id) === "mastered").length;
+
   const numberKeysPool = KEY_NUMBER_GROUPS
     .filter((g) => selectedNumberGroups.has(g.id))
     .flatMap((g) => g.numbers);
@@ -256,6 +276,7 @@ export default function HiraganaTrainer() {
             masteredTotal={masteredTotal}
             masteredKataTotal={masteredKataTotal}
             masteredNumberKeys={masteredNumberKeys}
+            masteredPhrasesTotal={masteredPhrasesTotal}
             saveError={saveError}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
@@ -403,6 +424,50 @@ export default function HiraganaTrainer() {
             vocabulary={vocabSessionPool}
             progress={progress}
             sessionLimit={vocabSessionLimit}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("home")}
+          />
+        )}
+
+        {/* ── Frases: selector ── */}
+        {view === "phraseSetup" && (
+          <PhraseSetupView
+            progress={progress}
+            selectedPhraseCategories={selectedPhraseCategories}
+            togglePhraseCategory={togglePhraseCategory}
+            setSelectedPhraseCategories={setSelectedPhraseCategories}
+            phraseSessionLength={phraseSessionLength}
+            setPhraseSessionLength={setPhraseSessionLength}
+            filteredPhrases={filteredPhrases}
+            setView={setView}
+          />
+        )}
+
+        {/* ── Frases: reconocer significado ── */}
+        {view === "phraseMeaning" && (
+          <PhraseMeaningGame
+            phrases={phraseSessionPool}
+            progress={progress}
+            sessionLimit={phraseSessionLimit}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("home")}
+          />
+        )}
+
+        {/* ── Frases: escuchar ── */}
+        {view === "phraseListening" && (
+          <PhraseListeningGame
+            phrases={phraseSessionPool}
+            progress={progress}
+            sessionLimit={phraseSessionLimit}
             onProgressUpdate={(updates) => {
               const merged = { ...progress, ...updates };
               setProgress(merged);

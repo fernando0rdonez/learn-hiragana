@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Volume2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
 import { VOCABULARY } from "../vocabulary";
@@ -8,6 +8,7 @@ import { vocabProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
+import AudioButton from "./AudioButton";
 import VocabImage from "./VocabImage";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
@@ -280,13 +281,14 @@ export default function VocabListeningGame({
         >
           {currentWord.hiragana}
         </div>
-        <button
-          onClick={() => speak(currentWord.hiragana)}
-          aria-label="Escuchar pronunciación"
-          className="flex items-center justify-center w-9 h-9 rounded-full border-2 border-[#F0EDF8] text-[#8B7FA8] hover:border-[#E85D3A] transition-colors"
-        >
-          <Volume2 size={16} />
-        </button>
+        <AudioButton
+          text={currentWord.hiragana}
+          size={36}
+          iconSize={16}
+          accent="#E85D3A"
+          idleBorder="#F0EDF8"
+          idleText="#8B7FA8"
+        />
       </div>
 
       {/* Temporizador + zorro */}

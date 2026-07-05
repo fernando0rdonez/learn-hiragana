@@ -7,6 +7,7 @@ import { KATAKANA_CONFUSED_PAIRS } from "./confusedPairsKatakana";
 import { WORDS } from "./words";
 import { KATAKANA_WORDS } from "./wordsKatakana";
 import { VOCABULARY, type VocabWord } from "./vocabulary";
+import { PHRASES, type Phrase } from "./phrases";
 
 export function toISODate(d: Date = new Date()): string {
   return [
@@ -166,6 +167,56 @@ export function resolveVocabSession(
   }
   if (length === "all") return { pool: words, limit: words.length };
   return { pool: words, limit: Math.min(length, words.length) };
+}
+
+export type PhrasePracticeMode = "phrase-meaning" | "phrase-listening";
+
+const PHRASE_MODES: PhrasePracticeMode[] = ["phrase-meaning", "phrase-listening"];
+
+export function phraseProgressKey(mode: PhrasePracticeMode, id: string): string {
+  return `${mode}:${id}`;
+}
+
+/** Same thresholds as vocabStatus, summed across both phrase modes. */
+export function phraseStatus(items: ProgressItems, id: string): CharStatus {
+  let attempts = 0, correct = 0;
+  for (const mode of PHRASE_MODES) {
+    const p = items[phraseProgressKey(mode, id)];
+    if (p && p.attempts > 0) {
+      attempts += p.attempts;
+      correct += p.correct;
+    }
+  }
+  if (attempts === 0) return "untested";
+  const acc = correct / attempts;
+  if (attempts >= 3 && acc >= 0.85) return "mastered";
+  if (acc < 0.5) return "weak";
+  return "developing";
+}
+
+/** Per-category mastery aggregate for the phrase category picker cards. */
+export function phraseCategoryStats(progress: ProgressItems, categoryId: string): { total: number; mastered: number } {
+  const phrases = PHRASES.filter((p) => p.category === categoryId);
+  const mastered = phrases.filter((p) => phraseStatus(progress, p.id) === "mastered").length;
+  return { total: phrases.length, mastered };
+}
+
+export function notMasteredPhrases(progress: ProgressItems, phrases: Phrase[]): Phrase[] {
+  return phrases.filter((p) => phraseStatus(progress, p.id) !== "mastered");
+}
+
+/** Resolves a chosen session length into the actual phrase pool + count to play. */
+export function resolvePhraseSession(
+  phrases: Phrase[],
+  length: VocabSessionLength,
+  progress: ProgressItems
+): { pool: Phrase[]; limit: number } {
+  if (length === "repasar") {
+    const pool = notMasteredPhrases(progress, phrases);
+    return { pool, limit: pool.length };
+  }
+  if (length === "all") return { pool: phrases, limit: phrases.length };
+  return { pool: phrases, limit: Math.min(length, phrases.length) };
 }
 
 export function rowStats(progress: ProgressItems, rowId: string, rowGroups: typeof ALL_ROW_GROUPS = ALL_ROW_GROUPS) {

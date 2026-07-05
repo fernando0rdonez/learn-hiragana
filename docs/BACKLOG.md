@@ -131,6 +131,16 @@ nuevas; build pasa.
 **Aceptación**: sesión completa de cada modo con SRS persistente; toda frase tiene contexto
 en español y audio; añadido a `HomeView`; build pasa.
 
+> **Hecho (2026-07)** — `src/phrases.ts` (78 frases en 5 categorías: saludos, cortesía,
+> restaurante, compras, emergencia), `PhraseMeaningGame.tsx` (reconocer significado) y
+> `PhraseListeningGame.tsx` (escuchar → elegir frase escrita), `PhraseSetupView.tsx`
+> (selector de categoría/modo/sesión, plantilla `VocabSetupView`). Progreso con claves
+> `phrase-meaning:{id}` / `phrase-listening:{id}` (helpers en `src/utils.ts`); resumen de
+> sesión reutiliza `VocabSessionSummary`. Tarjeta "Frases" añadida a `HomeView` (fuera del
+> hero, igual que Números). No se integró en `StatsView`: ese componente solo cubre
+> hiragana/katakana hoy — Vocabulario y Números tampoco aparecen ahí, así que es
+> consistente con el resto de la app, no una omisión de esta spec.
+
 ---
 
 ## #5 · Módulo Kanji N5 (~100 kanji)
