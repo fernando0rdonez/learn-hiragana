@@ -13,6 +13,7 @@ import { getAvailableKatakanaWords } from "./wordsKatakana";
 import { VOCABULARY } from "./vocabulary";
 import { PHRASES } from "./phrases";
 import { KANJI } from "./kanji";
+import { GRAMMAR_LESSONS } from "./grammar";
 import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
 import { getAvailablePhonetics } from "./phonetics";
 import VocabularyGame from "./components/VocabularyGame";
@@ -23,6 +24,7 @@ import PhraseListeningGame from "./components/PhraseListeningGame";
 import KanjiMeaningGame from "./components/KanjiMeaningGame";
 import KanjiReadingGame from "./components/KanjiReadingGame";
 import KanjiMatchGame from "./components/KanjiMatchGame";
+import GrammarLessonGame from "./components/GrammarLessonGame";
 import VocabCountingGame from "./components/VocabCountingGame";
 import NumberKeysGame from "./components/NumberKeysGame";
 import NumberBuildGame from "./components/NumberBuildGame";
@@ -30,7 +32,7 @@ import PhoneticsDrill from "./components/PhoneticsDrill";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
 import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS } from "./dataKatakana";
-import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus } from "./utils";
+import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus, grammarStatus } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
@@ -39,6 +41,7 @@ import StatsView from "./views/StatsView";
 import VocabSetupView from "./views/VocabSetupView";
 import PhraseSetupView from "./views/PhraseSetupView";
 import KanjiSetupView from "./views/KanjiSetupView";
+import GrammarSetupView from "./views/GrammarSetupView";
 import NumberSetupView, { type NumberKeysLength } from "./views/NumberSetupView";
 import type { BuildLevel } from "./numbers";
 import { KEY_NUMBERS, KEY_NUMBER_GROUPS, BUILD_LEVELS, numberKeyStatus } from "./numbers";
@@ -76,6 +79,7 @@ export default function HiraganaTrainer() {
   const [phraseSessionLength, setPhraseSessionLength] = useState<VocabSessionLength>(20);
   const [selectedKanjiGroups, setSelectedKanjiGroups] = useState<Set<string>>(new Set());
   const [kanjiSessionLength, setKanjiSessionLength] = useState<VocabSessionLength>(10);
+  const [selectedGrammarLessonId, setSelectedGrammarLessonId] = useState<string | null>(null);
   const [selectedNumberGroups, setSelectedNumberGroups] = useState<Set<string>>(
     () => new Set(KEY_NUMBER_GROUPS.map((g) => g.id))
   );
@@ -270,6 +274,9 @@ export default function HiraganaTrainer() {
   const { pool: kanjiSessionPool, limit: kanjiSessionLimit } = resolveKanjiSession(filteredKanji, kanjiSessionLength, progress);
   const masteredKanjiTotal = KANJI.filter((k) => kanjiStatus(progress, k.kanji) === "mastered").length;
 
+  const masteredGrammarTotal = GRAMMAR_LESSONS.filter((l) => grammarStatus(progress, l.id) === "mastered").length;
+  const selectedGrammarLesson = GRAMMAR_LESSONS.find((l) => l.id === selectedGrammarLessonId) ?? null;
+
   const numberKeysPool = KEY_NUMBER_GROUPS
     .filter((g) => selectedNumberGroups.has(g.id))
     .flatMap((g) => g.numbers);
@@ -299,6 +306,7 @@ export default function HiraganaTrainer() {
             masteredNumberKeys={masteredNumberKeys}
             masteredPhrasesTotal={masteredPhrasesTotal}
             masteredKanjiTotal={masteredKanjiTotal}
+            masteredGrammarTotal={masteredGrammarTotal}
             saveError={saveError}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
@@ -548,6 +556,29 @@ export default function HiraganaTrainer() {
           <KanjiMatchGame
             kanjiList={filteredKanji}
             onBack={() => setView("kanjiSetup")}
+          />
+        )}
+
+        {/* ── Gramática: selector de lecciones ── */}
+        {view === "grammarSetup" && (
+          <GrammarSetupView
+            progress={progress}
+            setSelectedGrammarLessonId={setSelectedGrammarLessonId}
+            setView={setView}
+          />
+        )}
+
+        {/* ── Gramática: lección (explicación → ejercicios → resumen) ── */}
+        {view === "grammarLesson" && selectedGrammarLesson && (
+          <GrammarLessonGame
+            lesson={selectedGrammarLesson}
+            progress={progress}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("grammarSetup")}
           />
         )}
 

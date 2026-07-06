@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle, GraduationCap } from "lucide-react";
+import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle, GraduationCap, SpellCheck2 } from "lucide-react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
@@ -8,6 +8,7 @@ import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
 import { KEY_NUMBERS } from "../numbers";
 import { PHRASES } from "../phrases";
 import { KANJI } from "../kanji";
+import { GRAMMAR_LESSONS } from "../grammar";
 import foxImg from "../assets/character/fox-neutral.png";
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
   masteredNumberKeys: number;
   masteredPhrasesTotal: number;
   masteredKanjiTotal: number;
+  masteredGrammarTotal: number;
   saveError: boolean;
   resetConfirm: boolean;
   setResetConfirm: (v: boolean) => void;
@@ -40,7 +42,7 @@ function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
   return { moduleId: "hiragana", wasStored: false };
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
   const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -201,6 +203,14 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             title="Kanji"
             subtitle={`${masteredKanjiTotal} de ${KANJI.length} kanji dominados`}
             onClick={() => goTo("kanjiSetup")}
+          />
+
+          <ModuleCard
+            bg="#EDEFFB" border="#4C5FBF"
+            icon={<SpellCheck2 size={20} style={{ color: "#4C5FBF" }} />}
+            title="Gramática"
+            subtitle={`${masteredGrammarTotal} de ${GRAMMAR_LESSONS.length} lecciones dominadas`}
+            onClick={() => goTo("grammarSetup")}
           />
 
           <ModuleCard
