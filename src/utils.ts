@@ -270,6 +270,31 @@ export function resolveKanjiSession(
   return { pool: items, limit: Math.min(length, items.length) };
 }
 
+export type GrammarPracticeMode = "grammar-order" | "grammar-particle";
+
+const GRAMMAR_MODES: GrammarPracticeMode[] = ["grammar-order", "grammar-particle"];
+
+export function grammarProgressKey(mode: GrammarPracticeMode, lessonId: string): string {
+  return `${mode}:${lessonId}`;
+}
+
+/** Same thresholds as vocabStatus/phraseStatus/kanjiStatus, summed across both grammar drills. */
+export function grammarStatus(items: ProgressItems, lessonId: string): CharStatus {
+  let attempts = 0, correct = 0;
+  for (const mode of GRAMMAR_MODES) {
+    const p = items[grammarProgressKey(mode, lessonId)];
+    if (p && p.attempts > 0) {
+      attempts += p.attempts;
+      correct += p.correct;
+    }
+  }
+  if (attempts === 0) return "untested";
+  const acc = correct / attempts;
+  if (attempts >= 3 && acc >= 0.85) return "mastered";
+  if (acc < 0.5) return "weak";
+  return "developing";
+}
+
 export function rowStats(progress: ProgressItems, rowId: string, rowGroups: typeof ALL_ROW_GROUPS = ALL_ROW_GROUPS) {
   const chars = rowGroups.find((r) => r.id === rowId)?.chars ?? [];
   let attempts = 0, correct = 0, tested = 0;
