@@ -46,9 +46,6 @@ interface Round {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const POST_ANSWER_SPEECH_DELAY = 500;
-const WRONG_ANSWER_DELAY = 2200; // tiempo para leer la corrección
-
 const AMBER      = "#F5A623";
 const AMBER_DARK = "#C77F00";
 
@@ -160,11 +157,6 @@ export default function NumberBuildGame({
     }]);
   }
 
-  const speakAndWait = useCallback(
-    (text: string) => speak(text).then(() => new Promise<void>((resolve) => setTimeout(resolve, POST_ANSWER_SPEECH_DELAY))),
-    [speak]
-  );
-
   const checkAnswer = useCallback(
     (round: Round, sequence: TileChip[]) => {
       const isCorrect =
@@ -175,17 +167,19 @@ export default function NumberBuildGame({
         playChime();
         fireConfetti();
         setPhase("correct");
-        speakAndWait(numberToKana(round.target)).then(() => advanceToNext());
       } else {
         playBuzz();
         setPhase("wrong");
-        speak(numberToKana(round.target));
-        new Promise<void>((resolve) => setTimeout(resolve, WRONG_ANSWER_DELAY)).then(() => advanceToNext());
       }
+      speak(numberToKana(round.target));
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [roundIndex, rounds, progress]
   );
+
+  function handleContinue() {
+    advanceToNext();
+  }
 
   function handleTileTap(tile: TileChip) {
     if (phase !== "playing" || tile.used || !currentRound) return;
@@ -303,6 +297,7 @@ export default function NumberBuildGame({
           romaji={numberToRomaji(currentRound.target)}
           meaning={currentRound.target.toLocaleString("es")}
           accent={{ text: AMBER_DARK, bg: "#FDF2E3" }}
+          onContinue={handleContinue}
         />
       )}
     </div>

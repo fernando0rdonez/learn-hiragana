@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { KeyNumber } from "../numbers";
@@ -26,8 +26,6 @@ function toISODate(d: Date = new Date()): string {
 type GamePhase = "playing" | "correct" | "wrong" | "done";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-
-const POST_ANSWER_SPEECH_DELAY = 500;
 
 const AMBER      = "#F5A623";
 const AMBER_DARK = "#C77F00";
@@ -137,22 +135,6 @@ export default function NumberKeysGame({
     }]);
   }
 
-  // Lee siempre la forma correcta (la trampa de un irregular no es una palabra
-  // real que valga la pena escuchar) y espera antes de avanzar.
-  const speakAndWait = useCallback(
-    (text: string) => speak(text).then(() => new Promise<void>((resolve) => setTimeout(resolve, POST_ANSWER_SPEECH_DELAY))),
-    [speak]
-  );
-
-  const finishAnswer = useCallback(
-    (key: KeyNumber, isCorrect: boolean, delay: Promise<void>) => {
-      recordResult(key, isCorrect);
-      delay.then(() => advanceToNext());
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queueIndex, queue]
-  );
-
   function handleAnswer(option: string) {
     if (phase !== "playing" || !currentKey) return;
     setSelected(option);
@@ -165,7 +147,14 @@ export default function NumberKeysGame({
       playBuzz();
       setPhase("wrong");
     }
-    finishAnswer(currentKey, isCorrect, speakAndWait(currentKey.hiragana));
+    recordResult(currentKey, isCorrect);
+    // Lee siempre la forma correcta — la trampa de un irregular no es una
+    // palabra real que valga la pena escuchar.
+    speak(currentKey.hiragana);
+  }
+
+  function handleContinue() {
+    advanceToNext();
   }
 
   // ── Done screen ──────────────────────────────────────────────────────────────
@@ -258,6 +247,7 @@ export default function NumberKeysGame({
           extra={currentKey.irregular ? (
             <p className="text-xs mt-1" style={{ color: AMBER_DARK }}>¡forma irregular!</p>
           ) : undefined}
+          onContinue={handleContinue}
         />
       )}
     </div>

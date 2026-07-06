@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
@@ -36,7 +36,6 @@ const TIME_LIMIT = 12; // segundos por pregunta (algo más que otros modos: hay 
 const WORRIED_AT = 4;
 const RING_RADIUS = 26;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-const ANSWER_DELAY = 1800; // pausa tras responder, antes de avanzar
 
 const CORAL      = "#E85D3A";
 const CORAL_DARK = "#C03A1E";
@@ -205,15 +204,6 @@ export default function VocabListeningGame({
     setSessionResults((prev) => [...prev, { word, correct: isCorrect }]);
   }
 
-  const finishAnswer = useCallback(
-    (word: VocabWord, isCorrect: boolean) => {
-      recordResult(word, isCorrect);
-      setTimeout(() => advanceToNext(), ANSWER_DELAY);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queueIndex, queue]
-  );
-
   function handleAnswer(option: VocabWord) {
     if (phase !== "playing" || !currentWord) return;
     setSelected(option.hiragana);
@@ -226,7 +216,11 @@ export default function VocabListeningGame({
       playBuzz();
       setPhase("wrong");
     }
-    finishAnswer(currentWord, isCorrect);
+    recordResult(currentWord, isCorrect);
+  }
+
+  function handleContinue() {
+    advanceToNext();
   }
 
   // Countdown ticker
@@ -245,7 +239,7 @@ export default function VocabListeningGame({
     if (phase === "playing" && timeLeft <= 0 && currentWord) {
       playBuzz();
       setPhase("timeout");
-      finishAnswer(currentWord, false);
+      recordResult(currentWord, false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, phase]);
@@ -365,6 +359,7 @@ export default function VocabListeningGame({
           kanji={findKanjiSpelling(currentWord.hiragana)}
           romaji={currentWord.romaji}
           meaning={currentWord.meaning}
+          onContinue={handleContinue}
         />
       )}
     </div>

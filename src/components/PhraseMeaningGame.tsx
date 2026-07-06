@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { Phrase } from "../phrases";
@@ -31,7 +31,6 @@ const TIME_LIMIT = 12; // segundos por pregunta (algo más que vocab: hay que le
 const WORRIED_AT = 4;
 const RING_RADIUS = 26;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-const ANSWER_DELAY = 2200; // más largo que vocab: hay contexto que leer antes de avanzar
 
 const PINK      = "#D14B8F";
 const PINK_DARK = "#A8306E";
@@ -151,15 +150,6 @@ export default function PhraseMeaningGame({
     setSessionResults((prev) => [...prev, { word: { hiragana: phrase.kana, romaji: phrase.romaji, meaning: phrase.meaning }, correct: isCorrect }]);
   }
 
-  const finishAnswer = useCallback(
-    (phrase: Phrase, isCorrect: boolean) => {
-      recordResult(phrase, isCorrect);
-      setTimeout(() => advanceToNext(), ANSWER_DELAY);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queueIndex, queue]
-  );
-
   function handleAnswer(option: Phrase) {
     if (phase !== "playing" || !currentPhrase) return;
     setSelected(option.id);
@@ -172,7 +162,11 @@ export default function PhraseMeaningGame({
       playBuzz();
       setPhase("wrong");
     }
-    finishAnswer(currentPhrase, isCorrect);
+    recordResult(currentPhrase, isCorrect);
+  }
+
+  function handleContinue() {
+    advanceToNext();
   }
 
   // Countdown ticker
@@ -191,7 +185,7 @@ export default function PhraseMeaningGame({
     if (phase === "playing" && timeLeft <= 0 && currentPhrase) {
       playBuzz();
       setPhase("timeout");
-      finishAnswer(currentPhrase, false);
+      recordResult(currentPhrase, false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, phase]);
@@ -307,6 +301,7 @@ export default function PhraseMeaningGame({
               )}
             </>
           }
+          onContinue={handleContinue}
         />
       )}
     </div>

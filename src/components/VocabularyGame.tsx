@@ -197,7 +197,6 @@ export default function VocabularyGame({
           triggerAnim("error-shake", 500);
           setPhase("reveal");
           recordResult(word, false);
-          setTimeout(() => advanceToNext(), 2500);
         } else {
           triggerAnim("error-shake", 500);
           setPhase("wrong");
@@ -270,6 +269,10 @@ export default function VocabularyGame({
     setChips(buildChips(currentWord));
     setSlots(Array(wordLen).fill(null));
     setSlotChipIds(Array(wordLen).fill(null));
+  }
+
+  function handleContinue() {
+    advanceToNext();
   }
 
   // ── Done screen ──────────────────────────────────────────────────────────────
@@ -358,6 +361,7 @@ export default function VocabularyGame({
           kanji={findKanjiSpelling(currentWord.hiragana)}
           romaji={currentWord.romaji}
           meaning={currentWord.meaning}
+          onContinue={handleContinue}
         />
       )}
 
