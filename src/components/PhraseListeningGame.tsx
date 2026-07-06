@@ -3,12 +3,14 @@ import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { Phrase } from "../phrases";
 import { PHRASES } from "../phrases";
+import { findKanjiSpelling } from "../kanji";
 import { advanceBox, isDue } from "../leitner";
 import { phraseProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
 import { AudioUnavailableHint } from "./AudioButton";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxWorriedImg from "../assets/character/fox-worried.png";
@@ -295,25 +297,22 @@ export default function PhraseListeningGame({
       </div>
 
       {/* Feedback + contexto de uso */}
-      {phase === "correct" && (
-        <div className="text-center">
-          <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentPhrase.romaji} · {currentPhrase.meaning}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1">{currentPhrase.context}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1 italic">Repítela en voz alta 🗣️</p>
-        </div>
-      )}
-      {phase === "wrong" && (
-        <div className="text-center">
-          <p className="text-[#C03A1E] font-semibold text-sm">❌ Era: {currentPhrase.romaji} · {currentPhrase.meaning}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1">{currentPhrase.context}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1 italic">Repítela en voz alta 🗣️</p>
-        </div>
-      )}
-      {phase === "timeout" && (
-        <div className="text-center">
-          <p className="text-[#C03A1E] font-semibold text-sm">⏱️ ¡Se acabó el tiempo! Era: {currentPhrase.romaji} · {currentPhrase.meaning}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1">{currentPhrase.context}</p>
-        </div>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={currentPhrase.kana}
+          kanji={findKanjiSpelling(currentPhrase.kana)}
+          romaji={currentPhrase.romaji}
+          meaning={currentPhrase.meaning}
+          extra={
+            <>
+              <p className="text-[#8B7FA8] text-xs mt-1">{currentPhrase.context}</p>
+              {phase !== "timeout" && (
+                <p className="text-[#8B7FA8] text-xs mt-1 italic">Repítela en voz alta 🗣️</p>
+              )}
+            </>
+          }
+        />
       )}
     </div>
   );

@@ -3,11 +3,13 @@ import { ArrowLeft, RotateCcw } from "lucide-react";
 import AudioButton from "./AudioButton";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
+import { findKanjiSpelling } from "../kanji";
 import { INTERVALS, isDue } from "../leitner";
 import { vocabProgressKey } from "../utils";
 import { getDistractors } from "../utils/distractors";
 import { playChime, playBuzz } from "../utils/audio";
 import { fireConfetti } from "./ConfettiOverlay";
+import AnswerReveal from "./AnswerReveal";
 import VocabImage from "./VocabImage";
 import KanaChip from "./KanaChip";
 import WordSlots from "./WordSlots";
@@ -350,15 +352,13 @@ export default function VocabularyGame({
         <p className="text-[#C03A1E] font-semibold text-sm">❌ Inténtalo de nuevo</p>
       )}
       {phase === "reveal" && (
-        <div className="text-center">
-          <p className="text-[#C03A1E] font-semibold text-sm mb-1">❌ La respuesta era:</p>
-          <p
-            className="text-4xl"
-            style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
-          >
-            {currentWord.hiragana}
-          </p>
-        </div>
+        <AnswerReveal
+          status="wrong"
+          kana={currentWord.hiragana}
+          kanji={findKanjiSpelling(currentWord.hiragana)}
+          romaji={currentWord.romaji}
+          meaning={currentWord.meaning}
+        />
       )}
 
       {/* Kana chip pool — all chips visible at once */}

@@ -137,6 +137,16 @@ export function numberToRomaji(n: number): string {
   return numberToChips(n).map((c) => c.romaji).join(" ");
 }
 
+// El módulo Kanji (BACKLOG #5) solo enseña 一–十: mostrar 百/千/万 en la
+// revelación de respuesta no tendría ancla (i+1), así que el kanji de números
+// se limita a esos 10 valores — el resto de los números (compuestos, con
+// centenas/millares/万) se queda sin kanji, igual que si no hubiera match.
+const DIGIT_KANJI = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+
+export function findNumberKanji(value: number): string | undefined {
+  return value >= 1 && value <= 10 ? DIGIT_KANJI[value] : undefined;
+}
+
 // ── Distractores ─────────────────────────────────────────────────────────────
 // Formas "tentadoras" incorrectas de los 5 irregulares — el error natural de
 // aplicar la regla regular (さんひゃく) o el rendaku equivocado (さんぴゃく).

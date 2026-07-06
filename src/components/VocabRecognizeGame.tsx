@@ -3,11 +3,13 @@ import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
 import { VOCABULARY } from "../vocabulary";
+import { findKanjiSpelling } from "../kanji";
 import { advanceBox, isDue } from "../leitner";
 import { vocabProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
+import AnswerReveal from "./AnswerReveal";
 import VocabImage from "./VocabImage";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
@@ -314,14 +316,14 @@ export default function VocabRecognizeGame({
       </div>
 
       {/* Feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentWord.romaji} · {currentWord.meaning}</p>
-      )}
-      {phase === "wrong" && (
-        <p className="text-[#C03A1E] font-semibold text-sm">❌ Era {currentWord.romaji} · {currentWord.meaning}</p>
-      )}
-      {phase === "timeout" && (
-        <p className="text-[#C03A1E] font-semibold text-sm">⏱️ ¡Se acabó el tiempo! Era {currentWord.romaji} · {currentWord.meaning}</p>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={currentWord.hiragana}
+          kanji={findKanjiSpelling(currentWord.hiragana)}
+          romaji={currentWord.romaji}
+          meaning={currentWord.meaning}
+        />
       )}
     </div>
   );

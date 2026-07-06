@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { KeyNumber } from "../numbers";
-import { buildKeyOptions, numberKeyProgressKey } from "../numbers";
+import { buildKeyOptions, numberKeyProgressKey, findNumberKanji } from "../numbers";
 import { advanceBox, isDue } from "../leitner";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxCelebratingImg from "../assets/character/fox-celebrating.png";
@@ -246,14 +247,18 @@ export default function NumberKeysGame({
       </div>
 
       {/* Feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentKey.romaji}</p>
-      )}
-      {phase === "wrong" && (
-        <p className="font-semibold text-sm" style={{ color: AMBER_DARK }}>
-          ❌ Era {currentKey.hiragana} · {currentKey.romaji}
-          {currentKey.irregular ? " · ¡forma irregular!" : ""}
-        </p>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={currentKey.hiragana}
+          kanji={findNumberKanji(currentKey.value)}
+          romaji={currentKey.romaji}
+          meaning={currentKey.value.toLocaleString("es")}
+          accent={{ text: AMBER_DARK, bg: "#FDF2E3" }}
+          extra={currentKey.irregular ? (
+            <p className="text-xs mt-1" style={{ color: AMBER_DARK }}>¡forma irregular!</p>
+          ) : undefined}
+        />
       )}
     </div>
   );

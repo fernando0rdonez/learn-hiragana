@@ -4,13 +4,14 @@ import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
 import { VOCABULARY } from "../vocabulary";
 import type { NumberWord } from "../numbers";
-import { NUMBER_WORDS } from "../numbers";
+import { NUMBER_WORDS, findNumberKanji } from "../numbers";
 import { advanceBox } from "../leitner";
 import { vocabProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
 import { getVocabImageUrl } from "../vocabImages";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxCelebratingImg from "../assets/character/fox-celebrating.png";
@@ -271,11 +272,14 @@ export default function VocabCountingGame({
       </div>
 
       {/* Feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentRound.numberWord.romaji} · {currentRound.numberWord.meaning}</p>
-      )}
-      {phase === "wrong" && (
-        <p className="text-[#C03A1E] font-semibold text-sm">❌ Era {currentRound.numberWord.romaji} · {currentRound.numberWord.meaning}</p>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={currentRound.numberWord.hiragana}
+          kanji={findNumberKanji(currentRound.numberWord.numberValue)}
+          romaji={currentRound.numberWord.romaji}
+          meaning={currentRound.numberWord.meaning}
+        />
       )}
     </div>
   );

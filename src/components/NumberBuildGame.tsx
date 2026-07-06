@@ -9,11 +9,13 @@ import {
   buildChipDistractors,
   randomNumberForLevel,
   numberKeyProgressKey,
+  findNumberKanji,
 } from "../numbers";
 import { advanceBox } from "../leitner";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxCelebratingImg from "../assets/character/fox-celebrating.png";
@@ -293,17 +295,15 @@ export default function NumberBuildGame({
       </div>
 
       {/* Feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">
-          ✅ ¡Correcto! · {numberToRomaji(currentRound.target)}
-        </p>
-      )}
-      {phase === "wrong" && (
-        <p className="font-semibold text-sm text-center" style={{ color: AMBER_DARK }}>
-          ❌ Era {numberToKana(currentRound.target)}
-          <br />
-          <span className="font-normal">{numberToRomaji(currentRound.target)}</span>
-        </p>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={numberToKana(currentRound.target)}
+          kanji={findNumberKanji(currentRound.target)}
+          romaji={numberToRomaji(currentRound.target)}
+          meaning={currentRound.target.toLocaleString("es")}
+          accent={{ text: AMBER_DARK, bg: "#FDF2E3" }}
+        />
       )}
     </div>
   );
