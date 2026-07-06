@@ -72,17 +72,20 @@ function isEligibleForListening(word: VocabWord): boolean {
   return !EXCLUDED_CATEGORIES.has(word.category);
 }
 
+// Palabras de "gente" (persona, persona formal, adulto, empleado...) no tienen
+// un referente visual distinto y sus ilustraciones terminan siendo casi
+// indistinguibles entre sí. Solo para esta categoría se prefieren distractores
+// de OTRA categoría (misma dificultad fonética, arte distinto). El resto de
+// categorías (colores, animales, comida...) sí tienen referentes visuales
+// claros, así que ahí los distractores deben seguir siendo de la MISMA
+// categoría — si no, basta con ver cuál imagen "combina" para adivinar.
+const CROSS_CATEGORY_DISTRACTORS = new Set(["gente"]);
+
 /**
  * 4 opciones: la palabra correcta + 3 distractores, priorizados por qué tan
  * fácil sería confundirlos con la respuesta correcta a nivel fonético (misma
  * sílaba inicial, caracteres compartidos) — así las imágenes no bastan por
  * sí solas y hay que reconocer el hiragana/audio de verdad.
- *
- * A propósito NO se prioriza la misma categoría: varias palabras de "gente"
- * (persona, persona formal, adulto, empleado...) no tienen un referente visual
- * distinto y sus ilustraciones terminan siendo casi indistinguibles entre sí.
- * Se prefieren distractores de OTRA categoría (misma dificultad fonética, arte
- * distinto) y solo se recurre a la misma categoría si no alcanzan candidatos.
  */
 function buildOptions(word: VocabWord): VocabWord[] {
   const candidates = VOCABULARY.filter((w) => w.hiragana !== word.hiragana && isEligibleForListening(w));
@@ -95,12 +98,13 @@ function buildOptions(word: VocabWord): VocabWord[] {
   }));
   scored.sort((a, b) => b.score - a.score);
 
-  const otherCategory = scored.filter((s) => !s.sameCategory);
-  const sameCategory = scored.filter((s) => s.sameCategory);
+  const preferOtherCategory = CROSS_CATEGORY_DISTRACTORS.has(word.category);
+  const primary = scored.filter((s) => s.sameCategory !== preferOtherCategory);
+  const fallback = scored.filter((s) => s.sameCategory === preferOtherCategory);
 
   const seen = new Set([word.hiragana]);
   const distractors: VocabWord[] = [];
-  for (const { w } of [...otherCategory, ...sameCategory]) {
+  for (const { w } of [...primary, ...fallback]) {
     if (distractors.length >= 3) break;
     if (seen.has(w.hiragana)) continue;
     seen.add(w.hiragana);
