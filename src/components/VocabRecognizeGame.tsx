@@ -1,13 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
 import { VOCABULARY } from "../vocabulary";
+import { findKanjiSpelling } from "../kanji";
 import { advanceBox, isDue } from "../leitner";
 import { vocabProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
+import AnswerReveal from "./AnswerReveal";
 import VocabImage from "./VocabImage";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
@@ -34,8 +36,6 @@ const WORRIED_AT = 4;  // el zorro se pone nervioso cuando quedan <= 4s
 const RING_RADIUS = 26;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 const PROMPT_PHRASE = "これはなに？";
-const POST_ANSWER_SPEECH_DELAY = 500; // pausa tras terminar de leer la opción, antes de avanzar
-const TIMEOUT_DELAY = 2000; // sin selección: no hay nada que leer, se usa un delay fijo
 
 const CORAL      = "#E85D3A";
 const CORAL_DARK = "#C03A1E";
@@ -162,22 +162,6 @@ export default function VocabRecognizeGame({
     setSessionResults((prev) => [...prev, { word, correct: isCorrect }]);
   }
 
-  // Lee la opción seleccionada y espera a que termine antes de resolver, más un
-  // pequeño colchón, para que la pronunciación no se corte al avanzar de pregunta.
-  const speakAndWait = useCallback(
-    (text: string) => speak(text).then(() => new Promise<void>((resolve) => setTimeout(resolve, POST_ANSWER_SPEECH_DELAY))),
-    [speak]
-  );
-
-  const finishAnswer = useCallback(
-    (word: VocabWord, isCorrect: boolean, delay: Promise<void>) => {
-      recordResult(word, isCorrect);
-      delay.then(() => advanceToNext());
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queueIndex, queue]
-  );
-
   function handleAnswer(option: VocabWord) {
     if (phase !== "playing" || !currentWord) return;
     setSelected(option.hiragana);
@@ -190,7 +174,12 @@ export default function VocabRecognizeGame({
       playBuzz();
       setPhase("wrong");
     }
-    finishAnswer(currentWord, isCorrect, speakAndWait(option.hiragana));
+    recordResult(currentWord, isCorrect);
+    speak(option.hiragana);
+  }
+
+  function handleContinue() {
+    advanceToNext();
   }
 
   // Countdown ticker
@@ -211,7 +200,7 @@ export default function VocabRecognizeGame({
     if (phase === "playing" && timeLeft <= 0 && currentWord) {
       playBuzz();
       setPhase("timeout");
-      finishAnswer(currentWord, false, new Promise((resolve) => setTimeout(resolve, TIMEOUT_DELAY)));
+      recordResult(currentWord, false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, phase]);
@@ -314,14 +303,15 @@ export default function VocabRecognizeGame({
       </div>
 
       {/* Feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentWord.romaji} · {currentWord.meaning}</p>
-      )}
-      {phase === "wrong" && (
-        <p className="text-[#C03A1E] font-semibold text-sm">❌ Era {currentWord.romaji} · {currentWord.meaning}</p>
-      )}
-      {phase === "timeout" && (
-        <p className="text-[#C03A1E] font-semibold text-sm">⏱️ ¡Se acabó el tiempo! Era {currentWord.romaji} · {currentWord.meaning}</p>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={currentWord.hiragana}
+          kanji={findKanjiSpelling(currentWord.hiragana)}
+          romaji={currentWord.romaji}
+          meaning={currentWord.meaning}
+          onContinue={handleContinue}
+        />
       )}
     </div>
   );

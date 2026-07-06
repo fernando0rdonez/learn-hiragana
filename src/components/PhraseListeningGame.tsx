@@ -1,14 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { Phrase } from "../phrases";
 import { PHRASES } from "../phrases";
+import { findKanjiSpelling } from "../kanji";
 import { advanceBox, isDue } from "../leitner";
 import { phraseProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
 import { AudioUnavailableHint } from "./AudioButton";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxWorriedImg from "../assets/character/fox-worried.png";
@@ -29,7 +31,6 @@ const TIME_LIMIT = 14; // segundos por pregunta: hay que escuchar y leer 4 frase
 const WORRIED_AT = 4;
 const RING_RADIUS = 26;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-const ANSWER_DELAY = 2200;
 
 const PINK      = "#D14B8F";
 const PINK_DARK = "#A8306E";
@@ -158,15 +159,6 @@ export default function PhraseListeningGame({
     setSessionResults((prev) => [...prev, { word: { hiragana: phrase.kana, romaji: phrase.romaji, meaning: phrase.meaning }, correct: isCorrect }]);
   }
 
-  const finishAnswer = useCallback(
-    (phrase: Phrase, isCorrect: boolean) => {
-      recordResult(phrase, isCorrect);
-      setTimeout(() => advanceToNext(), ANSWER_DELAY);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queueIndex, queue]
-  );
-
   function handleAnswer(option: Phrase) {
     if (phase !== "playing" || !currentPhrase) return;
     setSelected(option.id);
@@ -179,7 +171,11 @@ export default function PhraseListeningGame({
       playBuzz();
       setPhase("wrong");
     }
-    finishAnswer(currentPhrase, isCorrect);
+    recordResult(currentPhrase, isCorrect);
+  }
+
+  function handleContinue() {
+    advanceToNext();
   }
 
   // Countdown ticker
@@ -198,7 +194,7 @@ export default function PhraseListeningGame({
     if (phase === "playing" && timeLeft <= 0 && currentPhrase) {
       playBuzz();
       setPhase("timeout");
-      finishAnswer(currentPhrase, false);
+      recordResult(currentPhrase, false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, phase]);
@@ -295,25 +291,23 @@ export default function PhraseListeningGame({
       </div>
 
       {/* Feedback + contexto de uso */}
-      {phase === "correct" && (
-        <div className="text-center">
-          <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentPhrase.romaji} · {currentPhrase.meaning}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1">{currentPhrase.context}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1 italic">Repítela en voz alta 🗣️</p>
-        </div>
-      )}
-      {phase === "wrong" && (
-        <div className="text-center">
-          <p className="text-[#C03A1E] font-semibold text-sm">❌ Era: {currentPhrase.romaji} · {currentPhrase.meaning}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1">{currentPhrase.context}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1 italic">Repítela en voz alta 🗣️</p>
-        </div>
-      )}
-      {phase === "timeout" && (
-        <div className="text-center">
-          <p className="text-[#C03A1E] font-semibold text-sm">⏱️ ¡Se acabó el tiempo! Era: {currentPhrase.romaji} · {currentPhrase.meaning}</p>
-          <p className="text-[#8B7FA8] text-xs mt-1">{currentPhrase.context}</p>
-        </div>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={currentPhrase.kana}
+          kanji={findKanjiSpelling(currentPhrase.kana)}
+          romaji={currentPhrase.romaji}
+          meaning={currentPhrase.meaning}
+          extra={
+            <>
+              <p className="text-[#8B7FA8] text-xs mt-1">{currentPhrase.context}</p>
+              {phase !== "timeout" && (
+                <p className="text-[#8B7FA8] text-xs mt-1 italic">Repítela en voz alta 🗣️</p>
+              )}
+            </>
+          }
+          onContinue={handleContinue}
+        />
       )}
     </div>
   );

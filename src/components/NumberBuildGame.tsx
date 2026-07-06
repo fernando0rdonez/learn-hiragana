@@ -9,11 +9,13 @@ import {
   buildChipDistractors,
   randomNumberForLevel,
   numberKeyProgressKey,
+  findNumberKanji,
 } from "../numbers";
 import { advanceBox } from "../leitner";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxCelebratingImg from "../assets/character/fox-celebrating.png";
@@ -43,9 +45,6 @@ interface Round {
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-
-const POST_ANSWER_SPEECH_DELAY = 500;
-const WRONG_ANSWER_DELAY = 2200; // tiempo para leer la corrección
 
 const AMBER      = "#F5A623";
 const AMBER_DARK = "#C77F00";
@@ -158,11 +157,6 @@ export default function NumberBuildGame({
     }]);
   }
 
-  const speakAndWait = useCallback(
-    (text: string) => speak(text).then(() => new Promise<void>((resolve) => setTimeout(resolve, POST_ANSWER_SPEECH_DELAY))),
-    [speak]
-  );
-
   const checkAnswer = useCallback(
     (round: Round, sequence: TileChip[]) => {
       const isCorrect =
@@ -173,17 +167,19 @@ export default function NumberBuildGame({
         playChime();
         fireConfetti();
         setPhase("correct");
-        speakAndWait(numberToKana(round.target)).then(() => advanceToNext());
       } else {
         playBuzz();
         setPhase("wrong");
-        speak(numberToKana(round.target));
-        new Promise<void>((resolve) => setTimeout(resolve, WRONG_ANSWER_DELAY)).then(() => advanceToNext());
       }
+      speak(numberToKana(round.target));
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [roundIndex, rounds, progress]
   );
+
+  function handleContinue() {
+    advanceToNext();
+  }
 
   function handleTileTap(tile: TileChip) {
     if (phase !== "playing" || tile.used || !currentRound) return;
@@ -293,17 +289,16 @@ export default function NumberBuildGame({
       </div>
 
       {/* Feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">
-          ✅ ¡Correcto! · {numberToRomaji(currentRound.target)}
-        </p>
-      )}
-      {phase === "wrong" && (
-        <p className="font-semibold text-sm text-center" style={{ color: AMBER_DARK }}>
-          ❌ Era {numberToKana(currentRound.target)}
-          <br />
-          <span className="font-normal">{numberToRomaji(currentRound.target)}</span>
-        </p>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={numberToKana(currentRound.target)}
+          kanji={findNumberKanji(currentRound.target)}
+          romaji={numberToRomaji(currentRound.target)}
+          meaning={currentRound.target.toLocaleString("es")}
+          accent={{ text: AMBER_DARK, bg: "#FDF2E3" }}
+          onContinue={handleContinue}
+        />
       )}
     </div>
   );

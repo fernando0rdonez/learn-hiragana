@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { KeyNumber } from "../numbers";
-import { buildKeyOptions, numberKeyProgressKey } from "../numbers";
+import { buildKeyOptions, numberKeyProgressKey, findNumberKanji } from "../numbers";
 import { advanceBox, isDue } from "../leitner";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxCelebratingImg from "../assets/character/fox-celebrating.png";
@@ -25,8 +26,6 @@ function toISODate(d: Date = new Date()): string {
 type GamePhase = "playing" | "correct" | "wrong" | "done";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-
-const POST_ANSWER_SPEECH_DELAY = 500;
 
 const AMBER      = "#F5A623";
 const AMBER_DARK = "#C77F00";
@@ -136,22 +135,6 @@ export default function NumberKeysGame({
     }]);
   }
 
-  // Lee siempre la forma correcta (la trampa de un irregular no es una palabra
-  // real que valga la pena escuchar) y espera antes de avanzar.
-  const speakAndWait = useCallback(
-    (text: string) => speak(text).then(() => new Promise<void>((resolve) => setTimeout(resolve, POST_ANSWER_SPEECH_DELAY))),
-    [speak]
-  );
-
-  const finishAnswer = useCallback(
-    (key: KeyNumber, isCorrect: boolean, delay: Promise<void>) => {
-      recordResult(key, isCorrect);
-      delay.then(() => advanceToNext());
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queueIndex, queue]
-  );
-
   function handleAnswer(option: string) {
     if (phase !== "playing" || !currentKey) return;
     setSelected(option);
@@ -164,7 +147,14 @@ export default function NumberKeysGame({
       playBuzz();
       setPhase("wrong");
     }
-    finishAnswer(currentKey, isCorrect, speakAndWait(currentKey.hiragana));
+    recordResult(currentKey, isCorrect);
+    // Lee siempre la forma correcta — la trampa de un irregular no es una
+    // palabra real que valga la pena escuchar.
+    speak(currentKey.hiragana);
+  }
+
+  function handleContinue() {
+    advanceToNext();
   }
 
   // ── Done screen ──────────────────────────────────────────────────────────────
@@ -246,14 +236,19 @@ export default function NumberKeysGame({
       </div>
 
       {/* Feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentKey.romaji}</p>
-      )}
-      {phase === "wrong" && (
-        <p className="font-semibold text-sm" style={{ color: AMBER_DARK }}>
-          ❌ Era {currentKey.hiragana} · {currentKey.romaji}
-          {currentKey.irregular ? " · ¡forma irregular!" : ""}
-        </p>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={currentKey.hiragana}
+          kanji={findNumberKanji(currentKey.value)}
+          romaji={currentKey.romaji}
+          meaning={currentKey.value.toLocaleString("es")}
+          accent={{ text: AMBER_DARK, bg: "#FDF2E3" }}
+          extra={currentKey.irregular ? (
+            <p className="text-xs mt-1" style={{ color: AMBER_DARK }}>¡forma irregular!</p>
+          ) : undefined}
+          onContinue={handleContinue}
+        />
       )}
     </div>
   );

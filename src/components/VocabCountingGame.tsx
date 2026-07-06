@@ -1,16 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
 import { VOCABULARY } from "../vocabulary";
 import type { NumberWord } from "../numbers";
-import { NUMBER_WORDS } from "../numbers";
+import { NUMBER_WORDS, findNumberKanji } from "../numbers";
 import { advanceBox } from "../leitner";
 import { vocabProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
 import { getVocabImageUrl } from "../vocabImages";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxCelebratingImg from "../assets/character/fox-celebrating.png";
@@ -43,7 +44,6 @@ const COUNTABLE_CATEGORIES = new Set([
 ]);
 
 const PROMPT_PHRASE = "いくつ見えますか？";
-const POST_ANSWER_SPEECH_DELAY = 500;
 
 const CORAL_DARK = "#C03A1E";
 
@@ -159,20 +159,6 @@ export default function VocabCountingGame({
     setSessionResults((prev) => [...prev, { word: numberWord, correct: isCorrect }]);
   }
 
-  const speakAndWait = useCallback(
-    (text: string) => speak(text).then(() => new Promise<void>((resolve) => setTimeout(resolve, POST_ANSWER_SPEECH_DELAY))),
-    [speak]
-  );
-
-  const finishAnswer = useCallback(
-    (numberWord: NumberWord, isCorrect: boolean, delay: Promise<void>) => {
-      recordResult(numberWord, isCorrect);
-      delay.then(() => advanceToNext());
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [roundIndex, rounds]
-  );
-
   function handleAnswer(option: NumberWord) {
     if (phase !== "playing" || !currentRound) return;
     setSelected(option.hiragana);
@@ -185,7 +171,12 @@ export default function VocabCountingGame({
       playBuzz();
       setPhase("wrong");
     }
-    finishAnswer(currentRound.numberWord, isCorrect, speakAndWait(option.hiragana));
+    recordResult(currentRound.numberWord, isCorrect);
+    speak(option.hiragana);
+  }
+
+  function handleContinue() {
+    advanceToNext();
   }
 
   // ── Done screen ──────────────────────────────────────────────────────────────
@@ -271,11 +262,15 @@ export default function VocabCountingGame({
       </div>
 
       {/* Feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentRound.numberWord.romaji} · {currentRound.numberWord.meaning}</p>
-      )}
-      {phase === "wrong" && (
-        <p className="text-[#C03A1E] font-semibold text-sm">❌ Era {currentRound.numberWord.romaji} · {currentRound.numberWord.meaning}</p>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={currentRound.numberWord.hiragana}
+          kanji={findNumberKanji(currentRound.numberWord.numberValue)}
+          romaji={currentRound.numberWord.romaji}
+          meaning={currentRound.numberWord.meaning}
+          onContinue={handleContinue}
+        />
       )}
     </div>
   );

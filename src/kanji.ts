@@ -261,3 +261,21 @@ export const KANJI: KanjiEntry[] = [
   { kanji: "帰", meanings: ["regresar", "volver"], onyomi: ["キ"], kunyomi: ["かえ(る)"], group: "verbos",
     examples: [{ word: "帰る", kana: "かえる", meaning: "regresar" }] },
 ];
+
+// Lectura kana → palabra ejemplo con kanji, para revelar la escritura kanji de
+// una palabra/frase ya anclada al módulo Kanji (BACKLOG #5) al responder en
+// Vocabulario o Frases. Solo cubre las ~100 palabras ejemplo de arriba a
+// propósito: mostrar kanji no enseñado en ese módulo rompería el i+1.
+let kanjiByReading: Map<string, string> | null = null;
+
+export function findKanjiSpelling(kana: string): string | undefined {
+  if (!kanjiByReading) {
+    kanjiByReading = new Map();
+    for (const entry of KANJI) {
+      for (const ex of entry.examples) {
+        if (!kanjiByReading.has(ex.kana)) kanjiByReading.set(ex.kana, ex.word);
+      }
+    }
+  }
+  return kanjiByReading.get(kana);
+}
