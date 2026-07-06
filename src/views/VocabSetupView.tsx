@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Check, Play, PenLine, Eye, Headphones } from "lucide-react";
 import type { VocabWord } from "../vocabulary";
-import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
+import { VOCABULARY, VOCAB_CATEGORIES, LISTENING_EXCLUDED_CATEGORIES, isEligibleForListening } from "../vocabulary";
 import type { ViewName } from "../data";
 import type { ProgressItems, VocabSessionLength } from "../types";
 import { vocabCategoryStats, notMasteredVocab, resolveVocabSession } from "../utils";
@@ -102,12 +102,30 @@ export default function VocabSetupView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const allSelected = selectedVocabCategories.size === VOCAB_CATEGORIES.length;
-  const notMastered = notMasteredVocab(progress, filteredVocabulary);
-  const { limit: sessionSize } = resolveVocabSession(filteredVocabulary, vocabSessionLength, progress);
+  // El modo Escuchar no soporta ciertas categorías (ver LISTENING_EXCLUDED_CATEGORIES
+  // en vocabulary.ts): si el usuario cambia a ese modo con alguna ya seleccionada
+  // (p.ej. restaurada desde la última sesión), se retiran de inmediato para que
+  // nunca pueda arrancar una sesión que el juego dejará vacía.
+  useEffect(() => {
+    if (gameMode !== "listen") return;
+    const hasExcluded = [...selectedVocabCategories].some((id) => LISTENING_EXCLUDED_CATEGORIES.has(id));
+    if (!hasExcluded) return;
+    setSelectedVocabCategories(
+      new Set([...selectedVocabCategories].filter((id) => !LISTENING_EXCLUDED_CATEGORIES.has(id)))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameMode, selectedVocabCategories]);
+
+  const selectableCategories = gameMode === "listen"
+    ? VOCAB_CATEGORIES.filter((c) => !LISTENING_EXCLUDED_CATEGORIES.has(c.id))
+    : VOCAB_CATEGORIES;
+  const allSelected = selectedVocabCategories.size > 0 && selectedVocabCategories.size === selectableCategories.length;
+  const eligibleVocabulary = gameMode === "listen" ? filteredVocabulary.filter(isEligibleForListening) : filteredVocabulary;
+  const notMastered = notMasteredVocab(progress, eligibleVocabulary);
+  const { limit: sessionSize } = resolveVocabSession(eligibleVocabulary, vocabSessionLength, progress);
 
   function toggleSelectAll() {
-    setSelectedVocabCategories(allSelected ? new Set() : new Set(VOCAB_CATEGORIES.map((c) => c.id)));
+    setSelectedVocabCategories(allSelected ? new Set() : new Set(selectableCategories.map((c) => c.id)));
   }
 
   function handleStartSession() {
@@ -119,16 +137,24 @@ export default function VocabSetupView({
     setView(viewForMode(gameMode));
   }
 
+  function lastSessionPool(session: VocabLastSession): VocabWord[] {
+    const pool = VOCABULARY.filter((w) => session.categoryIds.includes(w.category));
+    return session.mode === "listen" ? pool.filter(isEligibleForListening) : pool;
+  }
+
   function handleContinue() {
     if (!lastSession) return;
-    const pool = VOCABULARY.filter((w) => lastSession.categoryIds.includes(w.category));
-    const { limit } = resolveVocabSession(pool, lastSession.length, progress);
-    if (limit === 0) return; // p.ej. "repasar" y ya no queda nada sin dominar
+    const { limit } = resolveVocabSession(lastSessionPool(lastSession), lastSession.length, progress);
+    if (limit === 0) return; // p.ej. "repasar" y ya no queda nada sin dominar, o la categoría no está disponible en este modo
     setSelectedVocabCategories(new Set(lastSession.categoryIds));
     setVocabSessionLength(lastSession.length);
     setGameMode(lastSession.mode);
     setView(viewForMode(lastSession.mode));
   }
+
+  const canContinue = lastSession
+    ? resolveVocabSession(lastSessionPool(lastSession), lastSession.length, progress).limit > 0
+    : false;
 
   return (
     <div>
@@ -166,12 +192,18 @@ export default function VocabSetupView({
             </span>
           </div>
           <button
+            disabled={!canContinue}
             onClick={handleContinue}
-            className="mt-3 flex items-center gap-2 bg-white rounded-xl px-4 py-2.5 text-sm font-semibold"
+            className="mt-3 flex items-center gap-2 bg-white rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
             style={{ color: CORAL_DARK }}
           >
             <Play size={14} /> Continuar
           </button>
+          {!canContinue && (
+            <p className="text-xs mt-2 text-white/80">
+              Esta combinación ya no tiene palabras disponibles en este modo.
+            </p>
+          )}
           <img
             src={foxImg}
             alt=""
@@ -230,12 +262,14 @@ export default function VocabSetupView({
             const isSelected = selectedVocabCategories.has(cat.id);
             const imageUrl = cat.image ? getVocabImageUrl(cat.image) : undefined;
             const pct = stats.total > 0 ? Math.round((stats.mastered / stats.total) * 100) : 0;
+            const disabledForMode = gameMode === "listen" && LISTENING_EXCLUDED_CATEGORIES.has(cat.id);
 
             return (
               <button
                 key={cat.id}
+                disabled={disabledForMode}
                 onClick={() => toggleVocabCategory(cat.id)}
-                className={`relative text-left rounded-2xl border-2 p-3 transition-colors ${!isSelected ? "hover:border-[#F0C4B4] hover:bg-[#FFFAF8]" : ""}`}
+                className={`relative text-left rounded-2xl border-2 p-3 transition-colors ${disabledForMode ? "opacity-40 cursor-not-allowed" : !isSelected ? "hover:border-[#F0C4B4] hover:bg-[#FFFAF8]" : ""}`}
                 style={isSelected
                   ? { backgroundColor: CORAL_LIGHT, borderColor: CORAL, boxShadow: "0 4px 14px rgba(232,93,58,0.18)" }
                   : { backgroundColor: "#FFFFFF", borderColor: BORDER }
@@ -259,12 +293,20 @@ export default function VocabSetupView({
                 <div className="text-sm font-semibold mt-2" style={{ color: isSelected ? CORAL_DARK : TEXT_MAIN }}>
                   {cat.label}
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: isSelected ? CORAL_DARK : TEXT_SECOND }}>
-                  {stats.mastered}/{stats.total} dominadas
-                </div>
-                <div className="w-full h-1 rounded-full mt-1.5 overflow-hidden" style={{ backgroundColor: "#F0EAE3" }}>
-                  <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: CORAL }} />
-                </div>
+                {disabledForMode ? (
+                  <div className="text-xs mt-0.5" style={{ color: TEXT_MUTED }}>
+                    No disponible en Escuchar
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-xs mt-0.5" style={{ color: isSelected ? CORAL_DARK : TEXT_SECOND }}>
+                      {stats.mastered}/{stats.total} dominadas
+                    </div>
+                    <div className="w-full h-1 rounded-full mt-1.5 overflow-hidden" style={{ backgroundColor: "#F0EAE3" }}>
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: CORAL }} />
+                    </div>
+                  </>
+                )}
               </button>
             );
           })}
@@ -295,7 +337,7 @@ export default function VocabSetupView({
                 : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
               }
             >
-              Todas ({filteredVocabulary.length})
+              Todas ({eligibleVocabulary.length})
             </button>
             <button
               disabled={notMastered.length === 0}
