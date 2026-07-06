@@ -45,6 +45,18 @@ export const VOCAB_CATEGORIES: VocabCategory[] = [
   { id: "misc",       label: "Misceláneos", emoji: "🎯" , image: "category-misc" },
 ];
 
+// Estas categorías son mayormente conceptos simbólicos/abstractos (p.ej. "hoy" y
+// "mañana" comparten casi la misma imagen de sol/calendario) que no se distinguen
+// de forma confiable solo con una imagen. Se excluyen únicamente en el modo
+// Escuchar: Deletrear no depende de imágenes y Reconocer muestra la traducción
+// como apoyo. Compartido entre VocabListeningGame y VocabSetupView para que la
+// pantalla de configuración nunca ofrezca una sesión que el juego dejará vacía.
+export const LISTENING_EXCLUDED_CATEGORIES = new Set(["tiempo", "preguntas", "cantidades"]);
+
+export function isEligibleForListening(word: VocabWord): boolean {
+  return !LISTENING_EXCLUDED_CATEGORIES.has(word.category);
+}
+
 // Vocabulario JLPT N5 en kana (~650 palabras). Los números, contadores y
 // fechas numéricas NO van aquí — viven en el módulo Números (src/numbers.ts);
 // por eso la lista N5 "completa" queda en ~650 y no en ~800 (BACKLOG #3).

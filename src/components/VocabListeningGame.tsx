@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { VocabWord } from "../vocabulary";
-import { VOCABULARY } from "../vocabulary";
+import { VOCABULARY, isEligibleForListening } from "../vocabulary";
 import { findKanjiSpelling } from "../kanji";
 import { advanceBox, isDue } from "../leitner";
 import { vocabProgressKey } from "../utils";
@@ -60,16 +60,6 @@ function sharedCharCount(a: string, b: string): number {
   let count = 0;
   for (const ch of b) if (setA.has(ch)) count++;
   return count;
-}
-
-// Estas categorías son mayormente conceptos simbólicos/abstractos (p.ej. "hoy" y
-// "mañana" comparten casi la misma imagen de sol/calendario) que no se distinguen
-// de forma confiable solo con una imagen. Se excluyen únicamente en este modo:
-// Deletrear no depende de imágenes y Reconocer muestra la traducción como apoyo.
-const EXCLUDED_CATEGORIES = new Set(["tiempo", "preguntas", "cantidades"]);
-
-function isEligibleForListening(word: VocabWord): boolean {
-  return !EXCLUDED_CATEGORIES.has(word.category);
 }
 
 // Palabras de "gente" (persona, persona formal, adulto, empleado...) no tienen
