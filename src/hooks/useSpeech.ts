@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 export interface UseSpeechResult {
-  speak: (text: string) => Promise<void>;
+  speak: (text: string, rate?: number) => Promise<void>;
   isSpeaking: boolean;
   isAvailable: boolean;
 }
@@ -31,7 +31,7 @@ export function useSpeech(): UseSpeechResult {
 
   // Resuelve cuando termina de hablar, para poder esperar antes de avanzar
   // y evitar que se corte la pronunciación a mitad de frase.
-  function speak(text: string): Promise<void> {
+  function speak(text: string, rate = 0.8): Promise<void> {
     if (typeof speechSynthesis === "undefined") return Promise.resolve();
 
     speechSynthesis.cancel();
@@ -50,12 +50,12 @@ export function useSpeech(): UseSpeechResult {
       // no disparar nunca onend/onerror (bug conocido de speechSynthesis), lo
       // que dejaría esta promesa colgada para siempre y bloquearía el avance
       // a la siguiente pregunta. Este timeout garantiza que siempre se resuelva.
-      const safetyTimeout = setTimeout(settle, Math.max(3000, text.length * 300));
+      const safetyTimeout = setTimeout(settle, Math.max(3000, text.length * 300) / rate);
 
       const utterance = new SpeechSynthesisUtterance(text);
       if (voiceRef.current) utterance.voice = voiceRef.current;
       utterance.lang = "ja-JP";
-      utterance.rate = 0.8;
+      utterance.rate = rate;
 
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = settle;

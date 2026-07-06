@@ -9,6 +9,7 @@ import { KATAKANA_WORDS } from "./wordsKatakana";
 import { VOCABULARY, type VocabWord } from "./vocabulary";
 import { PHRASES, type Phrase } from "./phrases";
 import { KANJI, type KanjiEntry } from "./kanji";
+import type { ListeningSentence } from "./listening";
 
 export function toISODate(d: Date = new Date()): string {
   return [
@@ -293,6 +294,49 @@ export function grammarStatus(items: ProgressItems, lessonId: string): CharStatu
   if (attempts >= 3 && acc >= 0.85) return "mastered";
   if (acc < 0.5) return "weak";
   return "developing";
+}
+
+export type ListeningPracticeMode = "listen-sentence" | "dictation";
+
+const LISTENING_MODES: ListeningPracticeMode[] = ["listen-sentence", "dictation"];
+
+export function listeningProgressKey(mode: ListeningPracticeMode, id: string): string {
+  return `${mode}:${id}`;
+}
+
+/** Same thresholds as vocabStatus/phraseStatus, summed across both listening modes. */
+export function listeningStatus(items: ProgressItems, id: string): CharStatus {
+  let attempts = 0, correct = 0;
+  for (const mode of LISTENING_MODES) {
+    const p = items[listeningProgressKey(mode, id)];
+    if (p && p.attempts > 0) {
+      attempts += p.attempts;
+      correct += p.correct;
+    }
+  }
+  if (attempts === 0) return "untested";
+  const acc = correct / attempts;
+  if (attempts >= 3 && acc >= 0.85) return "mastered";
+  if (acc < 0.5) return "weak";
+  return "developing";
+}
+
+export function notMasteredListening(progress: ProgressItems, sentences: ListeningSentence[]): ListeningSentence[] {
+  return sentences.filter((s) => listeningStatus(progress, s.id) !== "mastered");
+}
+
+/** Resolves a chosen session length into the actual sentence pool + count to play. */
+export function resolveListeningSession(
+  sentences: ListeningSentence[],
+  length: VocabSessionLength,
+  progress: ProgressItems
+): { pool: ListeningSentence[]; limit: number } {
+  if (length === "repasar") {
+    const pool = notMasteredListening(progress, sentences);
+    return { pool, limit: pool.length };
+  }
+  if (length === "all") return { pool: sentences, limit: sentences.length };
+  return { pool: sentences, limit: Math.min(length, sentences.length) };
 }
 
 export function rowStats(progress: ProgressItems, rowId: string, rowGroups: typeof ALL_ROW_GROUPS = ALL_ROW_GROUPS) {

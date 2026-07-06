@@ -16,9 +16,11 @@ export interface SessionResult {
 interface Props {
   sessionResults: SessionResult[];
   onBack: () => void;
+  /** Nota opcional bajo el porcentaje, p. ej. el conteo de reproducciones de audio de la sesión. */
+  footer?: string;
 }
 
-export default function VocabSessionSummary({ sessionResults, onBack }: Props) {
+export default function VocabSessionSummary({ sessionResults, onBack, footer }: Props) {
   const missed = sessionResults.filter((r) => !r.correct);
   const answered = sessionResults.length;
   const correctCount = answered - missed.length;
@@ -43,6 +45,7 @@ export default function VocabSessionSummary({ sessionResults, onBack }: Props) {
         <div className="w-full max-w-xs rounded-xl bg-white border border-[#E0D8F8] p-5 text-center">
           <span className="text-5xl font-bold text-[#7B4FD4]">{pct}%</span>
           <p className="text-stone-500 text-sm mt-1">{correctCount} de {answered} correctas</p>
+          {footer && <p className="text-stone-400 text-xs mt-2">{footer}</p>}
         </div>
       ) : (
         <p className="text-stone-500 text-sm">No hay palabras disponibles.</p>

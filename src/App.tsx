@@ -14,6 +14,7 @@ import { VOCABULARY } from "./vocabulary";
 import { PHRASES } from "./phrases";
 import { KANJI } from "./kanji";
 import { GRAMMAR_LESSONS } from "./grammar";
+import { LISTENING_SENTENCES } from "./listening";
 import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
 import { getAvailablePhonetics } from "./phonetics";
 import VocabularyGame from "./components/VocabularyGame";
@@ -25,6 +26,8 @@ import KanjiMeaningGame from "./components/KanjiMeaningGame";
 import KanjiReadingGame from "./components/KanjiReadingGame";
 import KanjiMatchGame from "./components/KanjiMatchGame";
 import GrammarLessonGame from "./components/GrammarLessonGame";
+import ListeningComprehensionGame from "./components/ListeningComprehensionGame";
+import ListeningDictationGame from "./components/ListeningDictationGame";
 import VocabCountingGame from "./components/VocabCountingGame";
 import NumberKeysGame from "./components/NumberKeysGame";
 import NumberBuildGame from "./components/NumberBuildGame";
@@ -32,7 +35,7 @@ import PhoneticsDrill from "./components/PhoneticsDrill";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
 import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS } from "./dataKatakana";
-import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus, grammarStatus } from "./utils";
+import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus, grammarStatus, resolveListeningSession, listeningStatus } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
@@ -42,6 +45,7 @@ import VocabSetupView from "./views/VocabSetupView";
 import PhraseSetupView from "./views/PhraseSetupView";
 import KanjiSetupView from "./views/KanjiSetupView";
 import GrammarSetupView from "./views/GrammarSetupView";
+import ListeningSetupView from "./views/ListeningSetupView";
 import NumberSetupView, { type NumberKeysLength } from "./views/NumberSetupView";
 import type { BuildLevel } from "./numbers";
 import { KEY_NUMBERS, KEY_NUMBER_GROUPS, BUILD_LEVELS, numberKeyStatus } from "./numbers";
@@ -80,6 +84,7 @@ export default function HiraganaTrainer() {
   const [selectedKanjiGroups, setSelectedKanjiGroups] = useState<Set<string>>(new Set());
   const [kanjiSessionLength, setKanjiSessionLength] = useState<VocabSessionLength>(10);
   const [selectedGrammarLessonId, setSelectedGrammarLessonId] = useState<string | null>(null);
+  const [listeningSessionLength, setListeningSessionLength] = useState<VocabSessionLength>(20);
   const [selectedNumberGroups, setSelectedNumberGroups] = useState<Set<string>>(
     () => new Set(KEY_NUMBER_GROUPS.map((g) => g.id))
   );
@@ -277,6 +282,9 @@ export default function HiraganaTrainer() {
   const masteredGrammarTotal = GRAMMAR_LESSONS.filter((l) => grammarStatus(progress, l.id) === "mastered").length;
   const selectedGrammarLesson = GRAMMAR_LESSONS.find((l) => l.id === selectedGrammarLessonId) ?? null;
 
+  const { pool: listeningSessionPool, limit: listeningSessionLimit } = resolveListeningSession(LISTENING_SENTENCES, listeningSessionLength, progress);
+  const masteredListeningTotal = LISTENING_SENTENCES.filter((s) => listeningStatus(progress, s.id) === "mastered").length;
+
   const numberKeysPool = KEY_NUMBER_GROUPS
     .filter((g) => selectedNumberGroups.has(g.id))
     .flatMap((g) => g.numbers);
@@ -307,6 +315,7 @@ export default function HiraganaTrainer() {
             masteredPhrasesTotal={masteredPhrasesTotal}
             masteredKanjiTotal={masteredKanjiTotal}
             masteredGrammarTotal={masteredGrammarTotal}
+            masteredListeningTotal={masteredListeningTotal}
             saveError={saveError}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
@@ -579,6 +588,46 @@ export default function HiraganaTrainer() {
               persist(merged);
             }}
             onBack={() => setView("grammarSetup")}
+          />
+        )}
+
+        {/* ── Listening: selector ── */}
+        {view === "listeningSetup" && (
+          <ListeningSetupView
+            progress={progress}
+            listeningSessionLength={listeningSessionLength}
+            setListeningSessionLength={setListeningSessionLength}
+            setView={setView}
+          />
+        )}
+
+        {/* ── Listening: comprensión ── */}
+        {view === "listeningComprehension" && (
+          <ListeningComprehensionGame
+            sentences={listeningSessionPool}
+            progress={progress}
+            sessionLimit={listeningSessionLimit}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("listeningSetup")}
+          />
+        )}
+
+        {/* ── Listening: dictado ── */}
+        {view === "listeningDictation" && (
+          <ListeningDictationGame
+            sentences={listeningSessionPool}
+            progress={progress}
+            sessionLimit={listeningSessionLimit}
+            onProgressUpdate={(updates) => {
+              const merged = { ...progress, ...updates };
+              setProgress(merged);
+              persist(merged);
+            }}
+            onBack={() => setView("listeningSetup")}
           />
         )}
 
