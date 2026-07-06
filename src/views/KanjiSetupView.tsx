@@ -5,6 +5,7 @@ import { KANJI, KANJI_GROUPS } from "../kanji";
 import type { ViewName } from "../data";
 import type { ProgressItems, VocabSessionLength } from "../types";
 import { kanjiGroupStats, notMasteredKanji, resolveKanjiSession } from "../utils";
+import { getVocabImageUrl } from "../vocabImages";
 import foxImg from "../assets/character/fox-neutral.png";
 import FloatingStartButton from "../components/FloatingStartButton";
 
@@ -215,6 +216,7 @@ export default function KanjiSetupView({
           {KANJI_GROUPS.map((group) => {
             const stats = kanjiGroupStats(progress, group.id);
             const isSelected = selectedKanjiGroups.has(group.id);
+            const imageUrl = group.image ? getVocabImageUrl(group.image) : undefined;
             const pct = stats.total > 0 ? Math.round((stats.mastered / stats.total) * 100) : 0;
 
             return (
@@ -235,7 +237,13 @@ export default function KanjiSetupView({
                     <Check size={13} className="text-white" strokeWidth={3} />
                   </span>
                 )}
-                <span className="text-3xl">{group.emoji}</span>
+                <div className="w-full aspect-square rounded-xl overflow-hidden flex items-center justify-center" style={{ backgroundColor: "#F5F0EA" }}>
+                  {imageUrl ? (
+                    <img src={imageUrl} alt={group.label} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl">{group.emoji}</span>
+                  )}
+                </div>
                 <div className="text-sm font-semibold mt-2" style={{ color: isSelected ? CRIMSON_DARK : TEXT_MAIN }}>
                   {group.label}
                 </div>

@@ -17,19 +17,20 @@ export interface KanjiGroup {
   id: string;
   label: string;
   emoji: string;
+  image?: string;      // slug key into getVocabImageUrl() (src/vocabImages.ts); fallback al emoji si no hay imagen generada
 }
 
 export const KANJI_GROUPS: KanjiGroup[] = [
-  { id: "numeros",    label: "Números",              emoji: "🔢" },
+  { id: "numeros",    label: "Números",              emoji: "🔢" , image: "category-numeros" },
   { id: "calendario", label: "Calendario",           emoji: "📅" },
-  { id: "tiempo",     label: "Tiempo",               emoji: "⏰" },
-  { id: "naturaleza", label: "Naturaleza",           emoji: "🌿" },
-  { id: "familia",    label: "Familia",              emoji: "👨‍👩‍👧" },
-  { id: "cuerpo",     label: "Cuerpo",               emoji: "🫀" },
-  { id: "escuela",    label: "Escuela",              emoji: "🏫" },
-  { id: "lugares",    label: "Lugares y direcciones", emoji: "🧭" },
-  { id: "adjetivos",  label: "Adjetivos",            emoji: "✨" },
-  { id: "verbos",     label: "Verbos",               emoji: "⚡" },
+  { id: "tiempo",     label: "Tiempo",               emoji: "⏰" , image: "category-tiempo" },
+  { id: "naturaleza", label: "Naturaleza",           emoji: "🌿" , image: "category-naturaleza" },
+  { id: "familia",    label: "Familia",              emoji: "👨‍👩‍👧" , image: "category-familia" },
+  { id: "cuerpo",     label: "Cuerpo",               emoji: "🫀" , image: "category-cuerpo" },
+  { id: "escuela",    label: "Escuela",              emoji: "🏫" , image: "category-escuela" },
+  { id: "lugares",    label: "Lugares y direcciones", emoji: "🧭" , image: "category-lugares" },
+  { id: "adjetivos",  label: "Adjetivos",            emoji: "✨" , image: "category-adjetivos" },
+  { id: "verbos",     label: "Verbos",               emoji: "⚡" , image: "category-verbos" },
 ];
 
 // Los ~100 kanji de N5, agrupados temáticamente (BACKLOG #5). Los `examples`
