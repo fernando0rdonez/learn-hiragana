@@ -8,6 +8,7 @@ import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
 import { AudioUnavailableHint } from "./AudioButton";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxCelebratingImg from "../assets/character/fox-celebrating.png";
@@ -269,22 +270,22 @@ export default function ListeningDictationGame({
         )}
       </form>
 
-      {/* Feedback: diff kana por kana + traducción */}
+      {/* Feedback: revela la frase + diff kana por kana del dictado */}
       {phase !== "playing" && (
-        <div className="w-full flex flex-col items-center gap-3 pb-6">
-          <p className="text-sm font-semibold" style={{ color: phase === "correct" ? "#0A6E54" : "#C03A1E" }}>
-            {phase === "correct" ? "¡Correcto!" : "Incorrecto — así se escribe:"}
-          </p>
-          <DictationDiff expected={currentSentence.kana} given={input} />
-          <p className="text-sm" style={{ color: "#8B7FA8" }}>{currentSentence.translation}</p>
-          <button
-            onClick={advanceToNext}
-            className="w-full py-3.5 rounded-2xl font-bold text-white text-sm tracking-wide uppercase"
-            style={{ backgroundColor: phase === "correct" ? "#0A6E54" : "#C03A1E" }}
-          >
-            Continuar
-          </button>
-        </div>
+        <AnswerReveal
+          status={phase}
+          kana={currentSentence.kana}
+          meaning={currentSentence.translation}
+          extra={
+            phase === "wrong" ? (
+              <div className="mt-3">
+                <p className="text-xs mb-1" style={{ opacity: 0.75 }}>Tu dictado:</p>
+                <DictationDiff expected={currentSentence.kana} given={input} />
+              </div>
+            ) : undefined
+          }
+          onContinue={advanceToNext}
+        />
       )}
     </div>
   );
