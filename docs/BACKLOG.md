@@ -208,6 +208,20 @@ dos drills activos, cubriendo la lista de gramática N5 del ROADMAP (Fase 1 §Co
 **Aceptación**: ≥ 20 lecciones N5; ambos tipos de ejercicio funcionan con SRS; toda frase
 usa vocabulario existente y suena por TTS al corregir; build pasa.
 
+> **Hecho (2026-07)** — `src/grammar.ts` (20 lecciones N5 en 5 bloques: estructura
+> X は Y です/negación/preguntas, las 8 partículas restantes が・を・に・で・へ・と・
+> も・の, ます/ません/ました/ませんでした, adjetivos い/な, y un bloque "Otros" con
+> demostrativos これ/それ/あれ, existencia あります/います y gustos すき/ほしい/たいです).
+> Cada lección trae 4 ejercicios de "ordenar" + 4 de "partícula hueca" (8 en total,
+> dentro del rango 8–12). `GrammarLessonGame.tsx` implementa el flujo explicación →
+> ejercicios (mezclados y barajados) → resumen (`VocabSessionSummary`), con fichas de
+> ancho variable (`GrammarTokenChip`/`GrammarTokenSlots`, ya que los tokens no son un
+> solo kana como en `KanaChip`/`WordSlots`). Progreso vía SRS con claves
+> `grammar-order:{id}` / `grammar-particle:{id}` (helpers en `src/utils.ts`), TTS de
+> la frase completa al corregir (`useSpeech`). `GrammarSetupView.tsx` lista las
+> lecciones agrupadas por bloque con su estado de dominio. Tarjeta "Gramática"
+> añadida a `HomeView`. No se integró en `StatsView`, igual que Frases/Kanji/Números.
+
 ---
 
 ## #7 · Listening de frases completas
