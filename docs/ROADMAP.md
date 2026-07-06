@@ -13,7 +13,7 @@ calendario sino cumpliendo la **puerta de salida** de la fase (METODOLOGIA §2.6
 |---|---|---|---|---|
 | 0 — Kana | pre-A1 | semanas 1–8 | hiragana + katakana + fonética básica | Hiragana ✅ · Fonética ✅ · Katakana ✅ |
 | 1 — Fundamentos | A1 ≈ N5 | meses 3–8 | 800 palabras, ~100 kanji, gramática N5, frases hechas | Vocab ✅ (~650, N5 completo sin números — ver #3) · Números ✅ (#11) · Frases ✅ (#4) · Kanji ❌ (#5) · Gramática ❌ (#6) |
-| 2 — Consolidación | A2 ≈ N4 | meses 8–16 | 1.500 palabras, ~300 kanji, forma て/plana, listening y lectura de frases | Listening frases ❌ (#7) · Lectura ❌ (#8) |
+| 2 — Consolidación | A2 ≈ N4 | meses 8–16 | 1.500 palabras, ~300 kanji, forma て/plana, listening y lectura de frases | Listening frases ✅ (#7) · Lectura ❌ (#8) |
 | 3 — Independencia | B1 ≈ N3 | meses 16–28 | 3.700 palabras, ~650 kanji, gramática N3, párrafos, shadowing, producción | Lectura N3 ❌ (#8) · Mapa B1 ❌ (#9) |
 
 ---
@@ -168,5 +168,5 @@ Para que la app siempre vaya **por delante** del estudiante:
 | Ya / inmediato | #10 Exportar progreso · #11 Números (antes de #3: retira los números del vocabulario) |
 | Antes del mes 3 | #3 Vocabulario N5 ✅ · #4 Frases con audio ✅ |
 | Antes del mes 4–5 | #5 Kanji N5 · #6 Gramática/construir frases |
-| Antes del mes 8 | #7 Listening de frases · #8 Lectura graduada |
+| Antes del mes 8 | #7 Listening de frases ✅ · #8 Lectura graduada |
 | Antes del mes 16 | #8 ampliado a N3 · #9 Mapa de progreso B1 |

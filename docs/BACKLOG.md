@@ -246,6 +246,22 @@ frases N5–N4.
 **Aceptación**: ambos modos completos con SRS; botón de velocidad lenta; el dictado
 tolera espacios y puntuación; build pasa.
 
+> **Hecho (2026-07)** — `src/listening.ts` deriva `LISTENING_SENTENCES` (79 frases,
+> todas N5 por ahora) directamente de los ejercicios "ordenar" de `src/grammar.ts`:
+> ya usan solo vocabulario existente y ya traen traducción, así que no hizo falta
+> un banco de frases aparte (el campo `level` queda listo para cuando haya
+> gramática N4). `ListeningComprehensionGame.tsx` (audio → elegir traducción entre
+> 4, clave `listen-sentence:{id}`) y `ListeningDictationGame.tsx` (audio → escribir
+> en kana, clave `dictation:{id}`, comparación normalizada ignorando espacios/
+> puntuación con feedback tipo diff kana por kana). Ambos reproducen hasta 3 veces
+> (botón normal + botón "más lento" con `rate` 0.6 en `useSpeech`, ahora
+> parametrizable) y sin límite de tiempo (a diferencia de Frases/Vocabulario):
+> escuchar varias veces antes de responder no encaja con un cronómetro. El resumen
+> de sesión (`VocabSessionSummary`, ahora con `footer` opcional) muestra el total
+> de escuchas. `ListeningSetupView.tsx` (plantilla `NumberSetupView`: selector de
+> modo + tamaño de sesión, sin categorías) y tarjeta "Listening" en `HomeView`.
+> No se integró en `StatsView`, igual que Frases/Kanji/Gramática/Números.
+
 ---
 
 ## #8 · Lectura graduada con preguntas

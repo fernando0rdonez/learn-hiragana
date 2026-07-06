@@ -2,7 +2,7 @@ import type { CharData, CharWithRow } from "./types";
 
 // ── Views ──────────────────────────────────────────────────────────────────
 
-export type ViewName = "home" | "hiraganaSetup" | "katakanaSetup" | "quiz" | "preview" | "summary" | "stats" | "vocabCategory" | "spellIt" | "recognizeIt" | "listenIt" | "numberSetup" | "numberKeys" | "numberBuild" | "countIt" | "phoneticSetup" | "phonetics" | "methodology" | "phraseSetup" | "phraseMeaning" | "phraseListening" | "kanjiSetup" | "kanjiMeaning" | "kanjiReading" | "kanjiMatch" | "grammarSetup" | "grammarLesson";
+export type ViewName = "home" | "hiraganaSetup" | "katakanaSetup" | "quiz" | "preview" | "summary" | "stats" | "vocabCategory" | "spellIt" | "recognizeIt" | "listenIt" | "numberSetup" | "numberKeys" | "numberBuild" | "countIt" | "phoneticSetup" | "phonetics" | "methodology" | "phraseSetup" | "phraseMeaning" | "phraseListening" | "kanjiSetup" | "kanjiMeaning" | "kanjiReading" | "kanjiMatch" | "grammarSetup" | "grammarLesson" | "listeningSetup" | "listeningComprehension" | "listeningDictation";
 
 // ── Kana data ──────────────────────────────────────────────────────────────
 

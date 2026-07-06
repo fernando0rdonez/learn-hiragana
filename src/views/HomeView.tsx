@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle, GraduationCap, SpellCheck2 } from "lucide-react";
+import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle, GraduationCap, SpellCheck2, Headphones } from "lucide-react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
@@ -9,6 +9,7 @@ import { KEY_NUMBERS } from "../numbers";
 import { PHRASES } from "../phrases";
 import { KANJI } from "../kanji";
 import { GRAMMAR_LESSONS } from "../grammar";
+import { LISTENING_SENTENCES } from "../listening";
 import foxImg from "../assets/character/fox-neutral.png";
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
   masteredPhrasesTotal: number;
   masteredKanjiTotal: number;
   masteredGrammarTotal: number;
+  masteredListeningTotal: number;
   saveError: boolean;
   resetConfirm: boolean;
   setResetConfirm: (v: boolean) => void;
@@ -42,7 +44,7 @@ function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
   return { moduleId: "hiragana", wasStored: false };
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, resetConfirm, setResetConfirm, resetProgress, setView }: Props) {
   const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -214,9 +216,17 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
           />
 
           <ModuleCard
+            bg="#E0F7FA" border="#0891B2"
+            icon={<Headphones size={20} style={{ color: "#0891B2" }} />}
+            title="Listening"
+            subtitle={`${masteredListeningTotal} de ${LISTENING_SENTENCES.length} frases dominadas`}
+            onClick={() => goTo("listeningSetup")}
+          />
+
+          <ModuleCard
             bg="#F5F5F5" border="#C9C9C9" dashed disabled
             icon={<PenLine size={20} style={{ color: "#8B7FA8" }} />}
-            title="Oraciones"
+            title="Lectura"
             subtitle="Se desbloquea al completar vocabulario base"
             badge="Próximamente"
           />
