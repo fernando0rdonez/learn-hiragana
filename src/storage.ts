@@ -1,9 +1,9 @@
-import type { ProgressData, ProgressItems } from "./types";
+import type { ProgressData, ProgressItems, ItemProgress } from "./types";
 import { WORDS } from "./words";
 import { VOCABULARY } from "./vocabulary";
 
 const STORAGE_KEY = "hiragana-progress";
-const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 2;
 
 const WORD_KANA = new Set(WORDS.map((w) => w.kana));
 const VOCAB_KANA = new Set(VOCABULARY.map((w) => w.hiragana));
@@ -61,4 +61,41 @@ export function saveProgress(data: ProgressData): boolean {
     // private mode or quota exceeded
     return false;
   }
+}
+
+function isItemProgress(v: unknown): v is ItemProgress {
+  if (!v || typeof v !== "object") return false;
+  const item = v as Record<string, unknown>;
+  return typeof item.box === "number" && typeof item.nextDue === "string"
+    && typeof item.attempts === "number" && typeof item.correct === "number";
+}
+
+export function parseImportedProgress(raw: string): ProgressData {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("El archivo no es un JSON válido.");
+  }
+
+  const items = (parsed as ProgressData | null)?.items;
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)
+      || !items || typeof items !== "object" || Array.isArray(items)) {
+    throw new Error("El archivo no tiene la estructura esperada (falta \"items\").");
+  }
+  for (const [key, item] of Object.entries(items)) {
+    if (!isItemProgress(item)) {
+      throw new Error(`El elemento "${key}" del archivo tiene un formato inválido.`);
+    }
+  }
+
+  const data = parsed as ProgressData;
+  const version = data.schemaVersion ?? 1;
+  if (version > CURRENT_SCHEMA_VERSION) {
+    throw new Error("Este archivo se exportó con una versión más nueva de la app. Actualiza la app para poder importarlo.");
+  }
+  if (version < CURRENT_SCHEMA_VERSION) {
+    return { ...data, items: migrateWordToSpellKeys(data.items), schemaVersion: CURRENT_SCHEMA_VERSION };
+  }
+  return { ...data, schemaVersion: CURRENT_SCHEMA_VERSION };
 }

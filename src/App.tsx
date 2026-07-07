@@ -60,7 +60,10 @@ import MethodologyView from "./views/MethodologyView";
 
 export default function HiraganaTrainer() {
   const { streak, setStreak, dailyProgress, setDailyProgress } = useStreak();
-  const { loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji } = useProgress({
+  const {
+    loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji,
+    exportProgress, importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
+  } = useProgress({
     streak, dailyProgress, setStreak, setDailyProgress,
   });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -321,6 +324,13 @@ export default function HiraganaTrainer() {
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
             resetProgress={resetProgress}
+            exportProgress={exportProgress}
+            importError={importError}
+            pendingImport={pendingImport}
+            importSuccess={importSuccess}
+            stageImport={stageImport}
+            confirmImport={confirmImport}
+            cancelImport={cancelImport}
             setView={setView}
           />
         )}
