@@ -9,7 +9,9 @@ import { KATAKANA_WORDS } from "./wordsKatakana";
 import { VOCABULARY, type VocabWord } from "./vocabulary";
 import { PHRASES, type Phrase } from "./phrases";
 import { KANJI, type KanjiEntry } from "./kanji";
-import type { ListeningSentence } from "./listening";
+import { LISTENING_SENTENCES, type ListeningSentence, type ListeningLevel } from "./listening";
+import { GRAMMAR_LESSONS } from "./grammar";
+import { PHONETIC_WORDS, type PhoneticEntry } from "./phonetics";
 
 export function toISODate(d: Date = new Date()): string {
   return [
@@ -337,6 +339,33 @@ export function resolveListeningSession(
   }
   if (length === "all") return { pool: sentences, limit: sentences.length };
   return { pool: sentences, limit: Math.min(length, sentences.length) };
+}
+
+function aggregateAccuracy(items: ProgressItems, keys: string[]): number | null {
+  let attempts = 0, correct = 0;
+  for (const key of keys) {
+    const p = items[key];
+    if (p && p.attempts > 0) { attempts += p.attempts; correct += p.correct; }
+  }
+  return attempts > 0 ? Math.round((correct / attempts) * 100) : null;
+}
+
+/** % de acierto agregado de las palabras de un fenómeno fonético (módulo #0). */
+export function phoneticsAccuracy(items: ProgressItems, phenomenon: PhoneticEntry["phenomenon"]): number | null {
+  const keys = PHONETIC_WORDS.filter((w) => w.phenomenon === phenomenon).map((w) => `phonetics:${w.id}`);
+  return aggregateAccuracy(items, keys);
+}
+
+/** % de acierto agregado de todos los drills de gramática (order + particle, #6). */
+export function grammarAccuracy(items: ProgressItems): number | null {
+  const keys = GRAMMAR_LESSONS.flatMap((l) => GRAMMAR_MODES.map((m) => grammarProgressKey(m, l.id)));
+  return aggregateAccuracy(items, keys);
+}
+
+/** % de acierto agregado de un modo de listening (#7), filtrado por nivel de frase. */
+export function listeningAccuracyByLevel(items: ProgressItems, mode: ListeningPracticeMode, level: ListeningLevel): number | null {
+  const keys = LISTENING_SENTENCES.filter((s) => s.level === level).map((s) => listeningProgressKey(mode, s.id));
+  return aggregateAccuracy(items, keys);
 }
 
 export function rowStats(progress: ProgressItems, rowId: string, rowGroups: typeof ALL_ROW_GROUPS = ALL_ROW_GROUPS) {

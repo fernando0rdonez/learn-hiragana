@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Flame, Check, AlertTriangle, ChevronDown, Info } from "lucide-react";
+import { ArrowLeft, Flame, Check, AlertTriangle, ChevronDown, Info, Map } from "lucide-react";
 import type { ProgressItems, StreakData, DailyProgress, CharStatus } from "../types";
 import type { ViewName } from "../data";
 import { ROWS, DAKUTEN_ROWS, COMPOUND_ROWS, ALL_CHARS } from "../data";
@@ -135,9 +135,12 @@ export default function StatsView({ progress, streak, dailyProgress, masteredTot
 
   return (
     <div className="pb-8">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center justify-between mb-4">
         <button onClick={() => setView("home")} className="flex items-center gap-1 text-sm hover:opacity-70" style={{ color: TEXT_SECOND }}>
           <ArrowLeft size={14} /> Inicio
+        </button>
+        <button onClick={() => setView("roadmap")} className="flex items-center gap-1 text-sm hover:opacity-70" style={{ color: TEXT_SECOND }}>
+          <Map size={14} /> Camino a B1
         </button>
       </div>
       <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: TEXT_MAIN }}>

@@ -41,6 +41,7 @@ import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
 import HomeView from "./views/HomeView";
 import StatsView from "./views/StatsView";
+import RoadmapView from "./views/RoadmapView";
 import VocabSetupView from "./views/VocabSetupView";
 import PhraseSetupView from "./views/PhraseSetupView";
 import KanjiSetupView from "./views/KanjiSetupView";
@@ -705,6 +706,11 @@ export default function HiraganaTrainer() {
             today={today}
             setView={setView}
           />
+        )}
+
+        {/* ── Camino a B1 ── */}
+        {view === "roadmap" && (
+          <RoadmapView progress={progress} setView={setView} />
         )}
 
       </div>

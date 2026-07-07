@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle, GraduationCap, SpellCheck2, Headphones } from "lucide-react";
+import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle, GraduationCap, SpellCheck2, Headphones, Map } from "lucide-react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
@@ -235,13 +235,22 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
 
       {/* ── Footer actions ── */}
       <div className="flex flex-col items-center gap-3 mt-8">
-        <button
-          onClick={() => setView("stats")}
-          className="flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 transition-colors"
-          style={{ color: "#1A1A2E" }}
-        >
-          <BarChart3 size={15} /> Ver estadísticas
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setView("stats")}
+            className="flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 transition-colors"
+            style={{ color: "#1A1A2E" }}
+          >
+            <BarChart3 size={15} /> Ver estadísticas
+          </button>
+          <button
+            onClick={() => setView("roadmap")}
+            className="flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 transition-colors"
+            style={{ color: "#1A1A2E" }}
+          >
+            <Map size={15} /> Camino a B1
+          </button>
+        </div>
 
         {!resetConfirm ? (
           <button onClick={() => setResetConfirm(true)} className="text-xs text-stone-400 hover:text-rose-600 flex items-center gap-1">

@@ -298,15 +298,53 @@ de salida y el % real de cada criterio, calculado desde `ProgressItems`.
 **Diseño**:
 - Nueva view `roadmap` (añadir a `ViewName`) accesible desde `HomeView` y `StatsView`.
 - Codificar las puertas de ROADMAP.md como datos (`src/roadmapGates.ts`): por fase, lista
-  de criterios `{ label, compute(progress): { current, target } }` — p. ej. "hiragana
-  dominado 98/104", "vocab N5 dominado 620/800", "kanji 40/100".
-- Reutilizar `charStatus`/`rowStats` de `src/utils.ts` para los cálculos; los módulos aún
-  no implementados aparecen como "próximamente" (leer qué existe por presencia de datos).
+  de criterios `{ label, compute(progress, content): { current, target, available } }`.
+  **`target` es siempre el número fijo del ROADMAP** (800, 1.500, 3.700 palabras; 104,
+  300, 650 kanji…), no cambia aunque el contenido esté incompleto. **`available` es lo
+  que realmente existe hoy** en los datos (`VOCABULARY.filter(w => level ∈ fase).length`,
+  `KANJI.length`…) y **`current`** es lo dominado (vía `charStatus`/`rowStats` de
+  `src/utils.ts` sobre `ProgressItems`). Ejemplos: "hiragana dominado 98/104" (available
+  = target, caso simple); "vocab N5+N4 dominado 620/1.500 (de 652 disponibles — faltan
+  848 palabras, spec #13)" (available < target, caso con contenido pendiente).
+- Tres estados posibles por criterio, no solo dos:
+  1. **Próximamente**: el módulo no existe aún (`available === 0` y no hay ninguna spec
+     implementada para ese dato) → mostrar solo el label, sin barra.
+  2. **Bloqueado por contenido**: `available < target` → barra hasta `current/target`
+     pero con el tramo `available–target` visualmente distinto (rayado/gris) y una nota
+     tipo "146 palabras aún no añadidas (spec #13)", para que no se lea como que el
+     estudiante va mal cuando en realidad es contenido de la app el que falta.
+  3. **En progreso normal**: `available >= target` → barra simple `current/target`.
+- Cuando una spec de contenido (#3, #5, #8, #13…) añade más ítems, este cálculo se
+  recalcula solo con los datos nuevos — `roadmapGates.ts` no debe tocarse al completar
+  esas specs, solo al cambiar los targets del ROADMAP.
 - UI: línea de fases con la fase activa destacada, barras de progreso por criterio y la
   puerta bloqueada/desbloqueada (reutilizar el estilo de `StatsView`).
 
-**Aceptación**: la vista refleja el progreso real de los módulos existentes; una puerta
-se marca cumplida solo cuando todos sus criterios llegan al objetivo; build pasa.
+**Aceptación**: la vista refleja el progreso real de los módulos existentes; distingue
+visualmente "contenido pendiente de añadir" de "estudio pendiente" en los criterios
+donde `available < target`; una puerta se marca cumplida solo cuando todos sus criterios
+llegan al `target` real del ROADMAP (no al `available`); build pasa.
+
+> **Hecho (2026-07)** — `src/roadmapGates.ts` codifica las 4 fases con sus criterios;
+> cada `compute(progress)` devuelve `{ current, target, available, unit? }` y
+> `criterionStatus`/`phaseGateComplete` derivan el estado ("próximamente" /
+> "bloqueado por contenido" / "en progreso" / "cumplido"). Los criterios objetivamente
+> medibles reutilizan `charStatus`/`vocabStatus`/`kanjiStatus` existentes más dos
+> helpers nuevos en `src/utils.ts` (`phoneticsAccuracy`, `grammarAccuracy`,
+> `listeningAccuracyByLevel`) para los % de acierto de fonética/gramática/dictado.
+> Los criterios no medibles desde `ProgressItems` (leer en <2s, conversación con
+> tutor, simulacro N3, escribir un texto…) se listan como autoevaluación manual, sin
+> barra, y no cuentan para que una fase se marque "Cumplida" — son honestos sobre lo
+> que la app no puede verificar. `RoadmapView.tsx` (vista `roadmap`) muestra las 4
+> fases como un sendero conectado con nodo por fase (emoji propio: あ/🌱/🌿/🏆,
+> candado si está bloqueada, check verde si está cumplida) y un hero con la mascota
+> (`summaryMascot`) reaccionando a cuántas fases van cumplidas, para que se sienta
+> juguetón en vez de una tabla plana. Accesible desde `HomeView` (footer, junto a
+> "Ver estadísticas") y desde `StatsView` (link en el header). Verificado en
+> navegador simulando progreso vía `localStorage`: los criterios recalculan en vivo
+> y una fase solo pasa a "Cumplida" cuando *todos* sus criterios computables llegan
+> al target real (no al disponible), confirmando el caso de #13 (vocab N4 pendiente)
+> — build pasa.
 
 ---
 
@@ -442,6 +480,50 @@ pasa.
 > desde un icono de ayuda junto a la racha en `HomeView`. Cubre las 4 secciones (meta,
 > principios, rutina diaria, cobertura de destrezas) más un resumen de las 4 fases del
 > ROADMAP.
+
+---
+
+## #13 · Ampliar vocabulario N4: 650 → 1.500 palabras
+
+**Fase**: 2 · **Tamaño**: L (contenido)
+
+**Objetivo**: cubrir la lista de vocabulario JLPT N4 (~700–850 palabras nuevas) en
+`src/vocabulary.ts`, para llegar a las ~1.500 palabras acumuladas que exige la puerta
+de salida de Fase 2 (ROADMAP). Es la spec de contenido equivalente a la #3, pero para
+N4 — hoy no existe ninguna spec que añada este vocabulario; #7 (Listening) y #8
+(Lectura) asumen que el vocabulario N4 ya está disponible pero no lo generan.
+
+**Diseño**:
+- Mismo formato `VocabWord` que #3 (hiragana, romaji, significado en español, categoría,
+  `emojiBackup`; `imageQuery`/`imagePath` según la skill `vocab-images`).
+- Añadir un campo `level: "N5" | "N4"` a `VocabWord` (por defecto tratar lo existente
+  como N5 vía migración de datos, no de `schemaVersion` — es un campo de contenido, no
+  de progreso). Los tres juegos de vocabulario (`VocabularyGame`, `VocabRecognizeGame`,
+  `VocabListeningGame`) y su setup view deben poder filtrar por nivel, con N5 y N4
+  combinables (por defecto: ambos activos una vez exista N4, para no forzar a
+  reconfigurar a quien ya esté en Fase 2).
+- Añadir en tandas por categoría (50–100 palabras por PR, igual que #3). Reutilizar
+  categorías existentes cuando el significado encaje; crear nuevas solo si hace falta
+  (p. ej. trabajo, sentimientos, verbos III), registrándolas en `VOCAB_CATEGORIES`.
+- Palabras que en N4 se escriben habitualmente con katakana: incluirlas (el módulo
+  Katakana #1 ya existe).
+- Evitar duplicados con las ~652 existentes (comprobar por campo `hiragana`).
+- Imágenes: usar la skill `vocab-images` para las tandas nuevas; `emojiBackup`
+  obligatorio como fallback.
+- Este vocabulario es prerrequisito de contenido para #8 ampliado a N4 (lectura) y para
+  que #7 (Listening, ya implementado) empiece a generar frases marcadas `level: "N4"`
+  desde `src/grammar.ts` una vez exista gramática N4 (ROADMAP Fase 2 §Contenido 3,
+  aún no especificada como backlog — ver nota de seguimiento más abajo).
+
+**Aceptación**: `VOCABULARY.length` ≥ 1.500 combinando N5+N4, sin duplicados; cada
+palabra nueva tiene `level: "N4"`, significado en español y categoría válida; los
+juegos de vocabulario filtran por nivel; build pasa.
+
+> **Nota de seguimiento**: el ROADMAP Fase 2 también pide gramática N4 (forma て,
+> pasado plano, たり/ながら…) y no existe todavía una spec de backlog para eso —
+> equivalente a la #6 pero N4. Si se prioriza esta ampliación de vocabulario, conviene
+> abrir esa spec de gramática N4 a continuación, ya que #7/#8 la necesitarán para
+> generar contenido N4 real (hoy #7 solo tiene frases N5 derivadas de `grammar.ts`).
 
 ---
 
