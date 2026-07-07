@@ -325,6 +325,27 @@ visualmente "contenido pendiente de añadir" de "estudio pendiente" en los crite
 donde `available < target`; una puerta se marca cumplida solo cuando todos sus criterios
 llegan al `target` real del ROADMAP (no al `available`); build pasa.
 
+> **Hecho (2026-07)** — `src/roadmapGates.ts` codifica las 4 fases con sus criterios;
+> cada `compute(progress)` devuelve `{ current, target, available, unit? }` y
+> `criterionStatus`/`phaseGateComplete` derivan el estado ("próximamente" /
+> "bloqueado por contenido" / "en progreso" / "cumplido"). Los criterios objetivamente
+> medibles reutilizan `charStatus`/`vocabStatus`/`kanjiStatus` existentes más dos
+> helpers nuevos en `src/utils.ts` (`phoneticsAccuracy`, `grammarAccuracy`,
+> `listeningAccuracyByLevel`) para los % de acierto de fonética/gramática/dictado.
+> Los criterios no medibles desde `ProgressItems` (leer en <2s, conversación con
+> tutor, simulacro N3, escribir un texto…) se listan como autoevaluación manual, sin
+> barra, y no cuentan para que una fase se marque "Cumplida" — son honestos sobre lo
+> que la app no puede verificar. `RoadmapView.tsx` (vista `roadmap`) muestra las 4
+> fases como un sendero conectado con nodo por fase (emoji propio: あ/🌱/🌿/🏆,
+> candado si está bloqueada, check verde si está cumplida) y un hero con la mascota
+> (`summaryMascot`) reaccionando a cuántas fases van cumplidas, para que se sienta
+> juguetón en vez de una tabla plana. Accesible desde `HomeView` (footer, junto a
+> "Ver estadísticas") y desde `StatsView` (link en el header). Verificado en
+> navegador simulando progreso vía `localStorage`: los criterios recalculan en vivo
+> y una fase solo pasa a "Cumplida" cuando *todos* sus criterios computables llegan
+> al target real (no al disponible), confirmando el caso de #13 (vocab N4 pendiente)
+> — build pasa.
+
 ---
 
 ## #10 · Exportar / importar progreso
