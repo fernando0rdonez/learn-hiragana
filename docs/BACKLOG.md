@@ -366,6 +366,20 @@ llegan al `target` real del ROADMAP (no al `available`); build pasa.
 **Aceptación**: ciclo exportar → borrar localStorage → importar deja el progreso idéntico
 (incluye racha y ajustes); un JSON inválido muestra error y no destruye nada; build pasa.
 
+> **Hecho (2026-07)** — `parseImportedProgress` en `src/storage.ts` valida estructura
+> (`items` presente, cada `ItemProgress` con forma correcta) y `schemaVersion` (rechaza
+> archivos de una versión más nueva; migra con `migrateWordToSpellKeys` si son de una
+> versión anterior, igual que `loadProgress`). Export/import viven en `useProgress`
+> (`exportProgress`, `stageImport`, `confirmImport`, `cancelImport`) con flujo de dos
+> pasos: seleccionar archivo valida y muestra confirmación sin tocar el progreso actual;
+> confirmar sobrescribe `items`/`streak`/`dailyProgress`/`settings` de una vez (no se
+> reutiliza `persist` para evitar guardar un `showRomaji` obsoleto por la naturaleza
+> asíncrona de `setState`). Botones "Exportar progreso"/"Importar progreso" en el footer
+> de `HomeView`, con mensajes de error/confirmación/éxito en español. Verificado en
+> navegador: ciclo exportar → borrar → importar deja `localStorage` byte-a-byte igual;
+> JSON inválido y un ítem con formato incorrecto muestran error sin alterar el progreso
+> existente; cancelar la importación descarta el archivo staged; build pasa.
+
 ---
 
 ## #11 · Módulo Números (sección propia + formar números grandes)
