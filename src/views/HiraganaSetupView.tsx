@@ -31,8 +31,6 @@ interface Props {
   togglePair: (idx: number) => void;
   poolForPairs: CharWithRow[];
   availablePairItems: QueueItem[];
-  showRomaji: boolean;
-  updateShowRomaji: (val: boolean) => void;
   wordPool: CharWithRow[];
   availableWordItems: CharWithRow[];
   startWordSession: (pool: CharWithRow[], length: number) => void;
@@ -96,7 +94,6 @@ export default function HiraganaSetupView({
   launchSession, startSession,
   selectedPairs, togglePair,
   poolForPairs, availablePairItems,
-  showRomaji, updateShowRomaji,
   wordPool, availableWordItems, startWordSession,
   setView,
 }: Props) {
@@ -391,18 +388,7 @@ export default function HiraganaSetupView({
 
       {/* ── Sesión de romaji ── */}
       <div className="mt-8 pt-6" style={{ borderTop: "1px solid #F5F3FF" }}>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium" style={{ color: TEXT_MAIN }}>Palabras en romaji</span>
-          <label className="flex items-center gap-2 text-xs cursor-pointer select-none" style={{ color: TEXT_SECOND }}>
-            <input
-              type="checkbox"
-              checked={showRomaji}
-              onChange={(e) => updateShowRomaji(e.target.checked)}
-              style={{ accentColor: PURPLE }}
-            />
-            Mostrar romaji
-          </label>
-        </div>
+        <span className="text-sm font-medium" style={{ color: TEXT_MAIN }}>Palabras en romaji</span>
         <p className="text-xs mt-1" style={{ color: TEXT_MUTED }}>
           Disponibles según las filas elegidas: {wordPool.length} palabra{wordPool.length === 1 ? "" : "s"}.
         </p>

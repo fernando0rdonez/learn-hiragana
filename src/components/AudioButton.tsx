@@ -11,6 +11,7 @@ interface Props {
   accent?: string;     // hex used for hover border/text and the "speaking" state
   idleBorder?: string; // hex for the idle (non-hover, non-speaking) border
   idleText?: string;   // hex for the idle icon color
+  onPlay?: () => void; // se llama cuando efectivamente se reproduce audio (voz disponible)
 }
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -75,6 +76,7 @@ export default function AudioButton({
   accent = DEFAULT_ACCENT,
   idleBorder = DEFAULT_IDLE_BORDER,
   idleText = DEFAULT_IDLE_TEXT,
+  onPlay,
 }: Props) {
   const { speak, isSpeaking, isAvailable } = useSpeech();
   const [showHelp, setShowHelp] = useState(false);
@@ -85,6 +87,7 @@ export default function AudioButton({
       setShowHelp((prev) => !prev);
       return;
     }
+    onPlay?.();
     speak(text);
   }
 

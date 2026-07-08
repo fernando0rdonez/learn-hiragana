@@ -93,6 +93,14 @@ export default function VocabularyGame({
   const [phase, setPhase] = useState<GamePhase>("playing");
   const [animClass, setAnimClass] = useState("");
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
+  const [audioUsed, setAudioUsed] = useState(false);
+  const [helpedCount, setHelpedCount] = useState(0);
+
+  // Escuchar el audio (o ver el romaji en pantalla) revela cómo suena/se
+  // escribe la palabra sin que el usuario tenga que asociarla con su
+  // significado — así que un acierto obtenido con esa ayuda no cuenta para
+  // el progreso (SRS) de la palabra.
+  const helpUsed = showRomaji || audioUsed;
 
   const today = toISODate();
 
@@ -129,9 +137,17 @@ export default function VocabularyGame({
     setFailCount(0);
     setPhase("playing");
     setAnimClass("");
+    setAudioUsed(false);
   }
 
-  function recordResult(word: VocabWord, isCorrect: boolean) {
+  // skipSRS: un acierto obtenido escuchando el audio o viendo el romaji sigue
+  // apareciendo en el resumen de la sesión (fue correcto), pero no debe mover
+  // la palabra en el sistema de repetición espaciada — el usuario no demostró
+  // que la reconoce sin ayuda.
+  function recordResult(word: VocabWord, isCorrect: boolean, skipSRS = false) {
+    setSessionResults((prev) => [...prev, { word, correct: isCorrect }]);
+    if (skipSRS) return;
+
     const key = vocabProgressKey("spell", word.hiragana);
     const prevP: ItemProgress = progress[key] ?? {
       box: 0,
@@ -157,7 +173,6 @@ export default function VocabularyGame({
       correct: prevP.correct + (isCorrect ? 1 : 0),
     };
     onProgressUpdate({ [key]: newP });
-    setSessionResults((prev) => [...prev, { word, correct: isCorrect }]);
   }
 
   const currentWord = queue[queueIndex] ?? null;
@@ -187,8 +202,8 @@ export default function VocabularyGame({
         fireConfetti();
         triggerAnim("correct-flash", 600);
         setPhase("correct");
-        recordResult(word, true);
-        setTimeout(() => advanceToNext(), 1500);
+        if (helpUsed) setHelpedCount((prev) => prev + 1);
+        recordResult(word, true, helpUsed);
       } else {
         playBuzz();
         const newFail = currentFail + 1;
@@ -212,7 +227,7 @@ export default function VocabularyGame({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queueIndex, queue]
+    [queueIndex, queue, helpUsed]
   );
 
   function handleChipTap(chipId: number) {
@@ -278,7 +293,17 @@ export default function VocabularyGame({
   // ── Done screen ──────────────────────────────────────────────────────────────
 
   if (phase === "done" || queue.length === 0) {
-    return <VocabSessionSummary sessionResults={sessionResults} onBack={onBack} />;
+    return (
+      <VocabSessionSummary
+        sessionResults={sessionResults}
+        onBack={onBack}
+        footer={
+          helpedCount > 0
+            ? `${helpedCount} palabra${helpedCount === 1 ? "" : "s"} no contaron para tu progreso por usar audio o romaji`
+            : undefined
+        }
+      />
+    );
   }
 
   if (!currentWord) return null;
@@ -335,7 +360,11 @@ export default function VocabularyGame({
             {currentWord.meaning}
           </span>
         </div>
-        <AudioButton text={currentWord.hiragana} className="shrink-0" />
+        <AudioButton
+          text={currentWord.hiragana}
+          className="shrink-0"
+          onPlay={() => setAudioUsed(true)}
+        />
         <img src={foxPose} alt="" className="w-20 h-20 object-contain shrink-0 transition-opacity" />
       </div>
 
@@ -348,19 +377,23 @@ export default function VocabularyGame({
       />
 
       {/* Phase feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto!</p>
-      )}
       {phase === "wrong" && (
         <p className="text-[#C03A1E] font-semibold text-sm">❌ Inténtalo de nuevo</p>
       )}
-      {phase === "reveal" && (
+      {(phase === "correct" || phase === "reveal") && (
         <AnswerReveal
-          status="wrong"
+          status={phase === "correct" ? "correct" : "wrong"}
           kana={currentWord.hiragana}
           kanji={findKanjiSpelling(currentWord.hiragana)}
           romaji={currentWord.romaji}
           meaning={currentWord.meaning}
+          extra={
+            phase === "correct" && helpUsed ? (
+              <p className="text-xs mt-2" style={{ color: "#0A6E54", opacity: 0.75 }}>
+                No cuenta para tu progreso — usaste audio o romaji
+              </p>
+            ) : undefined
+          }
           onContinue={handleContinue}
         />
       )}

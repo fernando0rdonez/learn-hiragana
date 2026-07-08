@@ -348,7 +348,6 @@ export default function HiraganaTrainer() {
             launchSession={launchSession} startSession={startSession}
             selectedPairs={selectedPairs} togglePair={togglePair}
             poolForPairs={poolForPairs} availablePairItems={availablePairItems}
-            showRomaji={showRomaji} updateShowRomaji={updateShowRomaji}
             wordPool={wordPool} availableWordItems={availableWordItems} startWordSession={startWordSession}
             setView={setView}
           />
@@ -433,6 +432,8 @@ export default function HiraganaTrainer() {
             vocabSessionLength={vocabSessionLength}
             setVocabSessionLength={setVocabSessionLength}
             filteredVocabulary={filteredVocabulary}
+            showRomaji={showRomaji}
+            updateShowRomaji={updateShowRomaji}
             setView={setView}
           />
         )}
