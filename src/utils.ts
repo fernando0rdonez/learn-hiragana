@@ -127,6 +127,16 @@ export function vocabProgressKey(mode: VocabPracticeMode, hiragana: string): str
  * the other modes automatically once they exist.
  */
 export function vocabStatus(items: ProgressItems, hiragana: string): CharStatus {
+  const { attempts, correct } = vocabAccuracy(items, hiragana);
+  if (attempts === 0) return "untested";
+  const acc = correct / attempts;
+  if (attempts >= 3 && acc >= 0.85) return "mastered";
+  if (acc < 0.5) return "weak";
+  return "developing";
+}
+
+/** Attempts/correct summed across VOCAB_MODES, for accuracy displays (e.g. StatsView). */
+export function vocabAccuracy(items: ProgressItems, hiragana: string): { attempts: number; correct: number } {
   let attempts = 0, correct = 0;
   for (const mode of VOCAB_MODES) {
     const p = items[vocabProgressKey(mode, hiragana)];
@@ -135,11 +145,7 @@ export function vocabStatus(items: ProgressItems, hiragana: string): CharStatus 
       correct += p.correct;
     }
   }
-  if (attempts === 0) return "untested";
-  const acc = correct / attempts;
-  if (attempts >= 3 && acc >= 0.85) return "mastered";
-  if (acc < 0.5) return "weak";
-  return "developing";
+  return { attempts, correct };
 }
 
 // NOTE: a handful of hiragana strings repeat across categories (e.g. "はな"
@@ -233,6 +239,16 @@ export function kanjiProgressKey(mode: KanjiPracticeMode, kanji: string): string
 
 /** Same thresholds as vocabStatus/phraseStatus, summed across both kanji modes. */
 export function kanjiStatus(items: ProgressItems, kanji: string): CharStatus {
+  const { attempts, correct } = kanjiAccuracy(items, kanji);
+  if (attempts === 0) return "untested";
+  const acc = correct / attempts;
+  if (attempts >= 3 && acc >= 0.85) return "mastered";
+  if (acc < 0.5) return "weak";
+  return "developing";
+}
+
+/** Attempts/correct summed across KANJI_MODES, for accuracy displays (e.g. StatsView). */
+export function kanjiAccuracy(items: ProgressItems, kanji: string): { attempts: number; correct: number } {
   let attempts = 0, correct = 0;
   for (const mode of KANJI_MODES) {
     const p = items[kanjiProgressKey(mode, kanji)];
@@ -241,11 +257,7 @@ export function kanjiStatus(items: ProgressItems, kanji: string): CharStatus {
       correct += p.correct;
     }
   }
-  if (attempts === 0) return "untested";
-  const acc = correct / attempts;
-  if (attempts >= 3 && acc >= 0.85) return "mastered";
-  if (acc < 0.5) return "weak";
-  return "developing";
+  return { attempts, correct };
 }
 
 /** Per-group mastery aggregate for the kanji group picker cards. */

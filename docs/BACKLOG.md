@@ -541,6 +541,60 @@ juegos de vocabulario filtran por nivel; build pasa.
 
 ---
 
+## #14 · Integrar Vocabulario y Kanji en Estadísticas
+
+**Fase**: transversal · **Tamaño**: M
+
+**Objetivo**: `StatsView` hoy solo cubre Hiragana/Katakana (ver notas "Hecho" de #4, #5,
+#6, #7 y #9: "No se integró en StatsView, igual que Frases/Kanji/Números/Gramática/
+Listening"). Esta spec cierra la brecha para **Vocabulario** y **Kanji**, que ya tienen
+todo el cómputo de progreso necesario implementado y sin usar en la vista de estadísticas.
+
+**Diseño**:
+- No hace falta cómputo nuevo: `src/utils.ts` ya expone `vocabStatus`/`vocabCategoryStats`
+  y `kanjiStatus`/`kanjiGroupStats` (agregan attempts/correct sobre `VOCAB_MODES` y
+  `KANJI_MODES` respectivamente, mismos umbrales que `charStatus`). El trabajo es cablear
+  `StatsView.tsx`, no reinventar el cálculo.
+- Ampliar `ScriptId` (`src/views/StatsView.tsx`) de `"hiragana" | "katakana"` a incluir
+  `"vocabulario" | "kanji"`, con su entrada en el selector de pestañas existente. Si 4
+  pestañas en una fila queda apretado, usar un selector de dos niveles ("Kana" ↔
+  "Contenido") en vez de forzarlas todas en la misma fila — decisión de UI libre.
+- Tarjeta hero (% dominado + barra), igual patrón que hoy: para vocabulario,
+  `mastered = VOCABULARY.filter(w => vocabStatus(progress, w.hiragana) === "mastered").length`
+  sobre `VOCABULARY.length`; para kanji, análogo con `KANJI`/`kanjiStatus`.
+- Sección "Por categoría": hoy es un grid fijo de 3 tarjetas (`categoryTotals` sobre
+  `RowGroup[]` de kana). Vocabulario tiene ~24 categorías (`VOCAB_CATEGORIES`) y kanji
+  ~10 grupos (`KANJI_GROUPS`) — no caben 3 en fila. Sustituir por una lista (scrolleable
+  o en grid de 2) que recorra **todas** las categorías/grupos usando directamente
+  `vocabCategoryStats(progress, cat.id)` / `kanjiGroupStats(progress, group.id)` (ya
+  devuelven `{ total, mastered }`, sin iterar rows a mano).
+- Sección de detalle por ítem (hoy `RowBlock`, una cajita por kana con su estado de
+  color): no traslada 1:1 a 650 palabras en pantalla. Diseño: por cada categoría/grupo,
+  un bloque plegable (colapsado por defecto, muestra `mastered/total` + barra, como los
+  `RowBlock` actuales) que al expandirse pinta las cajitas (`STATUS_STYLE`/`STATUS_DOT`,
+  mismos 4 colores y la misma leyenda ya existente) solo de las palabras/kanji de ese
+  grupo — cajita con hiragana + significado corto para vocabulario, kanji + on'yomi/
+  kun'yomi corto para kanji, en vez de kana + romaji.
+- Accuracy mostrado en la cajita cuando el estado es "developing"/"weak": hoy `RowBlock`
+  lee `progress["recognition:{kana}"]` directo; para vocabulario/kanji hay que sumar
+  attempts/correct a través de `vocabProgressKey`/`VOCAB_MODES` (o el helper equivalente
+  ya usado dentro de `vocabStatus`/`kanjiStatus` — puede valer la pena exportar un
+  `vocabAccuracy`/`kanjiAccuracy` desde `utils.ts` que reutilice esa misma suma en vez
+  de duplicarla en el componente).
+- La leyenda de colores (`STATUS_LABEL`/`STATUS_CRITERIA`) es genérica por umbral, no por
+  silabario — no requiere cambios, aplica igual a vocabulario y kanji.
+- Frases, Números, Gramática y Listening **siguen fuera de StatsView** tras esta spec
+  (no es su alcance); si se implementan después, actualizar sus notas "Hecho" que hoy
+  dicen explícitamente que no están integradas.
+
+**Aceptación**: `StatsView` tiene pestañas para Vocabulario y Kanji con % dominado global,
+desglose por **todas** las categorías/grupos (no solo 3) y detalle expandible por palabra/
+kanji con el mismo código de color y leyenda que hiragana/katakana; ningún cómputo de
+mastery se duplica (se reutilizan `vocabStatus`/`vocabCategoryStats`/`kanjiStatus`/
+`kanjiGroupStats` de `src/utils.ts`); build pasa.
+
+---
+
 ## Plantilla para nuevas specs
 
 Al añadir specs futuras a este backlog, incluir siempre: **Fase** del ROADMAP, **Objetivo**
