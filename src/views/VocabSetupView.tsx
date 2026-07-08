@@ -17,6 +17,8 @@ interface Props {
   vocabSessionLength: VocabSessionLength;
   setVocabSessionLength: (n: VocabSessionLength) => void;
   filteredVocabulary: VocabWord[];
+  showRomaji: boolean;
+  updateShowRomaji: (val: boolean) => void;
   setView: (v: ViewName) => void;
 }
 
@@ -72,6 +74,7 @@ export default function VocabSetupView({
   selectedVocabCategories, toggleVocabCategory, setSelectedVocabCategories,
   vocabSessionLength, setVocabSessionLength,
   filteredVocabulary,
+  showRomaji, updateShowRomaji,
   setView,
 }: Props) {
   const [lastSession] = useState<VocabLastSession | null>(() => {
@@ -248,6 +251,25 @@ export default function VocabSetupView({
             <Headphones size={14} /> Escuchar
           </button>
         </div>
+
+        {gameMode === "spell" && (
+          <div className="flex items-center justify-between mt-3 rounded-xl px-3 py-2.5" style={{ backgroundColor: "#FFF8F6" }}>
+            <div className="pr-3">
+              <label className="flex items-center gap-2 text-xs font-medium cursor-pointer select-none" style={{ color: TEXT_MAIN }}>
+                <input
+                  type="checkbox"
+                  checked={showRomaji}
+                  onChange={(e) => updateShowRomaji(e.target.checked)}
+                  style={{ accentColor: CORAL }}
+                />
+                Mostrar romaji en Deletrear
+              </label>
+              <p className="text-xs mt-1" style={{ color: TEXT_MUTED }}>
+                Si lo activas (o escuchas el audio), tus aciertos no contarán para tu progreso: solo repites lo que oíste o leíste, no aprendes la palabra.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between mt-5">
           <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Configurar sesión</div>
