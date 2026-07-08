@@ -204,7 +204,6 @@ export default function VocabularyGame({
         setPhase("correct");
         if (helpUsed) setHelpedCount((prev) => prev + 1);
         recordResult(word, true, helpUsed);
-        setTimeout(() => advanceToNext(), 1500);
       } else {
         playBuzz();
         const newFail = currentFail + 1;
@@ -378,26 +377,23 @@ export default function VocabularyGame({
       />
 
       {/* Phase feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm text-center">
-          ✅ ¡Correcto!
-          {helpUsed && (
-            <span className="block font-normal text-xs text-[#0A6E54]/70 mt-0.5">
-              No cuenta para tu progreso — usaste audio o romaji
-            </span>
-          )}
-        </p>
-      )}
       {phase === "wrong" && (
         <p className="text-[#C03A1E] font-semibold text-sm">❌ Inténtalo de nuevo</p>
       )}
-      {phase === "reveal" && (
+      {(phase === "correct" || phase === "reveal") && (
         <AnswerReveal
-          status="wrong"
+          status={phase === "correct" ? "correct" : "wrong"}
           kana={currentWord.hiragana}
           kanji={findKanjiSpelling(currentWord.hiragana)}
           romaji={currentWord.romaji}
           meaning={currentWord.meaning}
+          extra={
+            phase === "correct" && helpUsed ? (
+              <p className="text-xs mt-2" style={{ color: "#0A6E54", opacity: 0.75 }}>
+                No cuenta para tu progreso — usaste audio o romaji
+              </p>
+            ) : undefined
+          }
           onContinue={handleContinue}
         />
       )}
