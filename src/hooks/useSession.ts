@@ -182,13 +182,24 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
       setCorrectCount((c) => c + 1);
       setFeedback({ status: "correct", expected: cur.romaji });
       sessionIndexRef.current += 1;
-      setTimeout(() => goNext(), mode === "word" ? 1400 : 600);
+      // "word": el usuario avanza a mano con el banner inferior (AnswerReveal), sin auto-advance.
+      if (mode !== "word") {
+        setTimeout(() => goNext(), 600);
+      }
     } else {
       const newQueue: QueueItem[] = [...sessionQueueRef.current, { char: cur, mode }];
       updateQueue(newQueue);
       setMissedList((prev) => [...prev, { kana: cur.kana, mode, given: input.trim() || "(vacío)", expected: cur.romaji }]);
       setFeedback({ status: "wrong", expected: cur.romaji });
     }
+  }
+
+  /** Avanzar tras el banner de feedback (AnswerReveal) en modo "word". */
+  function handleWordContinue() {
+    if (feedback?.status === "wrong") {
+      sessionIndexRef.current += 1;
+    }
+    goNext();
   }
 
   function handleProductionAnswer(selectedKana: string) {
@@ -270,7 +281,7 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
     choices, selectedOption,
     inputRef, nextBtnRef,
     launchSession, startSession, startWordSession,
-    handleSubmit, handleProductionAnswer, handleProductionNext,
+    handleSubmit, handleProductionAnswer, handleProductionNext, handleWordContinue,
     reviewMisses,
   };
 }

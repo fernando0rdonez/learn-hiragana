@@ -4,8 +4,10 @@ import { RotateCcw, ArrowLeft } from "lucide-react";
 import type { CharWithRow, CharData, QuizMode, QueueItem, Feedback, MissedItem } from "../types";
 import type { ViewName } from "../data";
 import { WORDS } from "../words";
+import { findKanjiSpelling } from "../kanji";
 import ProductionCard from "../components/ProductionCard";
 import AudioButton from "../components/AudioButton";
+import AnswerReveal from "../components/AnswerReveal";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "../components/ConfettiOverlay";
 import { summaryMascot, foxCalmImg, foxNeutral, foxCelebrating, foxSad } from "../mascot";
@@ -33,6 +35,7 @@ interface Props {
   handleSubmit: (e: FormEvent<HTMLFormElement>) => void;
   handleProductionAnswer: (kana: string) => void;
   handleProductionNext: () => void;
+  handleWordContinue: () => void;
   reviewMisses: () => void;
   inputRef: RefObject<HTMLInputElement | null>;
   nextBtnRef: RefObject<HTMLButtonElement | null>;
@@ -43,7 +46,7 @@ export default function QuizView({
   previewRows, pendingStartRef,
   current, currentMode, feedback, input, setInput, choices, selectedOption,
   correctCount, sessionQueue, sessionIndexRef, missedList,
-  handleSubmit, handleProductionAnswer, handleProductionNext, reviewMisses,
+  handleSubmit, handleProductionAnswer, handleProductionNext, handleWordContinue, reviewMisses,
   inputRef, nextBtnRef,
 }: Props) {
   const queueLen    = sessionQueue.length;
@@ -131,38 +134,59 @@ export default function QuizView({
                 }`}
               />
 
-              <div className="flex items-center gap-2 text-sm min-h-[20px]">
-                {feedback?.status === "correct" && (
-                  <>
-                    <span className="w-2 h-2 rounded-full bg-[#15C0A0]" />
-                    <span className="text-[#0A6E54]">
-                      ¡Correcto!{currentMode === "word" && ` — ${WORDS.find((w) => w.kana === current.kana)?.meaning}`}
-                    </span>
-                  </>
-                )}
-                {feedback?.status === "wrong" && (
-                  <>
-                    <span className="w-2 h-2 rounded-full bg-[#E85D3A]" />
-                    <span className="text-[#C03A1E]">
-                      Era "{feedback.expected}"{currentMode === "word" && ` — ${WORDS.find((w) => w.kana === current.kana)?.meaning}`}
-                    </span>
-                  </>
-                )}
-              </div>
+              {currentMode === "recognition" && (
+                <>
+                  <div className="flex items-center gap-2 text-sm min-h-[20px]">
+                    {feedback?.status === "correct" && (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-[#15C0A0]" />
+                        <span className="text-[#0A6E54]">¡Correcto!</span>
+                      </>
+                    )}
+                    {feedback?.status === "wrong" && (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-[#E85D3A]" />
+                        <span className="text-[#C03A1E]">Era "{feedback.expected}"</span>
+                      </>
+                    )}
+                  </div>
 
-              <button
-                ref={feedback?.status === "wrong" ? nextBtnRef : undefined}
-                type="submit"
-                className={`w-full h-[50px] rounded-[14px] text-white font-bold ${
-                  feedback?.status === "correct" ? "bg-[#15C0A0]" :
-                  feedback?.status === "wrong"   ? "bg-[#E85D3A]" :
-                  ""
-                }`}
-                style={feedback ? undefined : { background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
-              >
-                {feedback ? "Siguiente →" : "Comprobar"}
-              </button>
+                  <button
+                    ref={feedback?.status === "wrong" ? nextBtnRef : undefined}
+                    type="submit"
+                    className={`w-full h-[50px] rounded-[14px] text-white font-bold ${
+                      feedback?.status === "correct" ? "bg-[#15C0A0]" :
+                      feedback?.status === "wrong"   ? "bg-[#E85D3A]" :
+                      ""
+                    }`}
+                    style={feedback ? undefined : { background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
+                  >
+                    {feedback ? "Siguiente →" : "Comprobar"}
+                  </button>
+                </>
+              )}
+
+              {currentMode === "word" && !feedback && (
+                <button
+                  type="submit"
+                  className="w-full h-[50px] rounded-[14px] text-white font-bold"
+                  style={{ background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
+                >
+                  Comprobar
+                </button>
+              )}
             </form>
+
+            {currentMode === "word" && feedback && (
+              <AnswerReveal
+                status={feedback.status}
+                kana={current.kana}
+                kanji={findKanjiSpelling(current.kana)}
+                romaji={current.romaji}
+                meaning={WORDS.find((w) => w.kana === current.kana)?.meaning ?? ""}
+                onContinue={handleWordContinue}
+              />
+            )}
           </>
         ) : (
           /* ── Production: romaji → kana ── */
