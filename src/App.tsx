@@ -102,7 +102,7 @@ export default function HiraganaTrainer() {
     choices, selectedOption,
     inputRef, nextBtnRef,
     launchSession, startSession, startWordSession,
-    handleSubmit, handleProductionAnswer, handleProductionNext,
+    handleSubmit, handleProductionAnswer, handleProductionNext, handleWordContinue,
     reviewMisses,
   } = useSession({ progress, setProgress, streak, dailyProgress, persist, setView, sessionMode });
 
@@ -392,6 +392,7 @@ export default function HiraganaTrainer() {
             handleSubmit={handleSubmit}
             handleProductionAnswer={handleProductionAnswer}
             handleProductionNext={handleProductionNext}
+            handleWordContinue={handleWordContinue}
             reviewMisses={reviewMisses}
             inputRef={inputRef}
             nextBtnRef={nextBtnRef}
