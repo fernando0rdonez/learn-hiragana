@@ -25,7 +25,8 @@ export function useAuth() {
 
   async function requestCode(email: string) {
     setOtpError(null);
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const emailRedirectTo = `${window.location.origin}${import.meta.env.BASE_URL}`;
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } });
     if (error) {
       setOtpError(error.message);
       return false;
