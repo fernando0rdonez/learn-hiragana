@@ -29,6 +29,7 @@ interface Props {
   otpStage: "idle" | "codeSent" | "verifying";
   otpError: string | null;
   pendingEmail: string;
+  cooldownSeconds: number;
   requestCode: (email: string) => Promise<boolean>;
   verifyCode: (code: string) => Promise<boolean>;
   cancelOtp: () => void;
@@ -40,7 +41,7 @@ interface Props {
 export default function SettingsView({
   setView, resetConfirm, setResetConfirm, resetProgress, exportProgress,
   importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
-  session, authLoading, otpStage, otpError, pendingEmail, requestCode, verifyCode, cancelOtp, signOut, pushNow, syncing,
+  session, authLoading, otpStage, otpError, pendingEmail, cooldownSeconds, requestCode, verifyCode, cancelOtp, signOut, pushNow, syncing,
 }: Props) {
   const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -86,6 +87,7 @@ export default function SettingsView({
           otpStage={otpStage}
           otpError={otpError}
           pendingEmail={pendingEmail}
+          cooldownSeconds={cooldownSeconds}
           requestCode={requestCode}
           verifyCode={verifyCode}
           cancelOtp={cancelOtp}

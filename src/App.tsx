@@ -82,7 +82,7 @@ export default function HiraganaTrainer() {
     streak, dailyProgress, setStreak, setDailyProgress,
   });
   const {
-    session, authLoading, otpStage, otpError, pendingEmail, requestCode, verifyCode, cancelOtp, signOut,
+    session, authLoading, otpStage, otpError, pendingEmail, cooldownSeconds, requestCode, verifyCode, cancelOtp, signOut,
   } = useAuth();
   const { pushNow, syncing } = useProgressSync({
     session,
@@ -379,6 +379,7 @@ export default function HiraganaTrainer() {
             otpStage={otpStage}
             otpError={otpError}
             pendingEmail={pendingEmail}
+            cooldownSeconds={cooldownSeconds}
             requestCode={requestCode}
             verifyCode={verifyCode}
             cancelOtp={cancelOtp}
