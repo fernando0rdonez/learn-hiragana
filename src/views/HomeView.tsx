@@ -1,8 +1,6 @@
-import { useState, useRef } from "react";
-import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle, GraduationCap, SpellCheck2, Headphones, Map, Download, Upload } from "lucide-react";
-import type { Session } from "@supabase/supabase-js";
-import type { StreakData, ProgressData } from "../types";
-import SyncPanel from "../components/SyncPanel";
+import { useState } from "react";
+import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, GraduationCap, SpellCheck2, Headphones } from "lucide-react";
+import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
 import { KATAKANA_ALL_CHARS } from "../dataKatakana";
@@ -24,28 +22,7 @@ interface Props {
   masteredGrammarTotal: number;
   masteredListeningTotal: number;
   saveError: boolean;
-  resetConfirm: boolean;
-  setResetConfirm: (v: boolean) => void;
-  resetProgress: () => void;
-  exportProgress: () => void;
-  importError: string | null;
-  pendingImport: ProgressData | null;
-  importSuccess: boolean;
-  stageImport: (file: File) => void;
-  confirmImport: () => void;
-  cancelImport: () => void;
   setView: (v: ViewName) => void;
-  session: Session | null;
-  authLoading: boolean;
-  otpStage: "idle" | "codeSent" | "verifying";
-  otpError: string | null;
-  pendingEmail: string;
-  requestCode: (email: string) => Promise<boolean>;
-  verifyCode: (code: string) => Promise<boolean>;
-  cancelOtp: () => void;
-  signOut: () => Promise<void>;
-  pushNow: () => Promise<void>;
-  syncing: boolean;
 }
 
 // ── Module visual config ────────────────────────────────────────────────────
@@ -64,19 +41,12 @@ function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
   return { moduleId: "hiragana", wasStored: false };
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, resetConfirm, setResetConfirm, resetProgress, exportProgress, importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport, setView, session, authLoading, otpStage, otpError, pendingEmail, requestCode, verifyCode, cancelOtp, signOut, pushNow, syncing }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, setView }: Props) {
   const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
-  const importInputRef = useRef<HTMLInputElement>(null);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
     if (moduleId) localStorage.setItem(LAST_USED_MODULE_KEY, moduleId);
     setView(view);
-  }
-
-  function handleImportFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (file) stageImport(file);
   }
 
   const hiraganaPct = Math.round((masteredTotal / ALL_CHARS.length) * 100);
@@ -104,6 +74,14 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             style={{ color: "#8B7FA8" }}
           >
             <HelpCircle size={16} />
+          </button>
+          <button
+            onClick={() => setView("settings")}
+            aria-label="Configuración"
+            className="w-8 h-8 rounded-full flex items-center justify-center border border-stone-200 hover:bg-stone-50 transition-colors"
+            style={{ color: "#8B7FA8" }}
+          >
+            <Settings size={16} />
           </button>
         </div>
       </div>
@@ -258,87 +236,6 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             badge="Próximamente"
           />
         </div>
-      </div>
-
-      {/* ── Footer actions ── */}
-      <div className="flex flex-col items-center gap-3 mt-8">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setView("stats")}
-            className="flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 transition-colors"
-            style={{ color: "#1A1A2E" }}
-          >
-            <BarChart3 size={15} /> Ver estadísticas
-          </button>
-          <button
-            onClick={() => setView("roadmap")}
-            className="flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 transition-colors"
-            style={{ color: "#1A1A2E" }}
-          >
-            <Map size={15} /> Camino a B1
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={exportProgress}
-            className="flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 transition-colors"
-            style={{ color: "#1A1A2E" }}
-          >
-            <Download size={15} /> Exportar progreso
-          </button>
-          <button
-            onClick={() => importInputRef.current?.click()}
-            className="flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 transition-colors"
-            style={{ color: "#1A1A2E" }}
-          >
-            <Upload size={15} /> Importar progreso
-          </button>
-          <input ref={importInputRef} type="file" accept="application/json" className="hidden" onChange={handleImportFileChange} />
-        </div>
-
-        {importError && (
-          <p className="text-xs text-rose-600 text-center max-w-xs">{importError}</p>
-        )}
-
-        {pendingImport && (
-          <div className="flex items-center gap-3">
-            <button onClick={confirmImport} className="text-xs text-amber-600 font-medium">
-              ¿Sobrescribir progreso actual? Confirmar importación
-            </button>
-            <button onClick={cancelImport} className="text-xs text-stone-400 hover:text-stone-600">
-              Cancelar
-            </button>
-          </div>
-        )}
-
-        {importSuccess && (
-          <p className="text-xs text-emerald-600 font-medium">Progreso importado correctamente.</p>
-        )}
-
-        <SyncPanel
-          session={session}
-          authLoading={authLoading}
-          otpStage={otpStage}
-          otpError={otpError}
-          pendingEmail={pendingEmail}
-          requestCode={requestCode}
-          verifyCode={verifyCode}
-          cancelOtp={cancelOtp}
-          signOut={signOut}
-          pushNow={pushNow}
-          syncing={syncing}
-        />
-
-        {!resetConfirm ? (
-          <button onClick={() => setResetConfirm(true)} className="text-xs text-stone-400 hover:text-rose-600 flex items-center gap-1">
-            <Trash2 size={12} /> Borrar progreso
-          </button>
-        ) : (
-          <button onClick={resetProgress} className="text-xs text-rose-600 font-medium">
-            ¿Seguro? Confirmar borrado
-          </button>
-        )}
       </div>
 
       {saveError && (

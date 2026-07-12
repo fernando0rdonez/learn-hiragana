@@ -58,6 +58,7 @@ import HiraganaSetupView from "./views/HiraganaSetupView";
 import KatakanaSetupView from "./views/KatakanaSetupView";
 import QuizView from "./views/QuizView";
 import MethodologyView from "./views/MethodologyView";
+import SettingsView from "./views/SettingsView";
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -332,6 +333,13 @@ export default function HiraganaTrainer() {
             masteredGrammarTotal={masteredGrammarTotal}
             masteredListeningTotal={masteredListeningTotal}
             saveError={saveError}
+            setView={setView}
+          />
+        )}
+
+        {view === "settings" && (
+          <SettingsView
+            setView={setView}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
             resetProgress={resetProgress}
@@ -342,7 +350,6 @@ export default function HiraganaTrainer() {
             stageImport={stageImport}
             confirmImport={confirmImport}
             cancelImport={cancelImport}
-            setView={setView}
             session={session}
             authLoading={authLoading}
             otpStage={otpStage}
