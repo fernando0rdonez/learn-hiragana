@@ -1,6 +1,6 @@
 {
-  "name": "Hiragana Trainer",
-  "short_name": "ひらがな",
+  "name": "Kanadō",
+  "short_name": "かな道",
   "description": "Practice hiragana with spaced repetition",
   "start_url": "/learn-hiragana/",
   "display": "standalone",

@@ -86,8 +86,8 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          <span style={{ color: "#1A1A2E" }}>にほん</span>
-          <span style={{ color: "#7B4FD4" }}>go</span>
+          <span style={{ color: "#1A1A2E" }}>かな</span>
+          <span style={{ color: "#7B4FD4" }}>道</span>
         </h1>
         <div className="flex items-center gap-2">
           <span
