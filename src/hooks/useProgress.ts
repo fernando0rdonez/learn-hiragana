@@ -63,6 +63,12 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
     }
   }
 
+  function stageRemoteProgress(data: ProgressData) {
+    setImportError(null);
+    setImportSuccess(false);
+    setPendingImport(data);
+  }
+
   function confirmImport() {
     if (!pendingImport) return;
     const items       = pendingImport.items;
@@ -86,6 +92,6 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
 
   return {
     loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji,
-    exportProgress, importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
+    exportProgress, importError, pendingImport, importSuccess, stageImport, stageRemoteProgress, confirmImport, cancelImport,
   };
 }

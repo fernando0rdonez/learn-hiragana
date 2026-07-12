@@ -39,6 +39,9 @@ import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, 
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
+import { useAuth } from "./hooks/useAuth";
+import { useProgressSync } from "./hooks/useProgressSync";
+import { CURRENT_SCHEMA_VERSION } from "./storage";
 import HomeView from "./views/HomeView";
 import StatsView from "./views/StatsView";
 import RoadmapView from "./views/RoadmapView";
@@ -55,6 +58,18 @@ import HiraganaSetupView from "./views/HiraganaSetupView";
 import KatakanaSetupView from "./views/KatakanaSetupView";
 import QuizView from "./views/QuizView";
 import MethodologyView from "./views/MethodologyView";
+import SettingsView from "./views/SettingsView";
+
+// Vistas de estudio activo — salir de cualquiera de estas hacia una vista
+// que no está en el set dispara un push (ver setView más abajo).
+const STUDY_VIEWS = new Set<ViewName>([
+  "quiz", "preview", "summary", "spellIt", "recognizeIt", "listenIt",
+  "numberKeys", "numberBuild", "countIt", "phonetics",
+  "phraseMeaning", "phraseListening",
+  "kanjiMeaning", "kanjiReading", "kanjiMatch",
+  "grammarLesson",
+  "listeningComprehension", "listeningDictation",
+]);
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -62,9 +77,17 @@ export default function HiraganaTrainer() {
   const { streak, setStreak, dailyProgress, setDailyProgress } = useStreak();
   const {
     loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji,
-    exportProgress, importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
+    exportProgress, importError, pendingImport, importSuccess, stageImport, stageRemoteProgress, confirmImport, cancelImport,
   } = useProgress({
     streak, dailyProgress, setStreak, setDailyProgress,
+  });
+  const {
+    session, authLoading, otpStage, otpError, pendingEmail, cooldownSeconds, requestCode, verifyCode, cancelOtp, signOut,
+  } = useAuth();
+  const { pushNow, syncing } = useProgressSync({
+    session,
+    snapshot: { items: progress, streak, dailyProgress, settings: { showRomaji }, schemaVersion: CURRENT_SCHEMA_VERSION },
+    onRemoteProgress: stageRemoteProgress,
   });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
@@ -77,7 +100,20 @@ export default function HiraganaTrainer() {
   const [kataSessionMode, setKataSessionMode] = useState<SessionMode>("recognition");
   const [kataSessionLength, setKataSessionLength] = useState<10 | 20 | "all">(20);
   const [selectedPhenomena, setSelectedPhenomena] = useState<Set<string>>(new Set());
-  const [view, setView]             = useState<ViewName>("home");
+  const [view, setViewRaw]          = useState<ViewName>("home");
+
+  /**
+   * Envuelve el setState crudo para empujar el progreso a Supabase justo al
+   * salir de una vista de estudio activa (terminar el quiz o volver atrás a
+   * mitad de camino) — sin esperar a que se oculte/cierre la pestaña.
+   * Cerrar la pestaña a mitad de un quiz sigue sin sincronizar hasta el
+   * próximo visibilitychange/pagehide; eso es intencional.
+   */
+  function setView(next: ViewName) {
+    if (STUDY_VIEWS.has(view) && !STUDY_VIEWS.has(next)) void pushNow();
+    setViewRaw(next);
+  }
+
   const [resetConfirm, setResetConfirm] = useState(false);
   const [sessionMode, setSessionMode]   = useState<SessionMode>("recognition");
   const [sessionLength, setSessionLength] = useState<10 | 20 | "all">(20);
@@ -321,6 +357,13 @@ export default function HiraganaTrainer() {
             masteredGrammarTotal={masteredGrammarTotal}
             masteredListeningTotal={masteredListeningTotal}
             saveError={saveError}
+            setView={setView}
+          />
+        )}
+
+        {view === "settings" && (
+          <SettingsView
+            setView={setView}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
             resetProgress={resetProgress}
@@ -331,7 +374,18 @@ export default function HiraganaTrainer() {
             stageImport={stageImport}
             confirmImport={confirmImport}
             cancelImport={cancelImport}
-            setView={setView}
+            session={session}
+            authLoading={authLoading}
+            otpStage={otpStage}
+            otpError={otpError}
+            pendingEmail={pendingEmail}
+            cooldownSeconds={cooldownSeconds}
+            requestCode={requestCode}
+            verifyCode={verifyCode}
+            cancelOtp={cancelOtp}
+            signOut={signOut}
+            pushNow={pushNow}
+            syncing={syncing}
           />
         )}
 

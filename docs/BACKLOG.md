@@ -595,6 +595,146 @@ mastery se duplica (se reutilizan `vocabStatus`/`vocabCategoryStats`/`kanjiStatu
 
 ---
 
+## #15 · Sync de progreso entre dispositivos (cuenta con email + Supabase)
+
+**Fase**: transversal · **Tamaño**: M
+
+**Objetivo**: que el progreso (`ProgressData` completo, hoy solo en `localStorage`) se
+pueda usar desde varios dispositivos con la misma cuenta, sin depender de exportar/
+importar un archivo a mano (#10 sigue existiendo como respaldo/offline). Login
+opcional: la app sigue funcionando 100% local sin cuenta, igual que hoy.
+
+**Diseño**:
+- **Backend**: Supabase (Postgres + Auth), sin servidor propio — el cliente habla
+  directo con Postgres vía RLS (`@supabase/supabase-js`). No se usa la *secret key*
+  en ningún punto del frontend, solo la *publishable key* (`VITE_SUPABASE_PUBLISHABLE_KEY`).
+- **Auth**: email OTP nativo de Supabase (`supabase.auth.signInWithOtp` /
+  `verifyOtp`, sin backend propio de códigos). Pantalla de dos pasos: email → código
+  de 6 dígitos.
+- **Tabla `progress`**: `user_id uuid PK references auth.users`, `data jsonb`
+  (el `ProgressData` completo tal cual se serializa hoy para exportar),
+  `updated_at timestamptz`. RLS: solo `auth.uid() = user_id` puede leer/escribir su
+  fila (`supabase/migrations/0001_progress.sql`).
+- **Validación compartida**: `src/storage.ts` expone `validateProgressData(parsed:
+  unknown): ProgressData` (misma lógica de `parseImportedProgress`, incluida la
+  migración de `schemaVersion`), reutilizada tanto por el import de archivo como por
+  el pull desde Supabase — un solo lugar valida la forma de los datos.
+- **Push**: al ocultarse la pestaña (`visibilitychange` → `hidden`) o al cerrarla
+  (`pagehide`), si hay sesión activa, `upsert` del `ProgressData` completo a la fila
+  del usuario. No hay sync en tiempo real ni offline-first: es deliberadamente "solo
+  al terminar la sesión de estudio".
+- **Pull**: al iniciar sesión en un dispositivo, se hace `select` de la fila remota y,
+  si existe, se reutiliza el flujo ya existente `stageImport`/`pendingImport`/
+  `confirmImport`/`cancelImport` de `useProgress.ts` (el mismo banner "¿Sobrescribir
+  progreso actual?" que hoy usa importar un archivo) — evita sobrescribir en silencio
+  y evita construir un segundo flujo de confirmación.
+- **UI**: nuevo panel de sync junto a los botones "Exportar/Importar progreso" en el
+  footer de `HomeView` — estado no logueado (email → código) / logueado (email +
+  "Sincronizar ahora" + "Cerrar sesión"). Oculto por completo si
+  `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` no están configuradas (build y
+  uso local sin cuenta siguen funcionando igual que hoy).
+
+**Aceptación**: build pasa sin variables de Supabase configuradas (panel de sync
+oculto, resto de la app intacta); con Supabase configurado, loguearse en un segundo
+"dispositivo" (otra sesión de navegador) ofrece importar el progreso subido desde el
+primero vía el flujo de confirmación existente; el progreso sube solo al ocultar/
+cerrar la pestaña, no en cada respuesta.
+
+---
+
+## #16 · Modo Competencia asíncrona (reto 1v1 entre dispositivos)
+
+**Fase**: transversal (requiere #15 ya implementado — necesita auth) · **Tamaño**: XL
+
+**Objetivo**: que dos usuarios puedan retarse a responder el mismo set de
+palabras/kana cada uno en su propio dispositivo y momento (asíncrono), ver quién
+ganó al terminar ambos, y llevar un historial de victorias/derrotas y racha actual
+contra cada rival con el que ha competido.
+
+**Contexto de decisiones ya tomadas** (no reabrir):
+- Invitación: **link/código compartible** (no hay sistema de "buscar por username").
+- Preguntas: el **creador del reto elige el módulo/modo** al crear la competencia
+  (p. ej. "Hiragana — reconocimiento" o "Vocabulario — deletrear"); ambos rivales
+  responden exactamente el mismo set fijo generado en ese momento.
+- v1 confía en el score que sube el cliente (mismo nivel de confianza que el
+  progreso local hoy) — sin validación de respuestas en servidor. Si en el futuro
+  se detectan trampas, la mitigación sería validar respuestas crudas en una Supabase
+  Edge Function en vez de confiar en el `score` final; **fuera de alcance de esta spec**.
+
+**Diseño**:
+
+*Modelo de datos (nuevas migraciones `supabase/migrations/000X_competitions.sql`)*:
+- `profiles`: `id uuid PK references auth.users`, `display_name text` (default:
+  prefijo del email antes de `@`, generado con un trigger `on auth.users insert` —
+  necesario porque el email es privado por RLS y no se debe mostrar al rival).
+- `competitions`: `id uuid PK default gen_random_uuid()`, `created_by uuid
+  references auth.users`, `quiz_config jsonb` (`{ module, mode, items: string[] }`
+  — `items` es la lista fija de claves ya resuelta al crear, p. ej. los `kana` o
+  `hiragana` de vocabulario elegidos con la misma lógica de `resolveVocabSession`/
+  `buildQueueItems` que ya existe, snapshot una sola vez para que ambos jueguen
+  literalmente lo mismo), `status text check in ('pendiente','activa','completada')`,
+  `invite_code text unique` (8 caracteres, base62), `created_at`, `expires_at`
+  (default `now() + interval '48 hours'`).
+- `competition_participants`: `(competition_id, user_id)` PK compuesta, `joined_at`.
+- `competition_results`: `(competition_id, user_id)` PK compuesta, `score int`,
+  `correct int`, `total int`, `submitted_at`.
+- **Trigger** `after insert on competition_results`: si ya existe una fila de
+  resultado por cada participante de esa `competition_id`, marca
+  `competitions.status = 'completada'` (función `security definer` para poder
+  actualizar `competitions` sin depender de que el trigger tenga permisos RLS de
+  ese usuario).
+- **Vista** `competition_summary` (join de `competitions` + los 2
+  `competition_results` de una competencia completada, una fila por partida con
+  `user_a/score_a/user_b/score_b`) — el head-to-head (ganados/perdidos, racha
+  actual contra un rival) se calcula **en el cliente** a partir de esta vista
+  filtrada por par de usuarios y ordenada por fecha, sin contadores mutables en la
+  base de datos (evita bugs de desincronización).
+
+*RLS*:
+- `competitions`: `select` para cualquier usuario autenticado (el contenido no es
+  sensible; el acceso real está guardado por conocer el `invite_code`/id, igual que
+  un link de Google Docs — documentar esto como simplificación v1, no como agujero
+  a "arreglar" sin necesidad real). `insert` solo `created_by = auth.uid()`.
+- `competition_participants`: `select`/`insert` propio (`user_id = auth.uid()`) o
+  si `auth.uid() = competitions.created_by` de esa competencia.
+- `competition_results`: `insert`/`update` solo de la fila propia
+  (`user_id = auth.uid()`) y solo si el usuario es participante de esa competencia;
+  `select` permitido a cualquier participante de la misma competencia (para ver el
+  resultado del rival una vez ambos terminaron).
+
+*Deep link*: la app hoy no tiene router (`src/App.tsx` es un switch por `view` en
+memoria, `ViewName` de `src/data.ts`). Añadir un parseo mínimo de
+`window.location.pathname` en el mount de `App.tsx`: si matchea `/compete/:code`,
+guardar el código en estado y, tras resolver el login (si hace falta), navegar a una
+vista nueva `competeJoin` en vez de `home` — sin añadir una librería de routing,
+consistente con la arquitectura actual.
+
+*UI (vistas nuevas, patrón de las setup views existentes)*:
+1. `CompetitionHomeView`: "Crear reto" · lista de retos propios (pendiente/
+   activa/completada) · lista de rivales con récord (ganados/perdidos) y racha
+   actual (agregado de `competition_summary` en el cliente).
+2. `CompetitionCreateView`: elegir módulo/modo (reusar selectores existentes de
+   Hiragana/Katakana/Vocabulario/etc.) + tamaño de sesión → crea la fila
+   `competitions` con `quiz_config.items` ya resuelto → pantalla "Comparte este
+   link" (`navigator.share` con fallback a copiar al portapapeles).
+3. `CompetitionJoinView` (destino del deep link `/compete/:code`): muestra quién
+   invitó y a qué módulo, botón "Unirme" (inserta en `competition_participants`).
+4. Sesión del reto: reusar el componente de juego del módulo elegido, pero
+   alimentado por `quiz_config.items` (set fijo) en vez de la cola SRS por
+   vencimiento — actualiza el progreso SRS local igual que una sesión normal
+   **y además** sube `{score, correct, total}` a `competition_results` al terminar.
+5. `CompetitionResultView`: cuando ambos resultados existen, muestra ganador/
+   empate cara a cara y el historial acumulado contra ese rival (racha actual,
+   ganados/perdidos totales).
+
+**Aceptación**: crear un reto genera un link válido; abrirlo en otra sesión de
+navegador (simulando el rival) permite unirse y jugar el mismo set de ítems; al
+completar ambos, el trigger marca la competencia `completada` y ambos ven el
+resultado; el historial contra un rival muestra ganados/perdidos/racha correctos
+tras varias competencias simuladas; build pasa.
+
+---
+
 ## Plantilla para nuevas specs
 
 Al añadir specs futuras a este backlog, incluir siempre: **Fase** del ROADMAP, **Objetivo**
