@@ -77,7 +77,7 @@ export default function HiraganaTrainer() {
   const { streak, setStreak, dailyProgress, setDailyProgress } = useStreak();
   const {
     loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji,
-    exportProgress, importError, pendingImport, importSuccess, stageImport, stageRemoteProgress, confirmImport, cancelImport,
+    exportProgress, importError, pendingImport, importSuccess, stageImport, adoptRemoteProgress, confirmImport, cancelImport,
   } = useProgress({
     streak, dailyProgress, setStreak, setDailyProgress,
   });
@@ -87,7 +87,7 @@ export default function HiraganaTrainer() {
   const { pushNow, syncing } = useProgressSync({
     session,
     snapshot: { items: progress, streak, dailyProgress, settings: { showRomaji }, schemaVersion: CURRENT_SCHEMA_VERSION },
-    onRemoteProgress: stageRemoteProgress,
+    onRemoteProgress: adoptRemoteProgress,
   });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
