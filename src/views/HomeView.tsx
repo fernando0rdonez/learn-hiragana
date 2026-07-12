@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
 import { BarChart3, Trash2, ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, MessageCircle, GraduationCap, SpellCheck2, Headphones, Map, Download, Upload } from "lucide-react";
+import type { Session } from "@supabase/supabase-js";
 import type { StreakData, ProgressData } from "../types";
+import SyncPanel from "../components/SyncPanel";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
 import { KATAKANA_ALL_CHARS } from "../dataKatakana";
@@ -33,6 +35,17 @@ interface Props {
   confirmImport: () => void;
   cancelImport: () => void;
   setView: (v: ViewName) => void;
+  session: Session | null;
+  authLoading: boolean;
+  otpStage: "idle" | "codeSent" | "verifying";
+  otpError: string | null;
+  pendingEmail: string;
+  requestCode: (email: string) => Promise<boolean>;
+  verifyCode: (code: string) => Promise<boolean>;
+  cancelOtp: () => void;
+  signOut: () => Promise<void>;
+  pushNow: () => Promise<void>;
+  syncing: boolean;
 }
 
 // ── Module visual config ────────────────────────────────────────────────────
@@ -51,7 +64,7 @@ function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
   return { moduleId: "hiragana", wasStored: false };
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, resetConfirm, setResetConfirm, resetProgress, exportProgress, importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, resetConfirm, setResetConfirm, resetProgress, exportProgress, importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport, setView, session, authLoading, otpStage, otpError, pendingEmail, requestCode, verifyCode, cancelOtp, signOut, pushNow, syncing }: Props) {
   const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
   const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -302,6 +315,20 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
         {importSuccess && (
           <p className="text-xs text-emerald-600 font-medium">Progreso importado correctamente.</p>
         )}
+
+        <SyncPanel
+          session={session}
+          authLoading={authLoading}
+          otpStage={otpStage}
+          otpError={otpError}
+          pendingEmail={pendingEmail}
+          requestCode={requestCode}
+          verifyCode={verifyCode}
+          cancelOtp={cancelOtp}
+          signOut={signOut}
+          pushNow={pushNow}
+          syncing={syncing}
+        />
 
         {!resetConfirm ? (
           <button onClick={() => setResetConfirm(true)} className="text-xs text-stone-400 hover:text-rose-600 flex items-center gap-1">

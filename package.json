@@ -15,6 +15,7 @@
     "vocab:generate-category-images": "node --env-file-if-exists=.env --import tsx .claude/skills/vocab-images/scripts/generate-category-images.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.2",
     "@tailwindcss/vite": "^4.3.1",
     "lucide-react": "^1.20.0",
     "react": "^19.2.6",

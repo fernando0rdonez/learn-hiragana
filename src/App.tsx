@@ -39,6 +39,9 @@ import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, 
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
+import { useAuth } from "./hooks/useAuth";
+import { useProgressSync } from "./hooks/useProgressSync";
+import { CURRENT_SCHEMA_VERSION } from "./storage";
 import HomeView from "./views/HomeView";
 import StatsView from "./views/StatsView";
 import RoadmapView from "./views/RoadmapView";
@@ -62,9 +65,17 @@ export default function HiraganaTrainer() {
   const { streak, setStreak, dailyProgress, setDailyProgress } = useStreak();
   const {
     loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji,
-    exportProgress, importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
+    exportProgress, importError, pendingImport, importSuccess, stageImport, stageRemoteProgress, confirmImport, cancelImport,
   } = useProgress({
     streak, dailyProgress, setStreak, setDailyProgress,
+  });
+  const {
+    session, authLoading, otpStage, otpError, pendingEmail, requestCode, verifyCode, cancelOtp, signOut,
+  } = useAuth();
+  const { pushNow, syncing } = useProgressSync({
+    session,
+    snapshot: { items: progress, streak, dailyProgress, settings: { showRomaji }, schemaVersion: CURRENT_SCHEMA_VERSION },
+    onRemoteProgress: stageRemoteProgress,
   });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
@@ -332,6 +343,17 @@ export default function HiraganaTrainer() {
             confirmImport={confirmImport}
             cancelImport={cancelImport}
             setView={setView}
+            session={session}
+            authLoading={authLoading}
+            otpStage={otpStage}
+            otpError={otpError}
+            pendingEmail={pendingEmail}
+            requestCode={requestCode}
+            verifyCode={verifyCode}
+            cancelOtp={cancelOtp}
+            signOut={signOut}
+            pushNow={pushNow}
+            syncing={syncing}
           />
         )}
 

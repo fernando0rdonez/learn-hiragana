@@ -70,6 +70,34 @@ function isItemProgress(v: unknown): v is ItemProgress {
     && typeof item.attempts === "number" && typeof item.correct === "number";
 }
 
+/**
+ * Valida y migra un ProgressData ya parseado (de un archivo importado o de una
+ * fila de Supabase). Punto único de verdad para "¿esto tiene forma de progreso
+ * válido?", usado tanto por parseImportedProgress como por el pull de sync.
+ */
+export function validateProgressData(parsed: unknown, source: "archivo" | "datos"): ProgressData {
+  const items = (parsed as ProgressData | null)?.items;
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)
+      || !items || typeof items !== "object" || Array.isArray(items)) {
+    throw new Error(`El ${source} no tiene la estructura esperada (falta "items").`);
+  }
+  for (const [key, item] of Object.entries(items)) {
+    if (!isItemProgress(item)) {
+      throw new Error(`El elemento "${key}" del ${source} tiene un formato inválido.`);
+    }
+  }
+
+  const data = parsed as ProgressData;
+  const version = data.schemaVersion ?? 1;
+  if (version > CURRENT_SCHEMA_VERSION) {
+    throw new Error(`Este ${source} se guardó con una versión más nueva de la app. Actualiza la app para poder usarlo.`);
+  }
+  if (version < CURRENT_SCHEMA_VERSION) {
+    return { ...data, items: migrateWordToSpellKeys(data.items), schemaVersion: CURRENT_SCHEMA_VERSION };
+  }
+  return { ...data, schemaVersion: CURRENT_SCHEMA_VERSION };
+}
+
 export function parseImportedProgress(raw: string): ProgressData {
   let parsed: unknown;
   try {
@@ -77,25 +105,5 @@ export function parseImportedProgress(raw: string): ProgressData {
   } catch {
     throw new Error("El archivo no es un JSON válido.");
   }
-
-  const items = (parsed as ProgressData | null)?.items;
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)
-      || !items || typeof items !== "object" || Array.isArray(items)) {
-    throw new Error("El archivo no tiene la estructura esperada (falta \"items\").");
-  }
-  for (const [key, item] of Object.entries(items)) {
-    if (!isItemProgress(item)) {
-      throw new Error(`El elemento "${key}" del archivo tiene un formato inválido.`);
-    }
-  }
-
-  const data = parsed as ProgressData;
-  const version = data.schemaVersion ?? 1;
-  if (version > CURRENT_SCHEMA_VERSION) {
-    throw new Error("Este archivo se exportó con una versión más nueva de la app. Actualiza la app para poder importarlo.");
-  }
-  if (version < CURRENT_SCHEMA_VERSION) {
-    return { ...data, items: migrateWordToSpellKeys(data.items), schemaVersion: CURRENT_SCHEMA_VERSION };
-  }
-  return { ...data, schemaVersion: CURRENT_SCHEMA_VERSION };
+  return validateProgressData(parsed, "archivo");
 }
