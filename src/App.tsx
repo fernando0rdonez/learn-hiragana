@@ -17,21 +17,6 @@ import { GRAMMAR_LESSONS } from "./grammar";
 import { LISTENING_SENTENCES } from "./listening";
 import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
 import { getAvailablePhonetics } from "./phonetics";
-import VocabularyGame from "./components/VocabularyGame";
-import VocabRecognizeGame from "./components/VocabRecognizeGame";
-import VocabListeningGame from "./components/VocabListeningGame";
-import PhraseMeaningGame from "./components/PhraseMeaningGame";
-import PhraseListeningGame from "./components/PhraseListeningGame";
-import KanjiMeaningGame from "./components/KanjiMeaningGame";
-import KanjiReadingGame from "./components/KanjiReadingGame";
-import KanjiMatchGame from "./components/KanjiMatchGame";
-import GrammarLessonGame from "./components/GrammarLessonGame";
-import ListeningComprehensionGame from "./components/ListeningComprehensionGame";
-import ListeningDictationGame from "./components/ListeningDictationGame";
-import VocabCountingGame from "./components/VocabCountingGame";
-import NumberKeysGame from "./components/NumberKeysGame";
-import NumberBuildGame from "./components/NumberBuildGame";
-import PhoneticsDrill from "./components/PhoneticsDrill";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
 import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS } from "./dataKatakana";
@@ -42,23 +27,20 @@ import { useSession } from "./hooks/useSession";
 import { useAuth } from "./hooks/useAuth";
 import { useProgressSync } from "./hooks/useProgressSync";
 import { CURRENT_SCHEMA_VERSION } from "./storage";
-import HomeView from "./views/HomeView";
-import StatsView from "./views/StatsView";
-import RoadmapView from "./views/RoadmapView";
-import VocabSetupView from "./views/VocabSetupView";
-import PhraseSetupView from "./views/PhraseSetupView";
-import KanjiSetupView from "./views/KanjiSetupView";
-import GrammarSetupView from "./views/GrammarSetupView";
-import ListeningSetupView from "./views/ListeningSetupView";
-import NumberSetupView, { type NumberKeysLength } from "./views/NumberSetupView";
+import { type NumberKeysLength } from "./views/NumberSetupView";
 import type { BuildLevel } from "./numbers";
 import { KEY_NUMBERS, KEY_NUMBER_GROUPS, BUILD_LEVELS, numberKeyStatus } from "./numbers";
-import PhoneticSetupView from "./views/PhoneticSetupView";
 import HiraganaSetupView from "./views/HiraganaSetupView";
 import KatakanaSetupView from "./views/KatakanaSetupView";
 import QuizView from "./views/QuizView";
-import MethodologyView from "./views/MethodologyView";
-import SettingsView from "./views/SettingsView";
+import CoreViews from "./views/modules/CoreViews";
+import PhoneticsModuleViews from "./views/modules/PhoneticsModuleViews";
+import VocabModuleViews from "./views/modules/VocabModuleViews";
+import PhraseModuleViews from "./views/modules/PhraseModuleViews";
+import KanjiModuleViews from "./views/modules/KanjiModuleViews";
+import GrammarModuleViews from "./views/modules/GrammarModuleViews";
+import ListeningModuleViews from "./views/modules/ListeningModuleViews";
+import NumberModuleViews from "./views/modules/NumberModuleViews";
 
 // Vistas de estudio activo — salir de cualquiera de estas hacia una vista
 // que no está en el set dispara un push (ver setView más abajo).
@@ -273,6 +255,13 @@ export default function HiraganaTrainer() {
     setView("home");
   }
 
+  /** Handler compartido por todos los módulos de juego: fusiona el update y persiste. */
+  function onProgressUpdate(updates: ProgressItems) {
+    const merged = { ...progress, ...updates };
+    setProgress(merged);
+    persist(merged);
+  }
+
   // ── Derived values ────────────────────────────────────────────────────────
 
   const today           = toISODate();
@@ -345,10 +334,15 @@ export default function HiraganaTrainer() {
       `}</style>
       <div className="w-full max-w-xl">
 
-        {/* ── Home ── */}
-        {view === "home" && (
-          <HomeView
+        {/* ── Core: home / settings / metodología / stats / roadmap ── */}
+        {["home", "settings", "methodology", "stats", "roadmap"].includes(view) && (
+          <CoreViews
+            view={view}
+            setView={setView}
+            progress={progress}
             streak={streak}
+            dailyProgress={dailyProgress}
+            today={today}
             masteredTotal={masteredTotal}
             masteredKataTotal={masteredKataTotal}
             masteredNumberKeys={masteredNumberKeys}
@@ -357,13 +351,6 @@ export default function HiraganaTrainer() {
             masteredGrammarTotal={masteredGrammarTotal}
             masteredListeningTotal={masteredListeningTotal}
             saveError={saveError}
-            setView={setView}
-          />
-        )}
-
-        {view === "settings" && (
-          <SettingsView
-            setView={setView}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
             resetProgress={resetProgress}
@@ -453,34 +440,26 @@ export default function HiraganaTrainer() {
           />
         )}
 
-        {/* ── Fonética: selector ── */}
-        {view === "phoneticSetup" && (
-          <PhoneticSetupView
+        {/* ── Fonética ── */}
+        {(view === "phoneticSetup" || view === "phonetics") && (
+          <PhoneticsModuleViews
+            view={view}
+            setView={setView}
+            progress={progress}
+            onProgressUpdate={onProgressUpdate}
             selectedPhenomena={selectedPhenomena}
             togglePhenomenon={togglePhenomenon}
             phoneticPool={phoneticPool}
+          />
+        )}
+
+        {/* ── Vocabulario ── */}
+        {(view === "vocabCategory" || view === "spellIt" || view === "recognizeIt" || view === "listenIt") && (
+          <VocabModuleViews
+            view={view}
             setView={setView}
-          />
-        )}
-
-        {/* ── Fonética ── */}
-        {view === "phonetics" && (
-          <PhoneticsDrill
-            phoneticWords={phoneticPool}
             progress={progress}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("home")}
-          />
-        )}
-
-        {/* ── Vocabulario: selector de categoría ── */}
-        {view === "vocabCategory" && (
-          <VocabSetupView
-            progress={progress}
+            onProgressUpdate={onProgressUpdate}
             selectedVocabCategories={selectedVocabCategories}
             toggleVocabCategory={toggleVocabCategory}
             setSelectedVocabCategories={setSelectedVocabCategories}
@@ -489,294 +468,90 @@ export default function HiraganaTrainer() {
             filteredVocabulary={filteredVocabulary}
             showRomaji={showRomaji}
             updateShowRomaji={updateShowRomaji}
+            vocabSessionPool={vocabSessionPool}
+            vocabSessionLimit={vocabSessionLimit}
+          />
+        )}
+
+        {/* ── Frases ── */}
+        {(view === "phraseSetup" || view === "phraseMeaning" || view === "phraseListening") && (
+          <PhraseModuleViews
+            view={view}
             setView={setView}
-          />
-        )}
-
-        {/* ── Vocabulario ── */}
-        {view === "spellIt" && (
-          <VocabularyGame
-            vocabulary={vocabSessionPool}
             progress={progress}
-            showRomaji={showRomaji}
-            sessionLimit={vocabSessionLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("home")}
-          />
-        )}
-
-        {/* ── Vocabulario: reconocer ── */}
-        {view === "recognizeIt" && (
-          <VocabRecognizeGame
-            vocabulary={vocabSessionPool}
-            progress={progress}
-            sessionLimit={vocabSessionLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("home")}
-          />
-        )}
-
-        {/* ── Vocabulario: escuchar ── */}
-        {view === "listenIt" && (
-          <VocabListeningGame
-            vocabulary={vocabSessionPool}
-            progress={progress}
-            sessionLimit={vocabSessionLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("home")}
-          />
-        )}
-
-        {/* ── Frases: selector ── */}
-        {view === "phraseSetup" && (
-          <PhraseSetupView
-            progress={progress}
+            onProgressUpdate={onProgressUpdate}
             selectedPhraseCategories={selectedPhraseCategories}
             togglePhraseCategory={togglePhraseCategory}
             setSelectedPhraseCategories={setSelectedPhraseCategories}
             phraseSessionLength={phraseSessionLength}
             setPhraseSessionLength={setPhraseSessionLength}
             filteredPhrases={filteredPhrases}
+            phraseSessionPool={phraseSessionPool}
+            phraseSessionLimit={phraseSessionLimit}
+          />
+        )}
+
+        {/* ── Kanji ── */}
+        {(view === "kanjiSetup" || view === "kanjiMeaning" || view === "kanjiReading" || view === "kanjiMatch") && (
+          <KanjiModuleViews
+            view={view}
             setView={setView}
-          />
-        )}
-
-        {/* ── Frases: reconocer significado ── */}
-        {view === "phraseMeaning" && (
-          <PhraseMeaningGame
-            phrases={phraseSessionPool}
             progress={progress}
-            sessionLimit={phraseSessionLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("home")}
-          />
-        )}
-
-        {/* ── Frases: escuchar ── */}
-        {view === "phraseListening" && (
-          <PhraseListeningGame
-            phrases={phraseSessionPool}
-            progress={progress}
-            sessionLimit={phraseSessionLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("home")}
-          />
-        )}
-
-        {/* ── Kanji: selector ── */}
-        {view === "kanjiSetup" && (
-          <KanjiSetupView
-            progress={progress}
+            onProgressUpdate={onProgressUpdate}
             selectedKanjiGroups={selectedKanjiGroups}
             toggleKanjiGroup={toggleKanjiGroup}
             setSelectedKanjiGroups={setSelectedKanjiGroups}
             kanjiSessionLength={kanjiSessionLength}
             setKanjiSessionLength={setKanjiSessionLength}
             filteredKanji={filteredKanji}
+            kanjiSessionPool={kanjiSessionPool}
+            kanjiSessionLimit={kanjiSessionLimit}
+          />
+        )}
+
+        {/* ── Gramática ── */}
+        {(view === "grammarSetup" || view === "grammarLesson") && (
+          <GrammarModuleViews
+            view={view}
             setView={setView}
-          />
-        )}
-
-        {/* ── Kanji: significado ── */}
-        {view === "kanjiMeaning" && (
-          <KanjiMeaningGame
-            kanjiList={kanjiSessionPool}
             progress={progress}
-            sessionLimit={kanjiSessionLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("kanjiSetup")}
-          />
-        )}
-
-        {/* ── Kanji: lectura ── */}
-        {view === "kanjiReading" && (
-          <KanjiReadingGame
-            kanjiList={kanjiSessionPool}
-            progress={progress}
-            sessionLimit={kanjiSessionLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("kanjiSetup")}
-          />
-        )}
-
-        {/* ── Kanji: emparejar (sin SRS) ── */}
-        {view === "kanjiMatch" && (
-          <KanjiMatchGame
-            kanjiList={filteredKanji}
-            onBack={() => setView("kanjiSetup")}
-          />
-        )}
-
-        {/* ── Gramática: selector de lecciones ── */}
-        {view === "grammarSetup" && (
-          <GrammarSetupView
-            progress={progress}
+            onProgressUpdate={onProgressUpdate}
             setSelectedGrammarLessonId={setSelectedGrammarLessonId}
+            selectedGrammarLesson={selectedGrammarLesson}
+          />
+        )}
+
+        {/* ── Listening ── */}
+        {(view === "listeningSetup" || view === "listeningComprehension" || view === "listeningDictation") && (
+          <ListeningModuleViews
+            view={view}
             setView={setView}
-          />
-        )}
-
-        {/* ── Gramática: lección (explicación → ejercicios → resumen) ── */}
-        {view === "grammarLesson" && selectedGrammarLesson && (
-          <GrammarLessonGame
-            lesson={selectedGrammarLesson}
             progress={progress}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("grammarSetup")}
-          />
-        )}
-
-        {/* ── Listening: selector ── */}
-        {view === "listeningSetup" && (
-          <ListeningSetupView
-            progress={progress}
+            onProgressUpdate={onProgressUpdate}
             listeningSessionLength={listeningSessionLength}
             setListeningSessionLength={setListeningSessionLength}
+            listeningSessionPool={listeningSessionPool}
+            listeningSessionLimit={listeningSessionLimit}
+          />
+        )}
+
+        {/* ── Números ── */}
+        {(view === "numberSetup" || view === "numberKeys" || view === "numberBuild" || view === "countIt") && (
+          <NumberModuleViews
+            view={view}
             setView={setView}
-          />
-        )}
-
-        {/* ── Listening: comprensión ── */}
-        {view === "listeningComprehension" && (
-          <ListeningComprehensionGame
-            sentences={listeningSessionPool}
             progress={progress}
-            sessionLimit={listeningSessionLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("listeningSetup")}
+            onProgressUpdate={onProgressUpdate}
+            selectedNumberGroups={selectedNumberGroups}
+            toggleNumberGroup={toggleNumberGroup}
+            numberKeysLength={numberKeysLength}
+            setNumberKeysLength={setNumberKeysLength}
+            numberBuildLevel={numberBuildLevel}
+            setNumberBuildLevel={setNumberBuildLevel}
+            numberKeysPool={numberKeysPool}
+            numberKeysLimit={numberKeysLimit}
+            numberBuildLevelDef={numberBuildLevelDef}
           />
-        )}
-
-        {/* ── Listening: dictado ── */}
-        {view === "listeningDictation" && (
-          <ListeningDictationGame
-            sentences={listeningSessionPool}
-            progress={progress}
-            sessionLimit={listeningSessionLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("listeningSetup")}
-          />
-        )}
-
-        {/* ── Números: selector ── */}
-        {view === "numberSetup" && (
-          <NumberSetupView
-            progress={progress}
-            selectedGroups={selectedNumberGroups}
-            toggleGroup={toggleNumberGroup}
-            keysLength={numberKeysLength}
-            setKeysLength={setNumberKeysLength}
-            buildLevel={numberBuildLevel}
-            setBuildLevel={setNumberBuildLevel}
-            setView={setView}
-          />
-        )}
-
-        {/* ── Números: números clave (reconocer) ── */}
-        {view === "numberKeys" && (
-          <NumberKeysGame
-            pool={numberKeysPool}
-            progress={progress}
-            sessionLimit={numberKeysLimit}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("numberSetup")}
-          />
-        )}
-
-        {/* ── Números: formar el número ── */}
-        {view === "numberBuild" && (
-          <NumberBuildGame
-            level={numberBuildLevelDef}
-            progress={progress}
-            sessionLimit={10}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("numberSetup")}
-          />
-        )}
-
-        {/* ── Números: contar (objetos del vocabulario completo) ── */}
-        {view === "countIt" && (
-          <VocabCountingGame
-            vocabulary={VOCABULARY}
-            progress={progress}
-            sessionLimit={10}
-            onProgressUpdate={(updates) => {
-              const merged = { ...progress, ...updates };
-              setProgress(merged);
-              persist(merged);
-            }}
-            onBack={() => setView("numberSetup")}
-          />
-        )}
-
-        {/* ── Cómo estudiar ── */}
-        {view === "methodology" && (
-          <MethodologyView setView={setView} />
-        )}
-
-        {/* ── Stats ── */}
-        {view === "stats" && (
-          <StatsView
-            progress={progress}
-            streak={streak}
-            dailyProgress={dailyProgress}
-            masteredTotal={masteredTotal}
-            today={today}
-            setView={setView}
-          />
-        )}
-
-        {/* ── Camino a B1 ── */}
-        {view === "roadmap" && (
-          <RoadmapView progress={progress} setView={setView} />
         )}
 
       </div>
