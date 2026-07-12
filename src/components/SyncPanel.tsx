@@ -39,9 +39,9 @@ export default function SyncPanel({
 
   if (session) {
     return (
-      <div className="flex flex-col items-center gap-2">
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-stone-400">{session.user.email}</span>
+      <div className="flex flex-col items-center gap-2 w-full">
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          <span className="text-xs text-stone-400 truncate max-w-full">{session.user.email}</span>
           <button
             onClick={async () => { await pushNow(); setJustSynced(true); setTimeout(() => setJustSynced(false), 2000); }}
             disabled={syncing}
