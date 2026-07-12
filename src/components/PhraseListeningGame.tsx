@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Volume2 } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { Phrase } from "../phrases";
 import { PHRASES } from "../phrases";
@@ -117,15 +117,12 @@ export default function PhraseListeningGame({
     setSelected(null);
     setTimeLeft(TIME_LIMIT);
     setPhase("playing");
-    if (isAvailable) speak(phrase.kana);
+    speak(phrase.kana);
   }
 
   function handleReplay() {
-    if (!isAvailable) {
-      setShowAudioHelp((prev) => !prev);
-      return;
-    }
     speak(currentPhrase!.kana);
+    if (!isAvailable) setShowAudioHelp((prev) => !prev);
   }
 
   const currentPhrase = queue[queueIndex] ?? null;
@@ -232,14 +229,11 @@ export default function PhraseListeningGame({
       {/* Solo audio — sin texto hasta responder */}
       <button
         onClick={handleReplay}
-        aria-label={isAvailable ? "Escuchar pronunciación" : "Voz japonesa no disponible"}
+        aria-label="Escuchar pronunciación"
         className="mt-2 flex items-center justify-center w-16 h-16 rounded-full shadow-lg transition-transform active:scale-95"
-        style={isAvailable
-          ? { background: `linear-gradient(135deg, ${PINK}, ${PINK_DARK})`, color: "#FFFFFF" }
-          : { backgroundColor: "#FAFAF9", border: "2px solid #E7E5E4", color: "#D6D3D1" }
-        }
+        style={{ background: `linear-gradient(135deg, ${PINK}, ${PINK_DARK})`, color: "#FFFFFF" }}
       >
-        {isAvailable ? <Volume2 size={26} /> : <VolumeX size={26} />}
+        <Volume2 size={26} />
       </button>
       {!isAvailable && showAudioHelp && <AudioUnavailableHint className="-mt-2" />}
 

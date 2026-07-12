@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Volume2, VolumeX, Turtle } from "lucide-react";
+import { ArrowLeft, Volume2, Turtle } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { ListeningSentence } from "../listening";
 import { advanceBox, isDue } from "../leitner";
@@ -114,18 +114,15 @@ export default function ListeningDictationGame({
     setInput("");
     setListenCount(1);
     setPhase("playing");
-    if (isAvailable) speak(sentence.kana);
+    speak(sentence.kana);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
 
   function handleReplay(rate?: number) {
-    if (!isAvailable) {
-      setShowAudioHelp((prev) => !prev);
-      return;
-    }
     if (phase === "playing" && listenCount >= MAX_LISTENS) return;
     setListenCount((c) => c + 1);
     speak(currentSentence!.kana, rate);
+    if (!isAvailable) setShowAudioHelp((prev) => !prev);
   }
 
   const currentSentence = queue[queueIndex] ?? null;
@@ -214,18 +211,15 @@ export default function ListeningDictationGame({
         <button
           onClick={() => handleReplay()}
           disabled={phase === "playing" && listenCount >= MAX_LISTENS}
-          aria-label={isAvailable ? "Escuchar pronunciación" : "Voz japonesa no disponible"}
+          aria-label="Escuchar pronunciación"
           className="flex items-center justify-center w-16 h-16 rounded-full shadow-lg transition-transform active:scale-95 disabled:opacity-40"
-          style={isAvailable
-            ? { background: `linear-gradient(135deg, ${CYAN}, ${CYAN_DARK})`, color: "#FFFFFF" }
-            : { backgroundColor: "#FAFAF9", border: "2px solid #E7E5E4", color: "#D6D3D1" }
-          }
+          style={{ background: `linear-gradient(135deg, ${CYAN}, ${CYAN_DARK})`, color: "#FFFFFF" }}
         >
-          {isAvailable ? <Volume2 size={26} /> : <VolumeX size={26} />}
+          <Volume2 size={26} />
         </button>
         <button
           onClick={() => handleReplay(0.6)}
-          disabled={!isAvailable || (phase === "playing" && listenCount >= MAX_LISTENS)}
+          disabled={phase === "playing" && listenCount >= MAX_LISTENS}
           aria-label="Escuchar más lento"
           className="flex items-center justify-center w-11 h-11 rounded-full border-2 transition-transform active:scale-95 disabled:opacity-30"
           style={{ borderColor: "#E0F7FA", color: CYAN_DARK }}

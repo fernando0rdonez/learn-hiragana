@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2 } from "lucide-react";
 import { useSpeech } from "../hooks/useSpeech";
 import { detectOS, type DetectedOS } from "../utils/os";
 
@@ -83,17 +83,15 @@ export default function AudioButton({
   const [hovered, setHovered] = useState(false);
 
   function handleClick() {
-    if (!isAvailable) {
-      setShowHelp((prev) => !prev);
-      return;
-    }
     onPlay?.();
     speak(text);
+    // isAvailable puede dar falso negativo (p.ej. Android no siempre expone
+    // una voz "ja-JP" explícita aunque el sistema sí pueda hablar japonés),
+    // así que igual intentamos reproducir y solo mostramos la ayuda como apoyo.
+    if (!isAvailable) setShowHelp((prev) => !prev);
   }
 
-  const style: React.CSSProperties = !isAvailable
-    ? { width: size, height: size, borderColor: "#E7E5E4", backgroundColor: "#FAFAF9", color: "#D6D3D1" }
-    : isSpeaking
+  const style: React.CSSProperties = isSpeaking
     ? { width: size, height: size, borderColor: accent, backgroundColor: hexToRgba(accent, 0.12), color: accent, transform: "scale(1.1)" }
     : hovered
     ? { width: size, height: size, borderColor: accent, backgroundColor: "#FFFFFF", color: accent }
@@ -105,12 +103,12 @@ export default function AudioButton({
         onClick={handleClick}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        aria-label={isAvailable ? "Escuchar pronunciación" : "Voz japonesa no disponible"}
+        aria-label="Escuchar pronunciación"
         className="flex items-center justify-center rounded-full border-2 transition-all select-none"
         style={style}
       >
         <span className={`leading-none ${isSpeaking ? "animate-pulse" : ""}`}>
-          {isAvailable ? <Volume2 size={iconSize} /> : <VolumeX size={iconSize} />}
+          <Volume2 size={iconSize} />
         </span>
       </button>
 
