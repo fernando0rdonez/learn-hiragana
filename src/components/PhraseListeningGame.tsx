@@ -83,7 +83,7 @@ export default function PhraseListeningGame({
   const [showAudioHelp, setShowAudioHelp] = useState(false);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
-  const { speak, isAvailable } = useSpeech();
+  const { speak } = useSpeech();
 
   const today = toISODate();
 
@@ -112,17 +112,19 @@ export default function PhraseListeningGame({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function initPhrase(phrase: Phrase) {
+  async function initPhrase(phrase: Phrase) {
     setOptions(buildOptions(phrase));
     setSelected(null);
     setTimeLeft(TIME_LIMIT);
     setPhase("playing");
-    speak(phrase.kana);
+    setShowAudioHelp(false);
+    const played = await speak(phrase.kana);
+    if (!played) setShowAudioHelp(true);
   }
 
-  function handleReplay() {
-    speak(currentPhrase!.kana);
-    if (!isAvailable) setShowAudioHelp((prev) => !prev);
+  async function handleReplay() {
+    const played = await speak(currentPhrase!.kana);
+    if (!played) setShowAudioHelp(true);
   }
 
   const currentPhrase = queue[queueIndex] ?? null;
@@ -235,7 +237,7 @@ export default function PhraseListeningGame({
       >
         <Volume2 size={26} />
       </button>
-      {!isAvailable && showAudioHelp && <AudioUnavailableHint className="-mt-2" />}
+      {showAudioHelp && <AudioUnavailableHint className="-mt-2" />}
 
       {/* Temporizador + zorro */}
       <div className="flex items-center gap-3">
