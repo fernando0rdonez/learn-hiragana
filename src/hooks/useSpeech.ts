@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
 export interface UseSpeechResult {
-  speak: (text: string, rate?: number) => Promise<void>;
+  // Resuelve con true si la síntesis realmente arrancó a sonar (onstart),
+  // y false si no. Refleja lo que de verdad pasó, a diferencia de un
+  // heurístico basado en la lista de voces (que da falsos negativos en
+  // Android, donde el sistema puede hablar japonés sin exponer una voz
+  // "ja-JP" explícita).
+  speak: (text: string, rate?: number) => Promise<boolean>;
   isSpeaking: boolean;
-  isAvailable: boolean;
 }
 
 function loadVoices(): Promise<SpeechSynthesisVoice[]> {
@@ -15,7 +19,6 @@ function loadVoices(): Promise<SpeechSynthesisVoice[]> {
 }
 
 export function useSpeech(): UseSpeechResult {
-  const [isAvailable, setIsAvailable] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
@@ -23,27 +26,26 @@ export function useSpeech(): UseSpeechResult {
     if (typeof speechSynthesis === "undefined") return;
 
     loadVoices().then((voices) => {
-      const jaVoice = voices.find((v) => v.lang === "ja-JP") ?? null;
-      voiceRef.current = jaVoice;
-      setIsAvailable(jaVoice !== null);
+      voiceRef.current = voices.find((v) => v.lang === "ja-JP") ?? null;
     });
   }, []);
 
   // Resuelve cuando termina de hablar, para poder esperar antes de avanzar
   // y evitar que se corte la pronunciación a mitad de frase.
-  function speak(text: string, rate = 0.8): Promise<void> {
-    if (typeof speechSynthesis === "undefined") return Promise.resolve();
+  function speak(text: string, rate = 0.8): Promise<boolean> {
+    if (typeof speechSynthesis === "undefined") return Promise.resolve(false);
 
     speechSynthesis.cancel();
 
     return new Promise((resolve) => {
       let settled = false;
+      let played = false;
       const settle = () => {
         if (settled) return;
         settled = true;
         setIsSpeaking(false);
         clearTimeout(safetyTimeout);
-        resolve();
+        resolve(played);
       };
 
       // Red de seguridad: en algunos navegadores, tras cancel(), speak() puede
@@ -57,7 +59,10 @@ export function useSpeech(): UseSpeechResult {
       utterance.lang = "ja-JP";
       utterance.rate = rate;
 
-      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onstart = () => {
+        played = true;
+        setIsSpeaking(true);
+      };
       utterance.onend = settle;
       utterance.onerror = settle;
 
@@ -65,5 +70,5 @@ export function useSpeech(): UseSpeechResult {
     });
   }
 
-  return { speak, isSpeaking, isAvailable };
+  return { speak, isSpeaking };
 }

@@ -81,7 +81,7 @@ export default function ListeningDictationGame({
   const [listenCount, setListenCount] = useState(1);
   const [totalListens, setTotalListens] = useState(0);
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
-  const { speak, isAvailable } = useSpeech();
+  const { speak } = useSpeech();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const today = toISODate();
@@ -110,19 +110,21 @@ export default function ListeningDictationGame({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function initSentence(sentence: ListeningSentence) {
+  async function initSentence(sentence: ListeningSentence) {
     setInput("");
     setListenCount(1);
     setPhase("playing");
-    speak(sentence.kana);
+    setShowAudioHelp(false);
     setTimeout(() => inputRef.current?.focus(), 50);
+    const played = await speak(sentence.kana);
+    if (!played) setShowAudioHelp(true);
   }
 
-  function handleReplay(rate?: number) {
+  async function handleReplay(rate?: number) {
     if (phase === "playing" && listenCount >= MAX_LISTENS) return;
     setListenCount((c) => c + 1);
-    speak(currentSentence!.kana, rate);
-    if (!isAvailable) setShowAudioHelp((prev) => !prev);
+    const played = await speak(currentSentence!.kana, rate);
+    if (!played) setShowAudioHelp(true);
   }
 
   const currentSentence = queue[queueIndex] ?? null;
@@ -227,7 +229,7 @@ export default function ListeningDictationGame({
           <Turtle size={20} />
         </button>
       </div>
-      {!isAvailable && showAudioHelp && <AudioUnavailableHint className="-mt-2" />}
+      {showAudioHelp && <AudioUnavailableHint className="-mt-2" />}
       <p className="text-xs" style={{ color: "#8B7FA8" }}>
         {listensLeft > 0 ? `Puedes reescuchar ${listensLeft} ${listensLeft === 1 ? "vez" : "veces"} más` : "Sin más escuchas — responde"}
       </p>

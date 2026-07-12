@@ -78,17 +78,15 @@ export default function AudioButton({
   idleText = DEFAULT_IDLE_TEXT,
   onPlay,
 }: Props) {
-  const { speak, isSpeaking, isAvailable } = useSpeech();
+  const { speak, isSpeaking } = useSpeech();
   const [showHelp, setShowHelp] = useState(false);
   const [hovered, setHovered] = useState(false);
 
-  function handleClick() {
+  async function handleClick() {
     onPlay?.();
-    speak(text);
-    // isAvailable puede dar falso negativo (p.ej. Android no siempre expone
-    // una voz "ja-JP" explícita aunque el sistema sí pueda hablar japonés),
-    // así que igual intentamos reproducir y solo mostramos la ayuda como apoyo.
-    if (!isAvailable) setShowHelp((prev) => !prev);
+    setShowHelp(false);
+    const played = await speak(text);
+    if (!played) setShowHelp(true);
   }
 
   const style: React.CSSProperties = isSpeaking
@@ -112,7 +110,7 @@ export default function AudioButton({
         </span>
       </button>
 
-      {!isAvailable && showHelp && <AudioUnavailableHint />}
+      {showHelp && <AudioUnavailableHint />}
     </div>
   );
 }
