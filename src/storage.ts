@@ -1,6 +1,7 @@
-import type { ProgressData, ProgressItems, ItemProgress } from "./types";
+import type { ProgressData, ProgressItems, ItemProgress, StreakData, DailyProgress } from "./types";
 import { WORDS } from "./words";
 import { VOCABULARY } from "./vocabulary";
+import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
 
 const STORAGE_KEY = "hiragana-progress";
 export const CURRENT_SCHEMA_VERSION = 2;
@@ -106,4 +107,49 @@ export function parseImportedProgress(raw: string): ProgressData {
     throw new Error("El archivo no es un JSON válido.");
   }
   return validateProgressData(parsed, "archivo");
+}
+
+function pickBetterItem(a: ItemProgress, b: ItemProgress): ItemProgress {
+  if (a.attempts !== b.attempts) return a.attempts > b.attempts ? a : b;
+  if (a.box !== b.box) return a.box > b.box ? a : b;
+  return a.nextDue >= b.nextDue ? a : b;
+}
+
+function mergeStreak(a: StreakData | undefined, b: StreakData | undefined): StreakData {
+  if (!a) return b ?? DEFAULT_STREAK;
+  if (!b) return a;
+  if (a.lastSuccessDate === b.lastSuccessDate) {
+    return { current: Math.max(a.current, b.current), longest: Math.max(a.longest, b.longest), lastSuccessDate: a.lastSuccessDate };
+  }
+  const newer = a.lastSuccessDate > b.lastSuccessDate ? a : b;
+  return { current: newer.current, longest: Math.max(a.longest, b.longest), lastSuccessDate: newer.lastSuccessDate };
+}
+
+function mergeDailyProgress(a: DailyProgress | undefined, b: DailyProgress | undefined): DailyProgress {
+  if (!a) return b ?? DEFAULT_DAILY_PROGRESS;
+  if (!b) return a;
+  if (a.date === b.date) return { date: a.date, correctToday: Math.max(a.correctToday, b.correctToday) };
+  return a.date > b.date ? a : b;
+}
+
+/**
+ * Combina el progreso de dos dispositivos sin pisar nada: por ítem se
+ * conserva la versión con más práctica (attempts, luego box, luego nextDue
+ * como desempate); streak y progreso diario toman el valor más avanzado o
+ * más reciente. Idempotente y conmutativa — se puede llamar en cualquier
+ * orden y cualquier número de veces sin perder ni duplicar progreso.
+ */
+export function mergeProgressData(a: ProgressData, b: ProgressData): ProgressData {
+  const items: ProgressItems = { ...a.items };
+  for (const [key, bItem] of Object.entries(b.items)) {
+    const aItem = items[key];
+    items[key] = aItem ? pickBetterItem(aItem, bItem) : bItem;
+  }
+  return {
+    items,
+    streak: mergeStreak(a.streak, b.streak),
+    dailyProgress: mergeDailyProgress(a.dailyProgress, b.dailyProgress),
+    settings: a.settings ?? b.settings,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+  };
 }

@@ -63,10 +63,14 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
     }
   }
 
-  function stageRemoteProgress(data: ProgressData) {
-    setImportError(null);
-    setImportSuccess(false);
-    setPendingImport(data);
+  /** Aplica progreso ya fusionado (useProgressSync) directo, sin diálogo de confirmación. */
+  function adoptRemoteProgress(data: ProgressData) {
+    const ok = saveProgress(data);
+    setProgress(data.items);
+    setShowRomaji(data.settings?.showRomaji ?? showRomaji);
+    setStreak(data.streak ?? DEFAULT_STREAK);
+    setDailyProgress(data.dailyProgress ?? DEFAULT_DAILY_PROGRESS);
+    setSaveError(!ok);
   }
 
   function confirmImport() {
@@ -92,6 +96,6 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
 
   return {
     loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji,
-    exportProgress, importError, pendingImport, importSuccess, stageImport, stageRemoteProgress, confirmImport, cancelImport,
+    exportProgress, importError, pendingImport, importSuccess, stageImport, adoptRemoteProgress, confirmImport, cancelImport,
   };
 }
