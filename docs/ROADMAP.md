@@ -167,6 +167,6 @@ Para que la app siempre vaya **por delante** del estudiante:
 |---|---|
 | Ya / inmediato | #10 Exportar progreso · #11 Números (antes de #3: retira los números del vocabulario) |
 | Antes del mes 3 | #3 Vocabulario N5 ✅ · #4 Frases con audio ✅ |
-| Antes del mes 4–5 | #5 Kanji N5 · #6 Gramática/construir frases |
+| Antes del mes 4–5 | #5 Kanji N5 · #6 Gramática/construir frases · #17 Fechas y Horas (horas del día) |
 | Antes del mes 8 | #7 Listening de frases ✅ · #13 Vocabulario N4 (650→1.500) · #8 Lectura graduada |
 | Antes del mes 16 | #8 ampliado a N3 · #9 Mapa de progreso B1 |
