@@ -11,6 +11,8 @@ interface Props {
   onSelect: (kana: string) => void;
   onNext: () => void;
   nextBtnRef: React.RefObject<HTMLButtonElement | null>;
+  /** En un reto, este botón reproduce el kana correcto en voz alta — hay que ocultarlo. */
+  hideAudio?: boolean;
 }
 
 export default function ProductionCard({
@@ -22,6 +24,7 @@ export default function ProductionCard({
   onSelect,
   onNext,
   nextBtnRef,
+  hideAudio,
 }: Props) {
   return (
     <div className="flex flex-col items-center w-full gap-6">
@@ -29,7 +32,7 @@ export default function ProductionCard({
 
       <div className="flex items-center gap-3">
         <div className="text-5xl font-semibold text-stone-800">{romaji}</div>
-        <AudioButton text={correctKana} />
+        {!hideAudio && <AudioButton text={correctKana} />}
       </div>
 
       <div className="grid grid-cols-2 gap-3 w-full max-w-xs">

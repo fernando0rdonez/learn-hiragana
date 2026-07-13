@@ -25,6 +25,9 @@ dist-ssr
 
 .env
 
+# Supabase CLI local state (project link cache, pooler URL, version pins)
+supabase/.temp/
+
 # Vocab image generation working state (drafts pending review/approval)
 .claude/skills/vocab-images/state/*
 !.claude/skills/vocab-images/state/.gitkeep

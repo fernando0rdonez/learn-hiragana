@@ -72,6 +72,12 @@ interface Props {
   sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
+  /** Reto en curso (Fase D) — dispara una vez al terminar la ronda, para subir el resultado. */
+  onComplete?: (results: SessionResult[]) => void;
+  /** Reto en curso — botón extra en el resumen para ir al resultado del reto. */
+  onViewCompetitionResult?: () => void;
+  /** En un reto, el audio revelaría cómo se escribe la palabra — se oculta mientras dure. */
+  hideAudio?: boolean;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -83,6 +89,9 @@ export default function VocabularyGame({
   sessionLimit = 50,
   onProgressUpdate,
   onBack,
+  onComplete,
+  onViewCompetitionResult,
+  hideAudio,
 }: Props) {
   const [queue, setQueue] = useState<VocabWord[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
@@ -128,6 +137,11 @@ export default function VocabularyGame({
     else setPhase("done");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (phase === "done") onComplete?.(sessionResults);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   function initWord(word: VocabWord) {
     const wordLen = [...word.hiragana].length;
@@ -302,6 +316,7 @@ export default function VocabularyGame({
             ? `${helpedCount} palabra${helpedCount === 1 ? "" : "s"} no contaron para tu progreso por usar audio o romaji`
             : undefined
         }
+        onViewCompetitionResult={onViewCompetitionResult}
       />
     );
   }
@@ -360,11 +375,13 @@ export default function VocabularyGame({
             {currentWord.meaning}
           </span>
         </div>
-        <AudioButton
-          text={currentWord.hiragana}
-          className="shrink-0"
-          onPlay={() => setAudioUsed(true)}
-        />
+        {!hideAudio && (
+          <AudioButton
+            text={currentWord.hiragana}
+            className="shrink-0"
+            onPlay={() => setAudioUsed(true)}
+          />
+        )}
         <img src={foxPose} alt="" className="w-20 h-20 object-contain shrink-0 transition-opacity" />
       </div>
 

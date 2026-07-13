@@ -733,6 +733,133 @@ completar ambos, el trigger marca la competencia `completada` y ambos ven el
 resultado; el historial contra un rival muestra ganados/perdidos/racha correctos
 tras varias competencias simuladas; build pasa.
 
+> **Hecho (2026-07)** — Plan completo en `docs/COMPETITION_PLAN.md` (5 fases,
+> todas `[x]`). Dos decisiones confirmadas que amplían/acotan la spec original:
+> **hasta 6 jugadores por reto** (no 1v1 estricto — leaderboard en vez de pantalla
+> cara a cara, el historial por rival sigue calculándose par a par sin cambios de
+> esquema) y **MVP limitado a 2 módulos** (Hiragana — reconocimiento y
+> Vocabulario — deletrear) en vez de "cualquier módulo", para no multiplicar la
+> resolución de ítems por los ~10 módulos de estudio el día uno.
+>
+> Dos bugs de diseño reales encontrados y corregidos durante la implementación,
+> no anticipados en la spec original:
+> 1. **Puntaje de Hiragana por aciertos "a la primera"**, no por `correctCount`
+>    bruto — el modo reconocimiento reintenta un ítem fallado hasta acertarlo, así
+>    que el conteo bruto converge a 100% para cualquiera que termine la sesión;
+>    el puntaje real usa `total − fallos únicos`.
+> 2. **Ayudas ocultas durante un reto** (oír la pronunciación en Hiragana y
+>    Vocabulario, ver el romaji en Vocabulario) — ya estaban excluidas del
+>    progreso SRS personal pero no del puntaje de la competencia, lo que habría
+>    permitido inflar el resultado.
+>
+> Retos de un solo intento (sin revancha tras subir resultado, tanto a nivel de UI
+> como con `insert` sin upsert en `competition_results`). Verificado en vivo contra
+> el proyecto Supabase alojado con cuentas reales: ciclo completo crear → unirse →
+> jugar → resultado para ambos módulos, banner de ganador/empate, historial de
+> rival (ganados/perdidos/racha), bloqueo de repetición, y build sin variables de
+> Supabase configuradas (UI de competir queda oculta por completo).
+
+---
+
+## #17 · Módulo Fechas y Horas — Horas del día (MVP)
+
+**Fase**: 1 (cubre el punto "contadores básicos y hora/fecha" de la Gramática N5,
+BACKLOG #6 · depende de #11 Números, ya hecho) · **Tamaño**: M
+
+**Objetivo**: módulo propio (al nivel de Hiragana/Números) para dominar cómo decir la
+hora en japonés — horas, minutos y am/pm — con tres modos de práctica: reconocer,
+escribir (tecleando en hiragana) y construir con fichas. Basado en la sección "Fechas y
+horas → Horas del día" de la guía TANOSHI Japonés (JLPT N5). **Fechas** (días de la
+semana, meses, días del mes, formato de fecha completo) queda fuera de esta spec — es
+un fast-follow natural (ver nota al final) porque los días del mes tienen ~15 lecturas
+irregulares que no siguen ninguna regla (más parecido a vocabulario que a un patrón
+numérico), a diferencia de horas/minutos que sí son composicionales.
+
+**Contenido fuente (para que la spec sea autocontenida, sin depender del PDF original)**:
+
+*Horas (時 -ji), 1–12 — solo 3 irregulares*:
+
+| Hora | Kana | Hora | Kana | Hora | Kana |
+|---|---|---|---|---|---|
+| 1 | いちじ | 5 | ごじ | 9 | **くじ** (irr.) |
+| 2 | にじ | 6 | ろくじ | 10 | じゅうじ |
+| 3 | さんじ | 7 | **しちじ** (irr.) | 11 | じゅういちじ |
+| 4 | **よじ** (irr.) | 8 | はちじ | 12 | じゅうにじ |
+
+*Minutos (分 -fun/-pun), composicional 1–59 igual que los números grandes de #11 (misma
+familia de rendaku: base 1–9 con su propia forma ふん/ぷん, decenas que también toman
+っぷん, y 11–59 = decena + unidad sin contracción adicional)*:
+
+| Unidad 1–9 | Kana | Decena | Kana |
+|---|---|---|---|
+| 1 | **いっぷん** | 10 | **じゅっぷん** |
+| 2 | にふん | 20 | にじゅっぷん |
+| 3 | **さんぷん** | 30 | さんじゅっぷん |
+| 4 | **よんぷん** | 40 | よんじゅっぷん |
+| 5 | ごふん | 50 | ごじゅっぷん |
+| 6 | **ろっぷん** | | |
+| 7 | ななふん | | |
+| 8 | **はっぷん** | | |
+| 9 | きゅうふん | | |
+
+Ejemplos de composición: 11 = じゅういっぷん, 16 = じゅうろっぷん, 20 = にじゅっぷん (no
+にじゅう+いっぷん). Igual que en #11, las formas en **negrita** son las irregulares con
+trato preferente en UI y generación de ejercicios.
+
+*Vocabulario fijo*: 午前 ごぜん (a.m.) · 午後 ごご (p.m.) · 今 いま (ahora) · 何時 なんじ
+(¿qué hora?) · 半 はん (y media, alternativa a "30分"). Ejemplo de frase completa:
+17:00 → 午後五時です (ごごごじです); pregunta: 今、何時ですか？
+
+**Diseño**:
+- Nuevo `src/dateTime.ts` (mismo patrón que `src/numbers.ts`):
+  - `KEY_HOURS`: `{ value: 1-12, hiragana, romaji, irregular? }` (12 ítems, 3 irregulares).
+  - `KEY_MINUTE_UNITS`: unidades 1–9 + decenas 10/20/30/40/50 con el mismo shape,
+    irregulares marcados (1,3,4,6,8 y sus decenas).
+  - `minuteToKana(n: 1–59): string` — conversor puro con tests unitarios (al menos:
+    1, 6, 10, 11, 16, 20, 24, 30, 45, 59).
+  - `GOZEN`/`GOGO`/`HAN` como vocabulario fijo (no SRS individual, se acredita como
+    parte de la lectura completa).
+  - `timeToChips(hour, minute, period)` → fichas con `credits` de vuelta a
+    `KEY_HOURS`/`KEY_MINUTE_UNITS` (mismo contrato que `NumberChip` de #11), para el
+    modo Construir.
+  - `randomTimeForLevel(level)`: niveles de dificultad — en punto (:00) → con :30/半 →
+    minutos libres 1–59 → con am/pm variable. Mismo espíritu que `BUILD_LEVELS` de #11.
+  - Generador de distractores **de tiempo** (no de kana) para el modo Reconocer: dado
+    el tiempo correcto, generar 3 tiempos parecidos pero incorrectos (mismo minuto con
+    am/pm invertido, ±1 minuto que cambia de familia de rendaku, hora ±1). Es la única
+    pieza de lógica genuinamente nueva — todo lo demás reutiliza helpers existentes.
+  - Claves SRS: `datetime:hour:{1-12}`, `datetime:minute:{1-59}` (mismo patrón que
+    `numberKeyProgressKey`).
+- **Tres modos** (nueva entrada "Fechas y Horas" en `HomeView`, setup view propio
+  `DateTimeSetupView.tsx` plantilla `NumberSetupView`, color de acento propio del módulo):
+  1. **Reconocer** (`DateTimeRecognizeGame.tsx`, plantilla `NumberKeysGame` pero en
+     dirección inversa): se muestra la lectura en hiragana (p. ej. ごごしちじにじゅうろっぷん),
+     el usuario elige el reloj/hora correcta entre 4 opciones visualmente similares
+     (generadas por el distractor de tiempo de arriba).
+  2. **Escribir** (`DateTimeWriteGame.tsx`, plantilla `ListeningDictationGame` pero sin
+     audio — el prompt es visual, un reloj/hora en pantalla): el usuario teclea la
+     lectura completa en hiragana con su IME; se compara normalizado igual que
+     `normalizeDictation`.
+  3. **Construir** (`DateTimeBuildGame.tsx`, plantilla `NumberBuildGame`): se muestra
+     una hora (p. ej. "07:26 p.m."), el usuario ordena fichas (hora + minuto + ごご,
+     con 2–3 fichas distractoras) en los huecos; acredita SRS a cada bloque usado.
+- UI: `ViewName` + vistas nuevas (`dateTimeSetup`, `dateTimeRecognize`,
+  `dateTimeWrite`, `dateTimeBuild`); tarjeta "Fechas y Horas" en `HomeView` (patrón
+  Números); wiring en `App.tsx` (estado + bloque de montaje) igual que
+  `NumberModuleViews`.
+
+**Nota — fast-follow "Fechas"**: cuando se aborde, añade días de la semana (7, sin
+irregulares), meses (12, irregulares 4=しがつ・7=しちがつ・9=くがつ) y días del mes (1–31,
+~15 lecturas irregulares 1–10/14/20/24 que hay que tabular a mano como vocabulario, el
+resto sigue X+にち). El año del formato de fecha completo (`YYYY年 MM月 DD日`) puede
+reutilizar `numberToChips` de #11 directamente (1989 → せんきゅうひゃくはちじゅうきゅう + ねん).
+
+**Aceptación**: `minuteToKana` pasa tests con los ejemplos listados; sesión completa de
+cada uno de los 3 modos con SRS persistente por hora/minuto clave; las formas
+irregulares de hora y minuto aparecen destacadas y sobre-representadas en la
+generación de ejercicios; el modo Reconocer nunca genera dos opciones idénticas;
+build pasa.
+
 ---
 
 ## Plantilla para nuevas specs

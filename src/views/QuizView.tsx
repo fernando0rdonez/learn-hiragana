@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, RefObject } from "react";
-import { RotateCcw, ArrowLeft } from "lucide-react";
+import { RotateCcw, ArrowLeft, Trophy } from "lucide-react";
 import type { CharWithRow, CharData, QuizMode, QueueItem, Feedback, MissedItem } from "../types";
 import type { ViewName } from "../data";
 import { WORDS } from "../words";
@@ -39,6 +39,10 @@ interface Props {
   reviewMisses: () => void;
   inputRef: RefObject<HTMLInputElement | null>;
   nextBtnRef: RefObject<HTMLButtonElement | null>;
+
+  // Reto en curso (Fase C) — muestra un botón extra en el resumen para ir al resultado.
+  activeCompetitionId: string | null;
+  setActiveCompetitionId: (id: string | null) => void;
 }
 
 export default function QuizView({
@@ -48,10 +52,14 @@ export default function QuizView({
   correctCount, sessionQueue, sessionIndexRef, missedList,
   handleSubmit, handleProductionAnswer, handleProductionNext, handleWordContinue, reviewMisses,
   inputRef, nextBtnRef,
+  activeCompetitionId, setActiveCompetitionId,
 }: Props) {
   const queueLen    = sessionQueue.length;
   const questionNum = sessionIndexRef.current + 1;
   const uniqueMissed = new Set(missedList.map((m) => `${m.mode}:${m.kana}`)).size;
+  // En un reto, escuchar la pronunciación delataría la respuesta (recognition: kana → romaji
+  // por oído; production: el botón reproduce literalmente el kana correcto) — se oculta mientras dure.
+  const isCompetition = !!activeCompetitionId;
 
   const [foxPose, setFoxPose] = useState(foxNeutral);
   useEffect(() => {
@@ -73,7 +81,7 @@ export default function QuizView({
       <div className="flex flex-col items-center">
         {/* Header */}
         <div className="w-full flex items-center justify-between text-xs text-[#8B7FA8] mb-2">
-          <button onClick={() => setView("home")} className="flex items-center gap-1 hover:opacity-70">
+          <button onClick={() => { setActiveCompetitionId(null); setView("home"); }} className="flex items-center gap-1 hover:opacity-70">
             <ArrowLeft size={14} /> Salir
           </button>
           <span>Pregunta {Math.min(questionNum, queueLen)} de {queueLen}</span>
@@ -103,14 +111,16 @@ export default function QuizView({
               >
                 {current.kana}
               </div>
-              <AudioButton
-                text={current.kana}
-                size={36}
-                iconSize={16}
-                accent="#7B4FD4"
-                idleBorder="#F0EDF8"
-                idleText="#8B7FA8"
-              />
+              {!isCompetition && (
+                <AudioButton
+                  text={current.kana}
+                  size={36}
+                  iconSize={16}
+                  accent="#7B4FD4"
+                  idleBorder="#F0EDF8"
+                  idleText="#8B7FA8"
+                />
+              )}
             </div>
 
             {/* Fox */}
@@ -204,6 +214,7 @@ export default function QuizView({
               onSelect={handleProductionAnswer}
               onNext={handleProductionNext}
               nextBtnRef={nextBtnRef}
+              hideAudio={isCompetition}
             />
           </>
         )}
@@ -260,6 +271,15 @@ export default function QuizView({
       )}
 
       <div className="flex flex-col gap-2 mt-6">
+        {activeCompetitionId && (
+          <button
+            onClick={() => setView("competeResult")}
+            className="w-full h-[50px] rounded-[14px] text-white font-bold flex items-center justify-center gap-2"
+            style={{ background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
+          >
+            <Trophy size={16} /> Ver resultado del reto
+          </button>
+        )}
         {missedList.length > 0 && (
           <button
             onClick={reviewMisses}
@@ -270,13 +290,15 @@ export default function QuizView({
           </button>
         )}
         <button
-          onClick={() => setView("home")}
+          onClick={() => { setActiveCompetitionId(null); setView("home"); }}
           className="w-full h-[50px] rounded-[14px] text-white font-bold"
-          style={{ background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
+          style={activeCompetitionId
+            ? { color: "#5533A8", backgroundColor: "#fff", border: "1.5px solid #E2DAF5" }
+            : { background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
         >
           Nueva sesión
         </button>
-        <button onClick={() => setView("stats")} className="w-full py-2 rounded-xl text-sm" style={{ color: "#8B7FA8" }}>
+        <button onClick={() => { setActiveCompetitionId(null); setView("stats"); }} className="w-full py-2 rounded-xl text-sm" style={{ color: "#8B7FA8" }}>
           Ver estadísticas
         </button>
       </div>

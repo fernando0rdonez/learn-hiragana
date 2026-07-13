@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, GraduationCap, SpellCheck2, Headphones } from "lucide-react";
+import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, GraduationCap, SpellCheck2, Headphones, Trophy } from "lucide-react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
@@ -10,6 +10,7 @@ import { PHRASES } from "../phrases";
 import { KANJI } from "../kanji";
 import { GRAMMAR_LESSONS } from "../grammar";
 import { LISTENING_SENTENCES } from "../listening";
+import { isSupabaseConfigured } from "../lib/supabase";
 import foxImg from "../assets/character/fox-neutral.png";
 
 interface Props {
@@ -154,6 +155,16 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
         <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: "#8B7FA8" }}>Tus módulos</div>
 
         <div className="mt-3 flex flex-col gap-3">
+          {isSupabaseConfigured && (
+            <ModuleCard
+              bg="#DCFCE7" border="#16A34A"
+              icon={<Trophy size={20} style={{ color: "#16A34A" }} />}
+              title="Competir"
+              subtitle="Reta a tus amigos — hasta 6 jugadores"
+              onClick={() => setView("competeHome")}
+            />
+          )}
+
           {heroModule === "vocab" && (
             <ModuleCard
               bg="#EDE7F9" border="#7B4FD4"

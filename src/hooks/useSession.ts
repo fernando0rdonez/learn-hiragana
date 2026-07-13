@@ -32,6 +32,8 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
   const sessionQueueRef = useRef<QueueItem[]>([]);
   const sessionPoolRef  = useRef<CharWithRow[]>([]);
   const sessionIndexRef = useRef(0);
+  const missedListRef   = useRef<MissedItem[]>([]);
+  const onSessionCompleteRef = useRef<((correct: number, total: number) => void) | null>(null);
 
   const [currentMode, setCurrentMode]   = useState<QuizMode>("recognition");
   const [correctCount, setCorrectCount] = useState(0);
@@ -58,6 +60,11 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
     setSessionQueue(q);
   }
 
+  function updateMissed(list: MissedItem[]) {
+    missedListRef.current = list;
+    setMissedList(list);
+  }
+
   function goNext() {
     const idx   = sessionIndexRef.current;
     const queue = sessionQueueRef.current;
@@ -65,6 +72,15 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
       setView("summary");
       setCurrent(null);
       setFeedback(null);
+      const onComplete = onSessionCompleteRef.current;
+      if (onComplete) {
+        // Con reintento-hasta-acertar, correctCount siempre converge a pool.length —
+        // el puntaje de competencia usa aciertos "a la primera" (sin fallos) en su lugar.
+        const total = sessionPoolRef.current.length;
+        const uniqueMissed = new Set(missedListRef.current.map((m) => `${m.mode}:${m.kana}`)).size;
+        onSessionCompleteRef.current = null;
+        onComplete(total - uniqueMissed, total);
+      }
       return;
     }
     const item = queue[idx];
@@ -103,15 +119,21 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
     setView("preview");
   }
 
-  function startSession(pool: CharWithRow[], length: number, mode: SessionMode = sessionMode) {
+  function startSession(
+    pool: CharWithRow[],
+    length: number,
+    mode: SessionMode = sessionMode,
+    onSessionComplete?: (correct: number, total: number) => void,
+  ) {
     const today = toISODate();
     const queue = buildQueueItems(pool, mode, length, progress, today);
     if (queue.length === 0) return;
 
+    onSessionCompleteRef.current = onSessionComplete ?? null;
     sessionIndexRef.current = 0;
     sessionPoolRef.current  = pool;
     updateQueue(queue);
-    setMissedList([]);
+    updateMissed([]);
     setCorrectCount(0);
     setSelectedOption(null);
     setInput("");
@@ -132,10 +154,11 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
       .map((char): QueueItem => ({ char, mode: "word" }));
     if (queue.length === 0) return;
 
+    onSessionCompleteRef.current = null;
     sessionIndexRef.current = 0;
     sessionPoolRef.current  = pool;
     updateQueue(queue);
-    setMissedList([]);
+    updateMissed([]);
     setCorrectCount(0);
     setSelectedOption(null);
     setInput("");
@@ -189,7 +212,7 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
     } else {
       const newQueue: QueueItem[] = [...sessionQueueRef.current, { char: cur, mode }];
       updateQueue(newQueue);
-      setMissedList((prev) => [...prev, { kana: cur.kana, mode, given: input.trim() || "(vacío)", expected: cur.romaji }]);
+      updateMissed([...missedListRef.current, { kana: cur.kana, mode, given: input.trim() || "(vacío)", expected: cur.romaji }]);
       setFeedback({ status: "wrong", expected: cur.romaji });
     }
   }
@@ -229,7 +252,7 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
     } else {
       const newQueue: QueueItem[] = [...sessionQueueRef.current, { char: cur, mode: "production" }];
       updateQueue(newQueue);
-      setMissedList((prev) => [...prev, { kana: cur.kana, mode: "production", given: selectedKana, expected: cur.kana }]);
+      updateMissed([...missedListRef.current, { kana: cur.kana, mode: "production", given: selectedKana, expected: cur.kana }]);
       setFeedback({ status: "wrong", expected: cur.kana });
     }
   }
@@ -256,10 +279,11 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
 
     const pool = [...new Map(queue.map((i) => [i.char.kana, i.char])).values()];
 
+    onSessionCompleteRef.current = null;
     sessionIndexRef.current = 0;
     sessionPoolRef.current  = pool;
     updateQueue(queue);
-    setMissedList([]);
+    updateMissed([]);
     setCorrectCount(0);
     setSelectedOption(null);
     setInput("");
