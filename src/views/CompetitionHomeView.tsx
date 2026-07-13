@@ -1,4 +1,5 @@
-import { ArrowLeft, Plus, Trophy } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { ArrowLeft, Plus, Trophy, ArrowRight } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
 import type { MyCompetition } from "../hooks/useCompetition";
@@ -17,6 +18,7 @@ interface Props {
   myCompetitions: MyCompetition[];
   loadingCompetitions: boolean;
   onOpen: (competition: MyCompetition) => void;
+  onJoinByCode: (code: string) => void;
 }
 
 function formatDate(iso: string): string {
@@ -27,7 +29,15 @@ function moduleLabel(module: "hiragana" | "vocab"): string {
   return module === "hiragana" ? "Hiragana — Reconocimiento" : "Vocabulario — Deletrear";
 }
 
-export default function CompetitionHomeView({ setView, session, authLoading, myCompetitions, loadingCompetitions, onOpen }: Props) {
+export default function CompetitionHomeView({ setView, session, authLoading, myCompetitions, loadingCompetitions, onOpen, onJoinByCode }: Props) {
+  const [code, setCode] = useState("");
+
+  function handleSubmitCode(e: FormEvent) {
+    e.preventDefault();
+    if (!code.trim()) return;
+    onJoinByCode(code);
+  }
+
   return (
     <div className="pb-8">
       <div className="flex items-center gap-3 mb-4">
@@ -69,6 +79,27 @@ export default function CompetitionHomeView({ setView, session, authLoading, myC
               <Plus size={15} /> Crear reto
             </button>
           </div>
+
+          <form onSubmit={handleSubmitCode} className="mt-4">
+            <div className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: TEXT_SECOND }}>¿Ya tienes un código?</div>
+            <div className="flex gap-2">
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Código del reto"
+                className="flex-1 min-w-0 rounded-xl px-3.5 py-2.5 text-sm font-semibold border-[1.5px] outline-none"
+                style={{ borderColor: BORDER, color: TEXT_MAIN }}
+              />
+              <button
+                type="submit"
+                disabled={!code.trim()}
+                className="shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white disabled:opacity-40"
+                style={{ background: `linear-gradient(135deg, ${PURPLE}, ${PURPLE_DARK})` }}
+              >
+                Unirme <ArrowRight size={15} />
+              </button>
+            </div>
+          </form>
 
           <div className="mt-8 text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Tus retos</div>
 
