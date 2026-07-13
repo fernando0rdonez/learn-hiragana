@@ -32,6 +32,8 @@ import { CURRENT_SCHEMA_VERSION } from "./storage";
 import { type NumberKeysLength } from "./views/NumberSetupView";
 import type { BuildLevel } from "./numbers";
 import { KEY_NUMBERS, KEY_NUMBER_GROUPS, BUILD_LEVELS, numberKeyStatus } from "./numbers";
+import type { TimeBuildLevel } from "./dateTime";
+import { KEY_HOURS, KEY_MINUTE_UNITS, hourKeyStatus, minuteKeyStatus } from "./dateTime";
 import HiraganaSetupView from "./views/HiraganaSetupView";
 import KatakanaSetupView from "./views/KatakanaSetupView";
 import QuizView from "./views/QuizView";
@@ -43,6 +45,7 @@ import KanjiModuleViews from "./views/modules/KanjiModuleViews";
 import GrammarModuleViews from "./views/modules/GrammarModuleViews";
 import ListeningModuleViews from "./views/modules/ListeningModuleViews";
 import NumberModuleViews from "./views/modules/NumberModuleViews";
+import DateTimeModuleViews from "./views/modules/DateTimeModuleViews";
 import CompetitionModuleViews from "./views/modules/CompetitionModuleViews";
 
 // Vistas de estudio activo — salir de cualquiera de estas hacia una vista
@@ -50,6 +53,7 @@ import CompetitionModuleViews from "./views/modules/CompetitionModuleViews";
 const STUDY_VIEWS = new Set<ViewName>([
   "quiz", "preview", "summary", "spellIt", "recognizeIt", "listenIt",
   "numberKeys", "numberBuild", "countIt", "phonetics",
+  "dateTimeRecognize", "dateTimeWrite", "dateTimeBuild",
   "phraseMeaning", "phraseListening",
   "kanjiMeaning", "kanjiReading", "kanjiMatch",
   "grammarLesson",
@@ -122,6 +126,7 @@ export default function HiraganaTrainer() {
   );
   const [numberKeysLength, setNumberKeysLength] = useState<NumberKeysLength>(10);
   const [numberBuildLevel, setNumberBuildLevel] = useState<BuildLevel>("2cifras");
+  const [dateTimeBuildLevel, setDateTimeBuildLevel] = useState<TimeBuildLevel>("hour");
 
   const {
     previewRows, pendingStartRef,
@@ -357,6 +362,10 @@ export default function HiraganaTrainer() {
   const numberBuildLevelDef = BUILD_LEVELS.find((l) => l.id === numberBuildLevel) ?? BUILD_LEVELS[0];
   const masteredNumberKeys = KEY_NUMBERS.filter((k) => numberKeyStatus(progress, k.value) === "mastered").length;
 
+  const masteredDateTimeKeys =
+    KEY_HOURS.filter((h) => hourKeyStatus(progress, h.value) === "mastered").length +
+    KEY_MINUTE_UNITS.filter((m) => minuteKeyStatus(progress, m.value) === "mastered").length;
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-stone-50 text-stone-400">Cargando progreso…</div>;
   }
@@ -382,6 +391,7 @@ export default function HiraganaTrainer() {
             masteredTotal={masteredTotal}
             masteredKataTotal={masteredKataTotal}
             masteredNumberKeys={masteredNumberKeys}
+            masteredDateTimeKeys={masteredDateTimeKeys}
             masteredPhrasesTotal={masteredPhrasesTotal}
             masteredKanjiTotal={masteredKanjiTotal}
             masteredGrammarTotal={masteredGrammarTotal}
@@ -589,6 +599,18 @@ export default function HiraganaTrainer() {
             numberKeysPool={numberKeysPool}
             numberKeysLimit={numberKeysLimit}
             numberBuildLevelDef={numberBuildLevelDef}
+          />
+        )}
+
+        {/* ── Fechas y Horas ── */}
+        {(view === "dateTimeSetup" || view === "dateTimeRecognize" || view === "dateTimeWrite" || view === "dateTimeBuild") && (
+          <DateTimeModuleViews
+            view={view}
+            setView={setView}
+            progress={progress}
+            onProgressUpdate={onProgressUpdate}
+            dateTimeBuildLevel={dateTimeBuildLevel}
+            setDateTimeBuildLevel={setDateTimeBuildLevel}
           />
         )}
 
