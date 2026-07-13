@@ -26,6 +26,7 @@ import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
 import { useAuth } from "./hooks/useAuth";
 import { useProgressSync } from "./hooks/useProgressSync";
+import { useCompetition } from "./hooks/useCompetition";
 import { CURRENT_SCHEMA_VERSION } from "./storage";
 import { type NumberKeysLength } from "./views/NumberSetupView";
 import type { BuildLevel } from "./numbers";
@@ -41,6 +42,7 @@ import KanjiModuleViews from "./views/modules/KanjiModuleViews";
 import GrammarModuleViews from "./views/modules/GrammarModuleViews";
 import ListeningModuleViews from "./views/modules/ListeningModuleViews";
 import NumberModuleViews from "./views/modules/NumberModuleViews";
+import CompetitionModuleViews from "./views/modules/CompetitionModuleViews";
 
 // Vistas de estudio activo — salir de cualquiera de estas hacia una vista
 // que no está en el set dispara un push (ver setView más abajo).
@@ -71,6 +73,11 @@ export default function HiraganaTrainer() {
     snapshot: { items: progress, streak, dailyProgress, settings: { showRomaji }, schemaVersion: CURRENT_SCHEMA_VERSION },
     onRemoteProgress: adoptRemoteProgress,
   });
+  const {
+    myCompetitions, loadingCompetitions, pendingInviteCode,
+    stashInviteCode, consumeInviteCode,
+    createCompetition, previewCompetition, joinCompetition,
+  } = useCompetition({ session });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
   const [selectedCompoundRows, setSelectedCompoundRows] = useState<Set<string>>(new Set());
@@ -131,6 +138,31 @@ export default function HiraganaTrainer() {
     document.head.appendChild(link);
     return () => { document.head.removeChild(link); };
   }, []);
+
+  /**
+   * Deep link /compete/:code (docs/COMPETITION_PLAN.md, Fase B). Sin librería de
+   * routing — se parsea el pathname una vez al montar, se guarda el código en
+   * sessionStorage (useCompetition.stashInviteCode) para que sobreviva el
+   * round-trip de login por OTP, y se navega a "competeJoin" de una vez —
+   * esa vista ya sabe mostrar su propio prompt de login si todavía no hay
+   * sesión, así que no hay que esperar a que resuelva el auth para navegar.
+   */
+  useEffect(() => {
+    const base = import.meta.env.BASE_URL;
+    const path = window.location.pathname;
+    const rest = path.startsWith(base) ? path.slice(base.length) : path.replace(/^\//, "");
+    const match = rest.match(/^compete\/([A-Za-z0-9]+)$/);
+    if (!match) return;
+    stashInviteCode(match[1]);
+    window.history.replaceState(null, "", base);
+    setView("competeJoin");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (session && pendingInviteCode) setView("competeJoin");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
 
   // ── Setup helpers ─────────────────────────────────────────────────────────
 
@@ -551,6 +583,23 @@ export default function HiraganaTrainer() {
             numberKeysPool={numberKeysPool}
             numberKeysLimit={numberKeysLimit}
             numberBuildLevelDef={numberBuildLevelDef}
+          />
+        )}
+
+        {/* ── Competir ── */}
+        {(view === "competeHome" || view === "competeCreate" || view === "competeJoin" || view === "competeResult") && (
+          <CompetitionModuleViews
+            view={view}
+            setView={setView}
+            session={session}
+            authLoading={authLoading}
+            myCompetitions={myCompetitions}
+            loadingCompetitions={loadingCompetitions}
+            pendingInviteCode={pendingInviteCode}
+            createCompetition={createCompetition}
+            previewCompetition={previewCompetition}
+            joinCompetition={joinCompetition}
+            consumeInviteCode={consumeInviteCode}
           />
         )}
 
