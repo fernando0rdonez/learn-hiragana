@@ -27,6 +27,7 @@ import { useSession } from "./hooks/useSession";
 import { useAuth } from "./hooks/useAuth";
 import { useProgressSync } from "./hooks/useProgressSync";
 import { useCompetition } from "./hooks/useCompetition";
+import { isSupabaseConfigured } from "./lib/supabase";
 import { CURRENT_SCHEMA_VERSION } from "./storage";
 import { type NumberKeysLength } from "./views/NumberSetupView";
 import type { BuildLevel } from "./numbers";
@@ -150,6 +151,7 @@ export default function HiraganaTrainer() {
    * sesión, así que no hay que esperar a que resuelva el auth para navegar.
    */
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
     const base = import.meta.env.BASE_URL;
     const path = window.location.pathname;
     const rest = path.startsWith(base) ? path.slice(base.length) : path.replace(/^\//, "");

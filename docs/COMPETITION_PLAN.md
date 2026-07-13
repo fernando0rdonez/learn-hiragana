@@ -130,14 +130,14 @@ This session also incidentally completed live verification of every item Phase C
 
 ---
 
-## Phase E — Polish & edge cases `[ ]`
+## Phase E — Polish & edge cases `[x]` (verified — one real gap found and fixed, two items already correct from earlier phases)
 
 **Goal**: the feature is robust to the rough edges identified during design, not just the happy path.
 
-- `npm run build` passes with Supabase env vars unset — competition UI stays fully hidden behind `isSupabaseConfigured`, same gate as `SyncPanel` (#15's own acceptance bar).
-- Refreshing mid-flow doesn't resurrect an already-consumed invite prompt (sessionStorage should be cleared by `consumeInviteCode`).
-- Joining an expired competition (`expires_at` in the past) shows a clear "reto expirado" message rather than silently allowing it or crashing.
-- Confirm `competition_summary` is genuinely RLS-respecting (not accidentally `security definer`) — a user who isn't a participant of a given competition should get zero rows back for it even though the view technically joins across all completed competitions.
+- **`npm run build` passes with Supabase env vars unset — competition UI stays fully hidden.** A real gap: `HomeView.tsx`'s "Competir" `ModuleCard` was rendered unconditionally, with no `isSupabaseConfigured` gate (unlike `SyncPanel`, which already had one). Fixed by importing `isSupabaseConfigured` and wrapping the card; also gated `App.tsx`'s `/compete/:code` deep-link-parsing effect behind the same flag, so visiting an invite link on a build with Supabase unconfigured is a true no-op instead of stashing a code nothing can ever resolve. **Verified**: `npm run build` with `.env` removed passes clean, and a live dev run with `.env` removed showed the Home screen with no "Competir" card at all (screenshotted against the configured state for comparison) and zero console errors.
+- **Refreshing mid-flow doesn't resurrect an already-consumed invite prompt.** Already correct by construction — `pendingInviteCode` is read fresh from `sessionStorage` on every mount, and `consumeInviteCode()` removes the key on a successful join. **Verified live**: opened a real invite link, confirmed `sessionStorage.getItem("pendingCompeteCode")` held the code, joined (exercising the same `23505`-duplicate-key no-op path used when already a participant), confirmed the key was `null` immediately after, then did a full hard page reload — landed on Home, not the join prompt.
+- **Joining an expired competition shows a clear message, not a crash.** Already correct — `CompetitionJoinView.tsx` computes `expired` from `expires_at` vs. `Date.now()` and renders "Este reto ya expiró." when true (built in Phase B). Verified via code review rather than a live test: forcing a real expired row would require a direct DB write, and faking `Date.now()` client-side doesn't survive the full-page reload the deep-link flow requires — both judged not worth the added risk/complexity for a one-line, low-risk date comparison already covered by Phase B's "expired/garbage invite code" acceptance note.
+- **`competition_summary` is genuinely RLS-respecting.** Verified via code review, not a live query — a live RLS-bypass test (`SET ROLE` simulating a non-participant against the hosted DB) was attempted and blocked by the environment's own "no direct production-data reads" guardrail, and the user opted for code review over routing around it. The view (`supabase/migrations/0002_competitions.sql`) carries no `SECURITY DEFINER`/`security_invoker` elevation — its own comment states this is deliberate ("vista simple... para que siga respetando el RLS de las tablas base") — and it's built entirely from two joins against `competition_results`, whose only `select` policy scopes rows to `exists (... p.user_id = auth.uid())` for that specific `competition_id`. Since the view adds no elevation, a non-participant's query through it still evaluates that same base-table policy and should yield zero rows for a competition they're not part of.
 
 ---
 
@@ -148,5 +148,6 @@ This session also incidentally completed live verification of every item Phase C
 - `src/views/modules/CompetitionModuleViews.tsx` + `src/views/Competition{Home,Create,Join}View.tsx` (new, Phase B), `CompetitionResultView.tsx` (new, Phase C)
 - `src/hooks/useSession.ts` (edit, Phase C: `startSession` completion callback, `goNext()`)
 - `src/components/VocabularyGame.tsx` (edit, Phase D: `onComplete` prop)
-- `src/App.tsx` (edit, Phase B: mount `CompetitionModuleViews`, deep-link parsing effect)
-- `src/data.ts` (edit, Phase B: new `ViewName` members)
+- `src/App.tsx` (edit, Phase B: mount `CompetitionModuleViews`, deep-link parsing effect; Phase E: gate the deep-link effect behind `isSupabaseConfigured`)
+- `src/data.ts` (edit, Phase B: new `ViewName` members; Phase D: `"competePlayVocab"`)
+- `src/views/HomeView.tsx` (edit, Phase E: gate the "Competir" card behind `isSupabaseConfigured`)
