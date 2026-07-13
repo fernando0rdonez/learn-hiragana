@@ -19,6 +19,7 @@ interface Props {
   myCompetitions: MyCompetition[];
   loadingCompetitions: boolean;
   pendingInviteCode: string | null;
+  stashInviteCode: (code: string) => void;
   activeCompetitionId: string | null;
   setActiveCompetitionId: (id: string | null) => void;
   createCompetition: (module: CompetitionModuleId, size: CompetitionSize) => Promise<CompetitionRow | null>;
@@ -36,11 +37,18 @@ interface Props {
 /** Fase C+D: juego de Hiragana y Vocabulario + resultado. */
 export default function CompetitionModuleViews({
   view, setView, session, authLoading, myCompetitions, loadingCompetitions,
-  pendingInviteCode, activeCompetitionId, setActiveCompetitionId,
+  pendingInviteCode, stashInviteCode, activeCompetitionId, setActiveCompetitionId,
   createCompetition, previewCompetition, joinCompetition, consumeInviteCode,
   submitResult, leaderboard, rivalHistories, startSession,
   progress, onProgressUpdate,
 }: Props) {
+  function handleJoinByCode(code: string) {
+    const trimmed = code.trim().toLowerCase();
+    if (!trimmed) return;
+    stashInviteCode(trimmed);
+    setView("competeJoin");
+  }
+
   function handleOpenCompetition(competition: MyCompetition) {
     if (competition.hasSubmitted) {
       setActiveCompetitionId(competition.id);
@@ -80,6 +88,7 @@ export default function CompetitionModuleViews({
           myCompetitions={myCompetitions}
           loadingCompetitions={loadingCompetitions}
           onOpen={handleOpenCompetition}
+          onJoinByCode={handleJoinByCode}
         />
       )}
 

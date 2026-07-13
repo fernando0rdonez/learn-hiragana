@@ -624,6 +624,7 @@ export default function HiraganaTrainer() {
             myCompetitions={myCompetitions}
             loadingCompetitions={loadingCompetitions}
             pendingInviteCode={pendingInviteCode}
+            stashInviteCode={stashInviteCode}
             activeCompetitionId={activeCompetitionId}
             setActiveCompetitionId={setActiveCompetitionId}
             createCompetition={createCompetition}
