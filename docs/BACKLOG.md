@@ -733,6 +733,32 @@ completar ambos, el trigger marca la competencia `completada` y ambos ven el
 resultado; el historial contra un rival muestra ganados/perdidos/racha correctos
 tras varias competencias simuladas; build pasa.
 
+> **Hecho (2026-07)** — Plan completo en `docs/COMPETITION_PLAN.md` (5 fases,
+> todas `[x]`). Dos decisiones confirmadas que amplían/acotan la spec original:
+> **hasta 6 jugadores por reto** (no 1v1 estricto — leaderboard en vez de pantalla
+> cara a cara, el historial por rival sigue calculándose par a par sin cambios de
+> esquema) y **MVP limitado a 2 módulos** (Hiragana — reconocimiento y
+> Vocabulario — deletrear) en vez de "cualquier módulo", para no multiplicar la
+> resolución de ítems por los ~10 módulos de estudio el día uno.
+>
+> Dos bugs de diseño reales encontrados y corregidos durante la implementación,
+> no anticipados en la spec original:
+> 1. **Puntaje de Hiragana por aciertos "a la primera"**, no por `correctCount`
+>    bruto — el modo reconocimiento reintenta un ítem fallado hasta acertarlo, así
+>    que el conteo bruto converge a 100% para cualquiera que termine la sesión;
+>    el puntaje real usa `total − fallos únicos`.
+> 2. **Ayudas ocultas durante un reto** (oír la pronunciación en Hiragana y
+>    Vocabulario, ver el romaji en Vocabulario) — ya estaban excluidas del
+>    progreso SRS personal pero no del puntaje de la competencia, lo que habría
+>    permitido inflar el resultado.
+>
+> Retos de un solo intento (sin revancha tras subir resultado, tanto a nivel de UI
+> como con `insert` sin upsert en `competition_results`). Verificado en vivo contra
+> el proyecto Supabase alojado con cuentas reales: ciclo completo crear → unirse →
+> jugar → resultado para ambos módulos, banner de ganador/empate, historial de
+> rival (ganados/perdidos/racha), bloqueo de repetición, y build sin variables de
+> Supabase configuradas (UI de competir queda oculta por completo).
+
 ---
 
 ## #17 · Módulo Fechas y Horas — Horas del día (MVP)
