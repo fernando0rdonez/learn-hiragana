@@ -860,6 +860,15 @@ irregulares de hora y minuto aparecen destacadas y sobre-representadas en la
 generación de ejercicios; el modo Reconocer nunca genera dos opciones idénticas;
 build pasa.
 
+> **Hecho (2026-07)** — `src/dateTime.ts` (`KEY_HOURS` 12 horas/3 irregulares,
+> `KEY_MINUTE_UNITS` 14 bloques/6 irregulares, `minuteToKana`/`timeToChips`,
+> distractores de tiempo para Reconocer y de bloque para Construir) + módulo propio
+> "Fechas y Horas" en `HomeView` con `DateTimeSetupView` y los 3 modos
+> (`DateTimeRecognizeGame`, `DateTimeWriteGame` sin audio, `DateTimeBuildGame` con
+> 4 niveles de dificultad). Claves SRS `datetime:hour:{1-12}` / `datetime:minute:{1-59}`.
+> はん se ofrece como alternativa a さんじゅっぷん en el nivel "Y media" de Construir.
+> 13 tests unitarios en `src/dateTime.test.ts`.
+
 ---
 
 ## Plantilla para nuevas specs

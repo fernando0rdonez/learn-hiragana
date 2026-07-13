@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, GraduationCap, SpellCheck2, Headphones, Trophy } from "lucide-react";
+import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, GraduationCap, SpellCheck2, Headphones, Trophy, Clock } from "lucide-react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
 import { KATAKANA_ALL_CHARS } from "../dataKatakana";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
 import { KEY_NUMBERS } from "../numbers";
+import { KEY_HOURS, KEY_MINUTE_UNITS } from "../dateTime";
 import { PHRASES } from "../phrases";
 import { KANJI } from "../kanji";
 import { GRAMMAR_LESSONS } from "../grammar";
@@ -18,6 +19,7 @@ interface Props {
   masteredTotal: number;
   masteredKataTotal: number;
   masteredNumberKeys: number;
+  masteredDateTimeKeys: number;
   masteredPhrasesTotal: number;
   masteredKanjiTotal: number;
   masteredGrammarTotal: number;
@@ -42,7 +44,7 @@ function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
   return { moduleId: "hiragana", wasStored: false };
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, setView }: Props) {
   const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -197,6 +199,14 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             title="Números"
             subtitle={`${masteredNumberKeys} de ${KEY_NUMBERS.length} números clave dominados`}
             onClick={() => goTo("numberSetup")}
+          />
+
+          <ModuleCard
+            bg="#F1F5F9" border="#475569"
+            icon={<Clock size={20} style={{ color: "#475569" }} />}
+            title="Fechas y Horas"
+            subtitle={`${masteredDateTimeKeys} de ${KEY_HOURS.length + KEY_MINUTE_UNITS.length} claves dominadas`}
+            onClick={() => goTo("dateTimeSetup")}
           />
 
           <ModuleCard

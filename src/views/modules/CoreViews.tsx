@@ -17,6 +17,7 @@ interface Props {
   masteredTotal: number;
   masteredKataTotal: number;
   masteredNumberKeys: number;
+  masteredDateTimeKeys: number;
   masteredPhrasesTotal: number;
   masteredKanjiTotal: number;
   masteredGrammarTotal: number;
@@ -49,7 +50,7 @@ interface Props {
 /** Vistas "de la app" sin estado de setup propio — home, ajustes y las pantallas informativas. */
 export default function CoreViews({
   view, setView, progress, streak, dailyProgress, today,
-  masteredTotal, masteredKataTotal, masteredNumberKeys, masteredPhrasesTotal,
+  masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredPhrasesTotal,
   masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError,
   resetConfirm, setResetConfirm, resetProgress, exportProgress,
   importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
@@ -64,6 +65,7 @@ export default function CoreViews({
           masteredTotal={masteredTotal}
           masteredKataTotal={masteredKataTotal}
           masteredNumberKeys={masteredNumberKeys}
+          masteredDateTimeKeys={masteredDateTimeKeys}
           masteredPhrasesTotal={masteredPhrasesTotal}
           masteredKanjiTotal={masteredKanjiTotal}
           masteredGrammarTotal={masteredGrammarTotal}
