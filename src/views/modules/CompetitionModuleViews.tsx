@@ -7,6 +7,7 @@ import type { CompetitionModuleId, CompetitionPreview, CompetitionRow, Competiti
 import CompetitionHomeView from "../CompetitionHomeView";
 import CompetitionCreateView from "../CompetitionCreateView";
 import CompetitionJoinView from "../CompetitionJoinView";
+import CompetitionShareView from "../CompetitionShareView";
 import CompetitionResultView from "../CompetitionResultView";
 import VocabularyGame from "../../components/VocabularyGame";
 import type { SessionResult } from "../../components/VocabSessionSummary";
@@ -49,12 +50,7 @@ export default function CompetitionModuleViews({
     setView("competeJoin");
   }
 
-  function handleOpenCompetition(competition: MyCompetition) {
-    if (competition.hasSubmitted) {
-      setActiveCompetitionId(competition.id);
-      setView("competeResult");
-      return;
-    }
+  function startPlayingCompetition(competition: MyCompetition) {
     if (competition.quiz_config.module === "vocab") {
       setActiveCompetitionId(competition.id);
       setView("competePlayVocab");
@@ -66,6 +62,22 @@ export default function CompetitionModuleViews({
     startSession(pool, pool.length, "recognition", (correct, total) => {
       void submitResult(competition.id, correct, total);
     });
+  }
+
+  function handleOpenCompetition(competition: MyCompetition) {
+    if (competition.hasSubmitted) {
+      setActiveCompetitionId(competition.id);
+      setView("competeResult");
+      return;
+    }
+    // El creador entra primero a la pantalla de compartir — puede no haber
+    // compartido el código/link todavía (ver docs/BACKLOG.md #16).
+    if (competition.isCreator) {
+      setActiveCompetitionId(competition.id);
+      setView("competeShare");
+      return;
+    }
+    startPlayingCompetition(competition);
   }
 
   function handleLeavePlay() {
@@ -105,6 +117,14 @@ export default function CompetitionModuleViews({
           previewCompetition={previewCompetition}
           joinCompetition={joinCompetition}
           consumeInviteCode={consumeInviteCode}
+        />
+      )}
+
+      {view === "competeShare" && activeCompetition && (
+        <CompetitionShareView
+          setView={setView}
+          competition={activeCompetition}
+          onPlay={() => startPlayingCompetition(activeCompetition)}
         />
       )}
 
