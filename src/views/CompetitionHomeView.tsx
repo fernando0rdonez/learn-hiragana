@@ -16,6 +16,7 @@ interface Props {
   authLoading: boolean;
   myCompetitions: MyCompetition[];
   loadingCompetitions: boolean;
+  onOpen: (competition: MyCompetition) => void;
 }
 
 function formatDate(iso: string): string {
@@ -26,7 +27,7 @@ function moduleLabel(module: "hiragana" | "vocab"): string {
   return module === "hiragana" ? "Hiragana — Reconocimiento" : "Vocabulario — Deletrear";
 }
 
-export default function CompetitionHomeView({ setView, session, authLoading, myCompetitions, loadingCompetitions }: Props) {
+export default function CompetitionHomeView({ setView, session, authLoading, myCompetitions, loadingCompetitions, onOpen }: Props) {
   return (
     <div className="pb-8">
       <div className="flex items-center gap-3 mb-4">
@@ -78,7 +79,7 @@ export default function CompetitionHomeView({ setView, session, authLoading, myC
           )}
 
           <div className="mt-2">
-            {myCompetitions.map((c) => <CompetitionRow key={c.id} competition={c} />)}
+            {myCompetitions.map((c) => <CompetitionRow key={c.id} competition={c} onOpen={onOpen} />)}
           </div>
         </>
       )}
@@ -92,11 +93,15 @@ function statusChip(c: MyCompetition): { label: string; bg: string; color: strin
   return { label: "Tu turno", bg: PURPLE, color: "#fff" };
 }
 
-function CompetitionRow({ competition }: { competition: MyCompetition }) {
+function CompetitionRow({ competition, onOpen }: { competition: MyCompetition; onOpen: (c: MyCompetition) => void }) {
   const chip = statusChip(competition);
   const isHiragana = competition.quiz_config.module === "hiragana";
   return (
-    <div className="flex items-center gap-3 py-3 border-b" style={{ borderColor: BORDER }}>
+    <button
+      onClick={() => onOpen(competition)}
+      className="w-full flex items-center gap-3 py-3 border-b text-left"
+      style={{ borderColor: BORDER }}
+    >
       <span
         className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-lg font-semibold"
         style={{
@@ -119,6 +124,6 @@ function CompetitionRow({ competition }: { competition: MyCompetition }) {
           {chip.label}
         </span>
       </div>
-    </div>
+    </button>
   );
 }

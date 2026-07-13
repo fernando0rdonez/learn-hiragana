@@ -37,6 +37,26 @@ export interface CompetitionPreview {
   full: boolean;
 }
 
+export interface LeaderboardEntry {
+  userId: string;
+  displayName: string;
+  submitted: boolean;
+  score: number | null;
+  correct: number | null;
+  total: number | null;
+  isMe: boolean;
+}
+
+export interface RivalHistory {
+  rivalId: string;
+  rivalName: string;
+  wins: number;
+  losses: number;
+  ties: number;
+  /** Positive = racha de victorias, negativo = racha de derrotas, 0 = sin racha activa. */
+  streak: number;
+}
+
 const INVITE_CODE_STORAGE_KEY = "pendingCompeteCode";
 const MAX_PLAYERS = 6;
 
@@ -65,6 +85,8 @@ export function useCompetition({ session }: Params) {
   const [pendingInviteCode, setPendingInviteCode] = useState<string | null>(() =>
     typeof window !== "undefined" ? sessionStorage.getItem(INVITE_CODE_STORAGE_KEY) : null
   );
+  // Reto que se está jugando (mientras dura la sesión de quiz) o consultando en competeResult.
+  const [activeCompetitionId, setActiveCompetitionId] = useState<string | null>(null);
 
   function stashInviteCode(code: string) {
     sessionStorage.setItem(INVITE_CODE_STORAGE_KEY, code);
@@ -207,6 +229,102 @@ export function useCompetition({ session }: Params) {
     return { ok: true };
   }
 
+  /**
+   * Sube el resultado una sola vez: reto de un solo intento, sin revanchas que
+   * inflen el puntaje. Un insert duplicado (23505) significa que ya se había
+   * subido — se trata como éxito silencioso, no como error.
+   */
+  async function submitResult(competitionId: string, correct: number, total: number): Promise<{ ok: true } | { ok: false; error: string }> {
+    if (!isSupabaseConfigured || !session) return { ok: false, error: "Inicia sesión para guardar tu resultado." };
+    const { error } = await supabase
+      .from("competition_results")
+      .insert({ competition_id: competitionId, user_id: session.user.id, score: correct, correct, total });
+    if (error && error.code !== "23505") return { ok: false, error: "No se pudo guardar tu resultado." };
+    await refreshCompetitions();
+    return { ok: true };
+  }
+
+  /**
+   * Todos los participantes del reto, con su resultado si ya lo subieron —
+   * incluye a quienes aún no han jugado (submitted: false) para que la pantalla
+   * de resultado pueda mostrar "N de 6 ya jugaron", no solo el ranking final.
+   */
+  async function leaderboard(competitionId: string): Promise<LeaderboardEntry[]> {
+    if (!isSupabaseConfigured) return [];
+    const [{ data: participants }, { data: results }] = await Promise.all([
+      supabase.from("competition_participants").select("user_id").eq("competition_id", competitionId),
+      supabase.from("competition_results").select("user_id, score, correct, total").eq("competition_id", competitionId),
+    ]);
+    if (!participants || participants.length === 0) return [];
+
+    const resultByUser = new Map((results ?? []).map((r) => [r.user_id, r]));
+    const userIds = participants.map((p) => p.user_id);
+    const { data: profiles } = await supabase.from("profiles").select("id, display_name").in("id", userIds);
+    const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+    const myId = session?.user.id;
+
+    const entries: LeaderboardEntry[] = participants.map((p) => {
+      const r = resultByUser.get(p.user_id);
+      return {
+        userId: p.user_id,
+        displayName: nameById.get(p.user_id) ?? "alguien",
+        submitted: !!r,
+        score: r?.score ?? null,
+        correct: r?.correct ?? null,
+        total: r?.total ?? null,
+        isMe: p.user_id === myId,
+      };
+    });
+
+    return entries.sort((a, b) => {
+      if (a.submitted !== b.submitted) return a.submitted ? -1 : 1;
+      return (b.score ?? 0) - (a.score ?? 0);
+    });
+  }
+
+  /**
+   * Historial cabeza a cabeza contra todos los rivales con los que ya se jugó
+   * al menos un reto completado (competition_summary, ver docs/COMPETITION_PLAN.md
+   * Fase A). Se trae todo de una vez y el componente filtra a los rivales que
+   * le interesan — evita N idas y vueltas por cada rival del leaderboard.
+   */
+  async function rivalHistories(): Promise<Map<string, RivalHistory>> {
+    const empty = new Map<string, RivalHistory>();
+    if (!isSupabaseConfigured || !session) return empty;
+    const myId = session.user.id;
+
+    const { data: rows } = await supabase
+      .from("competition_summary")
+      .select("user_a, score_a, user_b, score_b, completed_at")
+      .or(`user_a.eq.${myId},user_b.eq.${myId}`)
+      .order("completed_at", { ascending: true });
+    if (!rows || rows.length === 0) return empty;
+
+    const rivalIds = [...new Set(rows.map((r) => (r.user_a === myId ? r.user_b : r.user_a)))];
+    const { data: profiles } = await supabase.from("profiles").select("id, display_name").in("id", rivalIds);
+    const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+    const byRival = new Map<string, RivalHistory>();
+    for (const row of rows) {
+      const rivalId    = row.user_a === myId ? row.user_b : row.user_a;
+      const myScore    = row.user_a === myId ? row.score_a : row.score_b;
+      const rivalScore = row.user_a === myId ? row.score_b : row.score_a;
+      const outcome: "win" | "loss" | "tie" = myScore > rivalScore ? "win" : myScore < rivalScore ? "loss" : "tie";
+
+      const prev = byRival.get(rivalId) ?? { rivalId, rivalName: nameById.get(rivalId) ?? "alguien", wins: 0, losses: 0, ties: 0, streak: 0 };
+      if (outcome === "win") prev.wins += 1;
+      else if (outcome === "loss") prev.losses += 1;
+      else prev.ties += 1;
+
+      if (outcome === "tie") prev.streak = 0;
+      else if (outcome === "win") prev.streak = prev.streak > 0 ? prev.streak + 1 : 1;
+      else prev.streak = prev.streak < 0 ? prev.streak - 1 : -1;
+
+      byRival.set(rivalId, prev);
+    }
+    return byRival;
+  }
+
   return {
     myCompetitions,
     loadingCompetitions,
@@ -214,9 +332,14 @@ export function useCompetition({ session }: Params) {
     pendingInviteCode,
     stashInviteCode,
     consumeInviteCode,
+    activeCompetitionId,
+    setActiveCompetitionId,
     createCompetition,
     previewCompetition,
     joinCompetition,
+    submitResult,
+    leaderboard,
+    rivalHistories,
     refreshCompetitions,
   };
 }

@@ -76,7 +76,9 @@ export default function HiraganaTrainer() {
   const {
     myCompetitions, loadingCompetitions, pendingInviteCode,
     stashInviteCode, consumeInviteCode,
+    activeCompetitionId, setActiveCompetitionId,
     createCompetition, previewCompetition, joinCompetition,
+    submitResult, leaderboard, rivalHistories,
   } = useCompetition({ session });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
@@ -469,6 +471,8 @@ export default function HiraganaTrainer() {
             reviewMisses={reviewMisses}
             inputRef={inputRef}
             nextBtnRef={nextBtnRef}
+            activeCompetitionId={activeCompetitionId}
+            setActiveCompetitionId={setActiveCompetitionId}
           />
         )}
 
@@ -587,7 +591,7 @@ export default function HiraganaTrainer() {
         )}
 
         {/* ── Competir ── */}
-        {(view === "competeHome" || view === "competeCreate" || view === "competeJoin" || view === "competeResult") && (
+        {(view === "competeHome" || view === "competeCreate" || view === "competeJoin" || view === "competeResult" || view === "competePlayVocab") && (
           <CompetitionModuleViews
             view={view}
             setView={setView}
@@ -596,10 +600,18 @@ export default function HiraganaTrainer() {
             myCompetitions={myCompetitions}
             loadingCompetitions={loadingCompetitions}
             pendingInviteCode={pendingInviteCode}
+            activeCompetitionId={activeCompetitionId}
+            setActiveCompetitionId={setActiveCompetitionId}
             createCompetition={createCompetition}
             previewCompetition={previewCompetition}
             joinCompetition={joinCompetition}
             consumeInviteCode={consumeInviteCode}
+            submitResult={submitResult}
+            leaderboard={leaderboard}
+            rivalHistories={rivalHistories}
+            startSession={startSession}
+            progress={progress}
+            onProgressUpdate={onProgressUpdate}
           />
         )}
 

@@ -1,3 +1,4 @@
+import { Trophy } from "lucide-react";
 import { summaryMascot } from "../mascot";
 
 // Subconjunto estructural de VocabWord — permite que juegos que no usan
@@ -18,9 +19,11 @@ interface Props {
   onBack: () => void;
   /** Nota opcional bajo el porcentaje, p. ej. el conteo de reproducciones de audio de la sesión. */
   footer?: string;
+  /** Reto en curso (Fase D) — botón extra para ir al resultado del reto. */
+  onViewCompetitionResult?: () => void;
 }
 
-export default function VocabSessionSummary({ sessionResults, onBack, footer }: Props) {
+export default function VocabSessionSummary({ sessionResults, onBack, footer, onViewCompetitionResult }: Props) {
   const missed = sessionResults.filter((r) => !r.correct);
   const answered = sessionResults.length;
   const correctCount = answered - missed.length;
@@ -63,13 +66,26 @@ export default function VocabSessionSummary({ sessionResults, onBack, footer }: 
           </ul>
         </div>
       )}
-      <button
-        onClick={onBack}
-        className="mt-4 px-8 py-3 rounded-xl text-white font-semibold"
-        style={{ background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
-      >
-        Volver
-      </button>
+      <div className="flex flex-col gap-2 mt-4 w-full max-w-xs">
+        {onViewCompetitionResult && (
+          <button
+            onClick={onViewCompetitionResult}
+            className="px-8 py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2"
+            style={{ background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
+          >
+            <Trophy size={16} /> Ver resultado del reto
+          </button>
+        )}
+        <button
+          onClick={onBack}
+          className="px-8 py-3 rounded-xl font-semibold"
+          style={onViewCompetitionResult
+            ? { color: "#5533A8", backgroundColor: "#fff", border: "1.5px solid #E0D8F8" }
+            : { color: "#fff", background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
+        >
+          Volver
+        </button>
+      </div>
     </div>
   );
 }
