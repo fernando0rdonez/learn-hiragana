@@ -22,7 +22,8 @@ export function competitionLabel(quiz_config: QuizConfig): string {
   if (quiz_config.module === "vocab") return "Vocabulario — Deletrear";
   const modeLabel =
     quiz_config.mode === "recognize" ? "Reconocer" :
-    quiz_config.mode === "write" ? "Escribir" : "Construir";
+    quiz_config.mode === "write" ? "Escribir" :
+    quiz_config.mode === "clock" ? "Reloj" : "Construir";
   return `Hora — ${modeLabel}`;
 }
 

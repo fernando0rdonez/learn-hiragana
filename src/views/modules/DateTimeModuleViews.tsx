@@ -5,6 +5,7 @@ import DateTimeSetupView from "../DateTimeSetupView";
 import DateTimeRecognizeGame from "../../components/DateTimeRecognizeGame";
 import DateTimeWriteGame from "../../components/DateTimeWriteGame";
 import DateTimeBuildGame from "../../components/DateTimeBuildGame";
+import DateTimeClockInputGame from "../../components/DateTimeClockInputGame";
 
 interface Props {
   view: ViewName;
@@ -50,6 +51,15 @@ export default function DateTimeModuleViews({
       {view === "dateTimeBuild" && (
         <DateTimeBuildGame
           level={dateTimeBuildLevel}
+          progress={progress}
+          sessionLimit={10}
+          onProgressUpdate={onProgressUpdate}
+          onBack={() => setView("dateTimeSetup")}
+        />
+      )}
+
+      {view === "dateTimeClock" && (
+        <DateTimeClockInputGame
           progress={progress}
           sessionLimit={10}
           onProgressUpdate={onProgressUpdate}

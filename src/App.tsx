@@ -53,7 +53,7 @@ import CompetitionModuleViews from "./views/modules/CompetitionModuleViews";
 const STUDY_VIEWS = new Set<ViewName>([
   "quiz", "preview", "summary", "spellIt", "recognizeIt", "listenIt",
   "numberKeys", "numberBuild", "countIt", "phonetics",
-  "dateTimeRecognize", "dateTimeWrite", "dateTimeBuild",
+  "dateTimeRecognize", "dateTimeWrite", "dateTimeBuild", "dateTimeClock",
   "phraseMeaning", "phraseListening",
   "kanjiMeaning", "kanjiReading", "kanjiMatch",
   "grammarLesson",
@@ -607,7 +607,7 @@ export default function HiraganaTrainer() {
         )}
 
         {/* ── Fechas y Horas ── */}
-        {(view === "dateTimeSetup" || view === "dateTimeRecognize" || view === "dateTimeWrite" || view === "dateTimeBuild") && (
+        {(view === "dateTimeSetup" || view === "dateTimeRecognize" || view === "dateTimeWrite" || view === "dateTimeBuild" || view === "dateTimeClock") && (
           <DateTimeModuleViews
             view={view}
             setView={setView}

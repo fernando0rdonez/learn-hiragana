@@ -382,7 +382,7 @@ export function buildTimeOptions(correct: TimeValue, count = 4): TimeValue[] {
 // ALL_CHARS/VOCABULARY — el snapshot del reto se genera al azar una vez y se
 // codifica como string (timeKey) para guardarlo en quiz_config.items.
 
-export type DateTimeCompetitionMode = "recognize" | "write" | "build";
+export type DateTimeCompetitionMode = "recognize" | "write" | "build" | "clock";
 
 /** `size` horas únicas al azar, codificadas — construir usa siempre nivel "minute" (useHan siempre false ahí). */
 export function randomCompetitionTimeItems(mode: DateTimeCompetitionMode, size: number): string[] {

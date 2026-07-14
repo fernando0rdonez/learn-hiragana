@@ -14,6 +14,7 @@ import type { SessionResult } from "../../components/VocabSessionSummary";
 import DateTimeRecognizeGame from "../../components/DateTimeRecognizeGame";
 import DateTimeWriteGame from "../../components/DateTimeWriteGame";
 import DateTimeBuildGame from "../../components/DateTimeBuildGame";
+import DateTimeClockInputGame from "../../components/DateTimeClockInputGame";
 import { parseTimeKey } from "../../dateTime";
 
 interface Props {
@@ -189,6 +190,19 @@ export default function CompetitionModuleViews({
             <DateTimeBuildGame
               level="minute"
               items={dateTimePool.map((t) => ({ ...t, useHan: false }))}
+              progress={progress}
+              onProgressUpdate={onProgressUpdate}
+              onBack={handleLeavePlay}
+              onComplete={(results) => {
+                const correct = results.filter((r) => r.correct).length;
+                void submitResult(activeCompetition.id, correct, results.length);
+              }}
+              onViewCompetitionResult={() => setView("competeResult")}
+            />
+          )}
+          {activeCompetition.quiz_config.mode === "clock" && (
+            <DateTimeClockInputGame
+              items={dateTimePool}
               progress={progress}
               onProgressUpdate={onProgressUpdate}
               onBack={handleLeavePlay}
