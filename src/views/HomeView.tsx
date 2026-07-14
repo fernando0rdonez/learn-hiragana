@@ -282,23 +282,25 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
         </div>
 
         {isSupabaseConfigured && (
-          <button
-            onClick={() => setView("competeHome")}
-            className="relative w-full mt-3 flex items-center gap-3 rounded-2xl pl-4 pr-16 py-3 text-left overflow-hidden"
-            style={{ border: "1.5px dashed #BFE6D3", backgroundColor: "#F4FCF8" }}
-          >
-            <Trophy size={18} style={{ color: "#178A5C" }} className="shrink-0" />
-            <div className="min-w-0">
-              <div className="text-[13px] font-bold" style={{ color: "#178A5C" }}>Reta a un amigo</div>
-              <div className="text-[11px] font-semibold" style={{ color: "#4E9C7C" }}>Hasta 6 jugadores · opcional</div>
-            </div>
-            <ChevronRight size={16} className="shrink-0 ml-auto mr-8" style={{ color: "#178A5C" }} />
+          <div className="relative mt-3 mb-4">
+            <button
+              onClick={() => setView("competeHome")}
+              className="relative w-full flex items-center gap-3 rounded-2xl pl-4 pr-16 py-3 text-left"
+              style={{ border: "1.5px dashed #BFE6D3", backgroundColor: "#F4FCF8" }}
+            >
+              <Trophy size={18} style={{ color: "#178A5C" }} className="shrink-0" />
+              <div className="min-w-0">
+                <div className="text-[13px] font-bold" style={{ color: "#178A5C" }}>Reta a un amigo</div>
+                <div className="text-[11px] font-semibold" style={{ color: "#4E9C7C" }}>Hasta 6 jugadores · opcional</div>
+              </div>
+              <ChevronRight size={16} className="shrink-0 ml-auto mr-8" style={{ color: "#178A5C" }} />
+            </button>
             <img
               src={foxCheering}
               alt=""
-              className="absolute -right-1 -bottom-3 w-14 h-auto pointer-events-none select-none"
+              className="absolute -right-1 -bottom-4 w-14 h-auto pointer-events-none select-none"
             />
-          </button>
+          </div>
         )}
 
         <div className="flex items-center gap-2.5 mt-2.5 px-1 py-2">
