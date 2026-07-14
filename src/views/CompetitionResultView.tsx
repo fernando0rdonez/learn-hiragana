@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
 import type { LeaderboardEntry, MyCompetition, RivalHistory } from "../hooks/useCompetition";
 import { competitionLabel } from "../hooks/useCompetition";
+import { avatarSrc } from "../avatars";
 import foxImg from "../assets/character/fox-neutral.png";
 
 const PURPLE      = "#7B4FD4";
@@ -30,10 +31,6 @@ interface Props {
 const ORDINAL_SUFFIX: Record<number, string> = { 1: "er", 2: "do", 3: "er", 4: "to", 5: "to", 6: "to" };
 function ordinal(rank: number): string {
   return `${rank}${ORDINAL_SUFFIX[rank] ?? "to"}`;
-}
-
-function initials(name: string): string {
-  return name.slice(0, 2).toUpperCase();
 }
 
 type State =
@@ -188,7 +185,7 @@ export default function CompetitionResultView({
       ))}
       {pendingEntries.map((e) => (
         <div key={e.userId} className="flex items-center gap-2.5 py-2.5 px-2 opacity-55">
-          <span className="shrink-0 w-7 h-7 rounded-full border-[1.5px] flex items-center justify-center text-xs" style={{ borderColor: BORDER, color: TEXT_SECOND }}>·</span>
+          <img src={avatarSrc(e.avatarId)} alt="" className="shrink-0 w-7 h-7 rounded-full object-cover border-[1.5px]" style={{ borderColor: BORDER }} />
           <div className="text-sm font-semibold" style={{ color: TEXT_MAIN }}>{e.displayName}</div>
           <div className="text-xs ml-auto" style={{ color: TEXT_SECOND }}>Aún no ha jugado</div>
         </div>
@@ -201,7 +198,7 @@ export default function CompetitionResultView({
             <p className="text-sm" style={{ color: TEXT_SECOND }}>Sin rivales aún en este reto.</p>
           )}
           {submittedRanked.filter((e) => !e.isMe).map((e) => (
-            <RivalCard key={e.userId} name={e.displayName} stats={state.rivals.get(e.userId)} />
+            <RivalCard key={e.userId} name={e.displayName} avatarId={e.avatarId} stats={state.rivals.get(e.userId)} />
           ))}
         </>
       )}
@@ -230,9 +227,15 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry & { rank: number } 
       className="flex items-center gap-2.5 py-2.5 px-2 rounded-2xl mb-1"
       style={entry.isMe ? { backgroundColor: SURFACE, border: `1.5px solid ${PURPLE}` } : undefined}
     >
-      <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold" style={badgeStyle}>
-        {entry.rank}
-      </span>
+      <div className="relative shrink-0">
+        <img src={avatarSrc(entry.avatarId)} alt="" className="w-9 h-9 rounded-full object-cover" style={{ border: `1.5px solid ${BORDER}` }} />
+        <span
+          className="absolute -bottom-1 -right-1 w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-extrabold"
+          style={{ ...badgeStyle, width: 18, height: 18, border: "1.5px solid #fff" }}
+        >
+          {entry.rank}
+        </span>
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 text-sm font-bold" style={{ color: TEXT_MAIN }}>
           <span className="truncate">{entry.displayName}</span>
@@ -247,7 +250,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry & { rank: number } 
   );
 }
 
-function RivalCard({ name, stats }: { name: string; stats: RivalHistory | undefined }) {
+function RivalCard({ name, avatarId, stats }: { name: string; avatarId: string; stats: RivalHistory | undefined }) {
   const wins   = stats?.wins ?? 0;
   const losses = stats?.losses ?? 0;
   const ties   = stats?.ties ?? 0;
@@ -256,12 +259,7 @@ function RivalCard({ name, stats }: { name: string; stats: RivalHistory | undefi
 
   return (
     <div className="flex items-center gap-2.5 rounded-2xl px-2.5 py-2.5 mb-2" style={{ border: `1px solid ${BORDER}` }}>
-      <span
-        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold"
-        style={{ backgroundColor: SURFACE, color: PURPLE_DARK }}
-      >
-        {initials(name)}
-      </span>
+      <img src={avatarSrc(avatarId)} alt="" className="shrink-0 w-8 h-8 rounded-full object-cover" style={{ border: `1.5px solid ${BORDER}` }} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-bold truncate" style={{ color: TEXT_MAIN }}>{name}</div>
         <div className="text-[11px]" style={{ color: TEXT_SECOND }}>

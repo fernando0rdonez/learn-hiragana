@@ -80,6 +80,7 @@ export default function HiraganaTrainer() {
   });
   const {
     myCompetitions, loadingCompetitions, pendingInviteCode,
+    myDisplayName, myAvatarId, updateProfile,
     stashInviteCode, consumeInviteCode,
     activeCompetitionId, setActiveCompetitionId,
     createCompetition, previewCompetition, joinCompetition,
@@ -419,6 +420,9 @@ export default function HiraganaTrainer() {
             signOut={signOut}
             pushNow={pushNow}
             syncing={syncing}
+            myDisplayName={myDisplayName}
+            myAvatarId={myAvatarId}
+            updateProfile={updateProfile}
           />
         )}
 

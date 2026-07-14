@@ -45,6 +45,9 @@ interface Props {
   signOut: () => Promise<void>;
   pushNow: () => Promise<void>;
   syncing: boolean;
+  myDisplayName: string | null;
+  myAvatarId: string | null;
+  updateProfile: (displayName: string, avatarId: string) => Promise<{ ok: true } | { ok: false; error: string }>;
 }
 
 /** Vistas "de la app" sin estado de setup propio — home, ajustes y las pantallas informativas. */
@@ -56,6 +59,7 @@ export default function CoreViews({
   importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
   session, authLoading, otpStage, otpError, pendingEmail, cooldownSeconds,
   requestCode, verifyCode, cancelOtp, signOut, pushNow, syncing,
+  myDisplayName, myAvatarId, updateProfile,
 }: Props) {
   return (
     <>
@@ -100,6 +104,9 @@ export default function CoreViews({
           signOut={signOut}
           pushNow={pushNow}
           syncing={syncing}
+          myDisplayName={myDisplayName}
+          myAvatarId={myAvatarId}
+          updateProfile={updateProfile}
         />
       )}
 
