@@ -615,7 +615,7 @@ export default function HiraganaTrainer() {
         )}
 
         {/* ── Competir ── */}
-        {(view === "competeHome" || view === "competeCreate" || view === "competeJoin" || view === "competeShare" || view === "competeResult" || view === "competePlayVocab") && (
+        {(view === "competeHome" || view === "competeCreate" || view === "competeJoin" || view === "competeShare" || view === "competeResult" || view === "competePlayVocab" || view === "competePlayDateTime") && (
           <CompetitionModuleViews
             view={view}
             setView={setView}

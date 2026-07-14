@@ -3,7 +3,7 @@ import type { ViewName } from "../../data";
 import type { CharWithRow, ProgressItems, SessionMode } from "../../types";
 import { ALL_CHARS } from "../../data";
 import { VOCABULARY } from "../../vocabulary";
-import type { CompetitionModuleId, CompetitionPreview, CompetitionRow, CompetitionSize, LeaderboardEntry, MyCompetition, RivalHistory } from "../../hooks/useCompetition";
+import type { CompetitionMode, CompetitionModuleId, CompetitionPreview, CompetitionRow, CompetitionSize, LeaderboardEntry, MyCompetition, RivalHistory } from "../../hooks/useCompetition";
 import CompetitionHomeView from "../CompetitionHomeView";
 import CompetitionCreateView from "../CompetitionCreateView";
 import CompetitionJoinView from "../CompetitionJoinView";
@@ -11,6 +11,10 @@ import CompetitionShareView from "../CompetitionShareView";
 import CompetitionResultView from "../CompetitionResultView";
 import VocabularyGame from "../../components/VocabularyGame";
 import type { SessionResult } from "../../components/VocabSessionSummary";
+import DateTimeRecognizeGame from "../../components/DateTimeRecognizeGame";
+import DateTimeWriteGame from "../../components/DateTimeWriteGame";
+import DateTimeBuildGame from "../../components/DateTimeBuildGame";
+import { parseTimeKey } from "../../dateTime";
 
 interface Props {
   view: ViewName;
@@ -23,7 +27,7 @@ interface Props {
   stashInviteCode: (code: string) => void;
   activeCompetitionId: string | null;
   setActiveCompetitionId: (id: string | null) => void;
-  createCompetition: (module: CompetitionModuleId, size: CompetitionSize) => Promise<CompetitionRow | null>;
+  createCompetition: (module: CompetitionModuleId, size: CompetitionSize, mode?: CompetitionMode) => Promise<CompetitionRow | null>;
   previewCompetition: (code: string) => Promise<CompetitionPreview | { error: string }>;
   joinCompetition: (competitionId: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   consumeInviteCode: () => void;
@@ -54,6 +58,11 @@ export default function CompetitionModuleViews({
     if (competition.quiz_config.module === "vocab") {
       setActiveCompetitionId(competition.id);
       setView("competePlayVocab");
+      return;
+    }
+    if (competition.quiz_config.module === "datetime") {
+      setActiveCompetitionId(competition.id);
+      setView("competePlayDateTime");
       return;
     }
     const pool = ALL_CHARS.filter((c) => competition.quiz_config.items.includes(c.kana));
@@ -88,6 +97,9 @@ export default function CompetitionModuleViews({
   const activeCompetition = myCompetitions.find((c) => c.id === activeCompetitionId);
   const vocabPool = activeCompetition && activeCompetition.quiz_config.module === "vocab"
     ? VOCABULARY.filter((w) => activeCompetition.quiz_config.items.includes(w.hiragana))
+    : [];
+  const dateTimePool = activeCompetition && activeCompetition.quiz_config.module === "datetime"
+    ? activeCompetition.quiz_config.items.map(parseTimeKey)
     : [];
 
   return (
@@ -143,6 +155,51 @@ export default function CompetitionModuleViews({
           }}
           onViewCompetitionResult={() => setView("competeResult")}
         />
+      )}
+
+      {view === "competePlayDateTime" && activeCompetition && dateTimePool.length > 0 && (
+        <>
+          {activeCompetition.quiz_config.mode === "recognize" && (
+            <DateTimeRecognizeGame
+              items={dateTimePool}
+              progress={progress}
+              onProgressUpdate={onProgressUpdate}
+              onBack={handleLeavePlay}
+              onComplete={(results) => {
+                const correct = results.filter((r) => r.correct).length;
+                void submitResult(activeCompetition.id, correct, results.length);
+              }}
+              onViewCompetitionResult={() => setView("competeResult")}
+            />
+          )}
+          {activeCompetition.quiz_config.mode === "write" && (
+            <DateTimeWriteGame
+              items={dateTimePool}
+              progress={progress}
+              onProgressUpdate={onProgressUpdate}
+              onBack={handleLeavePlay}
+              onComplete={(results) => {
+                const correct = results.filter((r) => r.correct).length;
+                void submitResult(activeCompetition.id, correct, results.length);
+              }}
+              onViewCompetitionResult={() => setView("competeResult")}
+            />
+          )}
+          {activeCompetition.quiz_config.mode === "build" && (
+            <DateTimeBuildGame
+              level="minute"
+              items={dateTimePool.map((t) => ({ ...t, useHan: false }))}
+              progress={progress}
+              onProgressUpdate={onProgressUpdate}
+              onBack={handleLeavePlay}
+              onComplete={(results) => {
+                const correct = results.filter((r) => r.correct).length;
+                void submitResult(activeCompetition.id, correct, results.length);
+              }}
+              onViewCompetitionResult={() => setView("competeResult")}
+            />
+          )}
+        </>
       )}
 
       {view === "competeResult" && (

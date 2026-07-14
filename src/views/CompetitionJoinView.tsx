@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
 import type { CompetitionPreview } from "../hooks/useCompetition";
+import { competitionLabel } from "../hooks/useCompetition";
 import foxImg from "../assets/character/fox-neutral.png";
 
 const PURPLE      = "#7B4FD4";
 const PURPLE_DARK = "#5533A8";
 const CORAL       = "#E2503F";
+const SLATE_DARK  = "#334155";
 const TEXT_MAIN   = "#1A1A2E";
 const TEXT_SECOND = "#8B7FA8";
 
@@ -18,10 +20,6 @@ interface Props {
   previewCompetition: (code: string) => Promise<CompetitionPreview | { error: string }>;
   joinCompetition: (competitionId: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   consumeInviteCode: () => void;
-}
-
-function moduleLabel(module: "hiragana" | "vocab"): string {
-  return module === "hiragana" ? "Hiragana — Reconocimiento" : "Vocabulario — Deletrear";
 }
 
 function hoursLeft(expiresAt: string): number {
@@ -93,7 +91,12 @@ export default function CompetitionJoinView({ setView, session, authLoading, cod
   }
 
   const { preview } = state;
-  const isHiragana = preview.competition.quiz_config.module === "hiragana";
+  const module = preview.competition.quiz_config.module;
+  const iconMeta = module === "hiragana"
+    ? { bg: "#EFE7FB", color: PURPLE, glyph: "あ" }
+    : module === "vocab"
+    ? { bg: "#FBE7E4", color: CORAL, glyph: "本" }
+    : { bg: "#F1F5F9", color: SLATE_DARK, glyph: "🕐" };
   const blocked = preview.expired || preview.full;
 
   return (
@@ -103,22 +106,22 @@ export default function CompetitionJoinView({ setView, session, authLoading, cod
         <p className="text-lg font-extrabold text-balance" style={{ color: TEXT_MAIN }}>
           <span style={{ color: PURPLE }}>{preview.creatorName}</span> te invitó a un reto
         </p>
-        <p className="text-sm mt-1.5" style={{ color: TEXT_SECOND }}>{moduleLabel(preview.competition.quiz_config.module)}</p>
+        <p className="text-sm mt-1.5" style={{ color: TEXT_SECOND }}>{competitionLabel(preview.competition.quiz_config)}</p>
       </div>
 
       <div className="flex items-center gap-3 rounded-2xl p-4 mt-4" style={{ backgroundColor: "#F9F8FC" }}>
         <span
           className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-xl"
           style={{
-            backgroundColor: isHiragana ? "#EFE7FB" : "#FBE7E4",
-            color: isHiragana ? PURPLE : CORAL,
+            backgroundColor: iconMeta.bg,
+            color: iconMeta.color,
             fontFamily: "'Noto Sans JP', sans-serif",
           }}
         >
-          {isHiragana ? "あ" : "本"}
+          {iconMeta.glyph}
         </span>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-bold" style={{ color: TEXT_MAIN }}>{moduleLabel(preview.competition.quiz_config.module)}</div>
+          <div className="text-sm font-bold" style={{ color: TEXT_MAIN }}>{competitionLabel(preview.competition.quiz_config)}</div>
           <div className="text-xs mt-0.5" style={{ color: TEXT_SECOND }}>
             {preview.competition.quiz_config.items.length} ítems · mismo set para todos
           </div>

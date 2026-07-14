@@ -3,14 +3,26 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { ALL_CHARS } from "../data";
 import { VOCABULARY } from "../vocabulary";
+import { randomCompetitionTimeItems, type DateTimeCompetitionMode } from "../dateTime";
 
-export type CompetitionModuleId = "hiragana" | "vocab";
+export type CompetitionModuleId = "hiragana" | "vocab" | "datetime";
 export type CompetitionSize = 10 | 20;
+export type CompetitionMode = "recognition" | "spell" | DateTimeCompetitionMode;
 
 export interface QuizConfig {
   module: CompetitionModuleId;
-  mode: "recognition" | "spell";
+  mode: CompetitionMode;
   items: string[];
+}
+
+/** Etiqueta legible de un reto, usada en CompetitionHomeView y CompetitionResultView. */
+export function competitionLabel(quiz_config: QuizConfig): string {
+  if (quiz_config.module === "hiragana") return "Hiragana — Reconocimiento";
+  if (quiz_config.module === "vocab") return "Vocabulario — Deletrear";
+  const modeLabel =
+    quiz_config.mode === "recognize" ? "Reconocer" :
+    quiz_config.mode === "write" ? "Escribir" : "Construir";
+  return `Hora — ${modeLabel}`;
 }
 
 export interface CompetitionRow {
@@ -168,18 +180,19 @@ export function useCompetition({ session }: Params) {
       .then(({ data }) => setMyDisplayName(data?.display_name ?? null));
   }, [session]);
 
-  function resolveItems(module: CompetitionModuleId, size: number): string[] {
+  function resolveItems(module: CompetitionModuleId, size: number, mode: CompetitionMode): string[] {
     if (module === "hiragana") return shuffle(ALL_CHARS.map((c) => c.kana)).slice(0, size);
-    return shuffle(VOCABULARY.map((w) => w.hiragana)).slice(0, size);
+    if (module === "vocab") return shuffle(VOCABULARY.map((w) => w.hiragana)).slice(0, size);
+    return randomCompetitionTimeItems(mode as DateTimeCompetitionMode, size);
   }
 
-  async function createCompetition(module: CompetitionModuleId, size: CompetitionSize): Promise<CompetitionRow | null> {
+  async function createCompetition(module: CompetitionModuleId, size: CompetitionSize, mode?: CompetitionMode): Promise<CompetitionRow | null> {
     if (!isSupabaseConfigured || !session) return null;
-    const items = resolveItems(module, size);
-    const mode = module === "hiragana" ? "recognition" : "spell";
+    const resolvedMode: CompetitionMode = mode ?? (module === "hiragana" ? "recognition" : module === "vocab" ? "spell" : "recognize");
+    const items = resolveItems(module, size, resolvedMode);
     const { data, error } = await supabase
       .from("competitions")
-      .insert({ created_by: session.user.id, quiz_config: { module, mode, items }, status: "pendiente" })
+      .insert({ created_by: session.user.id, quiz_config: { module, mode: resolvedMode, items }, status: "pendiente" })
       .select()
       .single();
     if (error || !data) return null;

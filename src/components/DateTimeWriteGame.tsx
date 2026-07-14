@@ -58,6 +58,10 @@ interface Props {
   sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
+  /** Reto en curso — pool fijo de horas en vez de generar al azar. */
+  items?: TimeValue[];
+  onComplete?: (results: SessionResult[]) => void;
+  onViewCompetitionResult?: () => void;
 }
 
 export default function DateTimeWriteGame({
@@ -65,6 +69,9 @@ export default function DateTimeWriteGame({
   sessionLimit = 10,
   onProgressUpdate,
   onBack,
+  items,
+  onComplete,
+  onViewCompetitionResult,
 }: Props) {
   const [queue, setQueue] = useState<TimeValue[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
@@ -81,13 +88,18 @@ export default function DateTimeWriteGame({
     foxNeutralImg;
 
   useEffect(() => {
-    const built = Array.from({ length: sessionLimit }, randomTimeValue);
+    const built = items && items.length > 0 ? items : Array.from({ length: sessionLimit }, randomTimeValue);
     setQueue(built);
     setQueueIndex(0);
     if (built.length > 0) initRound();
     else setPhase("done");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (phase === "done") onComplete?.(sessionResults);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   function initRound() {
     setInput("");
@@ -146,7 +158,7 @@ export default function DateTimeWriteGame({
   }
 
   if (phase === "done" || queue.length === 0) {
-    return <VocabSessionSummary sessionResults={sessionResults} onBack={onBack} />;
+    return <VocabSessionSummary sessionResults={sessionResults} onBack={onBack} onViewCompetitionResult={onViewCompetitionResult} />;
   }
 
   if (!currentTime) return null;

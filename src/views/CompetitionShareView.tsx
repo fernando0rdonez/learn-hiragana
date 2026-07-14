@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Share2, Copy, Check, Play } from "lucide-react";
 import type { ViewName } from "../data";
 import type { MyCompetition } from "../hooks/useCompetition";
+import { competitionLabel } from "../hooks/useCompetition";
 
 const PURPLE      = "#7B4FD4";
 const PURPLE_DARK = "#5533A8";
@@ -17,10 +18,6 @@ interface Props {
 
 function inviteUrl(code: string): string {
   return `${window.location.origin}${import.meta.env.BASE_URL}compete/${code}`;
-}
-
-function moduleLabel(module: "hiragana" | "vocab"): string {
-  return module === "hiragana" ? "Hiragana — Reconocimiento" : "Vocabulario — Deletrear";
 }
 
 export default function CompetitionShareView({ setView, competition, onPlay }: Props) {
@@ -52,7 +49,7 @@ export default function CompetitionShareView({ setView, competition, onPlay }: P
           <ArrowLeft size={14} /> Competir
         </button>
       </div>
-      <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: TEXT_MAIN }}>{moduleLabel(competition.quiz_config.module)}</h1>
+      <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: TEXT_MAIN }}>{competitionLabel(competition.quiz_config)}</h1>
       <p className="text-sm mb-6" style={{ color: TEXT_SECOND }}>
         {competition.quiz_config.items.length} ítems · {competition.participantCount} jugador{competition.participantCount === 1 ? "" : "es"}
       </p>

@@ -1,19 +1,27 @@
 import { useState } from "react";
 import { ArrowLeft, Share2, Copy, Check } from "lucide-react";
 import type { ViewName } from "../data";
-import type { CompetitionModuleId, CompetitionRow, CompetitionSize } from "../hooks/useCompetition";
+import type { CompetitionModuleId, CompetitionMode, CompetitionRow, CompetitionSize } from "../hooks/useCompetition";
+import type { DateTimeCompetitionMode } from "../dateTime";
 
 const PURPLE      = "#7B4FD4";
 const PURPLE_DARK = "#5533A8";
 const CORAL       = "#E2503F";
+const SLATE_DARK  = "#334155";
 const TEXT_MAIN   = "#1A1A2E";
 const TEXT_SECOND = "#8B7FA8";
 const BORDER      = "#EEEEEE";
 
 interface Props {
   setView: (v: ViewName) => void;
-  createCompetition: (module: CompetitionModuleId, size: CompetitionSize) => Promise<CompetitionRow | null>;
+  createCompetition: (module: CompetitionModuleId, size: CompetitionSize, mode?: CompetitionMode) => Promise<CompetitionRow | null>;
 }
+
+const DATETIME_MODE_LABELS: Record<DateTimeCompetitionMode, string> = {
+  recognize: "Reconocer",
+  write: "Escribir",
+  build: "Construir",
+};
 
 function inviteUrl(code: string): string {
   return `${window.location.origin}${import.meta.env.BASE_URL}compete/${code}`;
@@ -21,6 +29,7 @@ function inviteUrl(code: string): string {
 
 export default function CompetitionCreateView({ setView, createCompetition }: Props) {
   const [module, setModule] = useState<CompetitionModuleId>("hiragana");
+  const [dateTimeMode, setDateTimeMode] = useState<DateTimeCompetitionMode>("recognize");
   const [size, setSize] = useState<CompetitionSize>(10);
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState<CompetitionRow | null>(null);
@@ -28,7 +37,8 @@ export default function CompetitionCreateView({ setView, createCompetition }: Pr
 
   async function handleCreate() {
     setCreating(true);
-    const row = await createCompetition(module, size);
+    const mode: CompetitionMode = module === "hiragana" ? "recognition" : module === "vocab" ? "spell" : dateTimeMode;
+    const row = await createCompetition(module, size, mode);
     setCreating(false);
     if (row) setCreated(row);
   }
@@ -129,6 +139,35 @@ export default function CompetitionCreateView({ setView, createCompetition }: Pr
         subtitle="Ves la imagen, formas la palabra"
         onClick={() => setModule("vocab")}
       />
+      <ModuleCard
+        selected={module === "datetime"}
+        accent={SLATE_DARK}
+        accentBg="#F1F5F9"
+        glyph="🕐"
+        title="Hora"
+        subtitle="Reconocer, escribir o construir la hora"
+        onClick={() => setModule("datetime")}
+      />
+
+      {module === "datetime" && (
+        <>
+          <div className="text-[11px] font-bold uppercase tracking-wide mt-6 mb-2.5" style={{ color: TEXT_SECOND }}>Modo</div>
+          <div className="flex gap-2">
+            {(Object.keys(DATETIME_MODE_LABELS) as DateTimeCompetitionMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => setDateTimeMode(m)}
+                className="flex-1 text-center rounded-xl py-2.5 text-sm font-bold border-[1.5px]"
+                style={dateTimeMode === m
+                  ? { borderColor: SLATE_DARK, backgroundColor: "#F1F5F9", color: SLATE_DARK }
+                  : { borderColor: BORDER, color: TEXT_SECOND }}
+              >
+                {DATETIME_MODE_LABELS[m]}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="text-[11px] font-bold uppercase tracking-wide mt-6 mb-2.5" style={{ color: TEXT_SECOND }}>Cantidad de ítems</div>
       <div className="flex gap-2">
@@ -144,7 +183,7 @@ export default function CompetitionCreateView({ setView, createCompetition }: Pr
         ))}
       </div>
       <p className="text-xs mt-2 mb-6 leading-relaxed" style={{ color: TEXT_SECOND }}>
-        {size} {module === "hiragana" ? "kana" : "palabras"} al azar. Todos los que se unan jugarán exactamente el mismo set.
+        {size} {module === "hiragana" ? "kana" : module === "vocab" ? "palabras" : "horas"} al azar. Todos los que se unan jugarán exactamente el mismo set.
       </p>
 
       <button
