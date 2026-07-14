@@ -12,7 +12,6 @@ import { KANJI } from "../kanji";
 import { GRAMMAR_LESSONS } from "../grammar";
 import { LISTENING_SENTENCES } from "../listening";
 import { isSupabaseConfigured } from "../lib/supabase";
-import foxTeaching from "../assets/character/fox-teaching.png";
 import foxStudying from "../assets/character/fox-studying.png";
 import foxCheering from "../assets/character/fox-cheering.png";
 import foxLocked from "../assets/character/fox-locked.png";
@@ -113,8 +112,8 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
 
       {/* ── Hero: el zorro recomienda el siguiente paso ── */}
       <div
-        className="mt-6 rounded-3xl p-5 text-white shadow-lg"
-        style={{ background: HERO_GRADIENT[heroModule] }}
+        className="relative mt-6 rounded-3xl pt-5 px-5 pb-24 text-white shadow-lg"
+        style={{ background: HERO_GRADIENT[heroModule], overflow: "visible" }}
       >
         <div className="text-xs font-semibold tracking-wide uppercase opacity-80">Siguiente paso recomendado</div>
 
@@ -158,14 +157,12 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
           </>
         )}
 
-        <div className="flex justify-center mt-3">
-          <img
-            src={foxTeaching}
-            alt="El zorro enseñando japonés"
-            className="w-full max-w-[220px] h-auto"
-            style={{ filter: "drop-shadow(0 8px 12px rgba(0,0,0,0.2))" }}
-          />
-        </div>
+        <img
+          src={foxStudying}
+          alt="El zorro estudiando con sus cuadernos"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 140, height: "auto", bottom: -56, right: 14, zIndex: 2, filter: "drop-shadow(0 10px 14px rgba(0,0,0,0.25))" }}
+        />
       </div>
 
       {/* ── Módulos: grilla compacta ── */}
