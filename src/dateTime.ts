@@ -325,8 +325,14 @@ export function randomTimeForLevel(level: TimeBuildLevel): RandomTime {
 // minuto con am/pm invertido, ±1 minuto (cambia de familia de rendaku),
 // hora ±1 y relleno aleatorio si hiciera falta.
 
-function timeKey(t: TimeValue): string {
+export function timeKey(t: TimeValue): string {
   return `${t.period}-${t.hour}-${t.minute}`;
+}
+
+/** Inversa de timeKey — reconstruye un TimeValue desde su clave codificada. */
+export function parseTimeKey(key: string): TimeValue {
+  const [period, hour, minute] = key.split("-");
+  return { period: period as TimePeriod, hour: Number(hour), minute: Number(minute) };
 }
 
 function clampHour(h: number): number {
@@ -369,6 +375,29 @@ export function buildTimeDistractors(correct: TimeValue, count = 3): TimeValue[]
 export function buildTimeOptions(correct: TimeValue, count = 4): TimeValue[] {
   const distractors = buildTimeDistractors(correct, count - 1);
   return shuffle([correct, ...distractors]);
+}
+
+// ── Modo Competencia (docs/COMPETITION_PLAN.md) ──────────────────────────────
+// El espacio de horas es demasiado grande (12×60×2) para un pool fijo tipo
+// ALL_CHARS/VOCABULARY — el snapshot del reto se genera al azar una vez y se
+// codifica como string (timeKey) para guardarlo en quiz_config.items.
+
+export type DateTimeCompetitionMode = "recognize" | "write" | "build";
+
+/** `size` horas únicas al azar, codificadas — construir usa siempre nivel "minute" (useHan siempre false ahí). */
+export function randomCompetitionTimeItems(mode: DateTimeCompetitionMode, size: number): string[] {
+  const used = new Set<string>();
+  const items: string[] = [];
+  let guard = 0;
+  while (items.length < size && guard < size * 50) {
+    guard++;
+    const t: TimeValue = mode === "build" ? randomTimeForLevel("minute") : randomTimeValue();
+    const key = timeKey(t);
+    if (used.has(key)) continue;
+    used.add(key);
+    items.push(key);
+  }
+  return items;
 }
 
 /**

@@ -3,6 +3,7 @@ import { ArrowLeft, Trophy } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
 import type { LeaderboardEntry, MyCompetition, RivalHistory } from "../hooks/useCompetition";
+import { competitionLabel } from "../hooks/useCompetition";
 import foxImg from "../assets/character/fox-neutral.png";
 
 const PURPLE      = "#7B4FD4";
@@ -24,10 +25,6 @@ interface Props {
   leaderboard: (competitionId: string) => Promise<LeaderboardEntry[]>;
   rivalHistories: () => Promise<Map<string, RivalHistory>>;
   setActiveCompetitionId: (id: string | null) => void;
-}
-
-function moduleLabel(module: "hiragana" | "vocab"): string {
-  return module === "hiragana" ? "Hiragana — Reconocimiento" : "Vocabulario — Deletrear";
 }
 
 const ORDINAL_SUFFIX: Record<number, string> = { 1: "er", 2: "do", 3: "er", 4: "to", 5: "to", 6: "to" };
@@ -134,7 +131,7 @@ export default function CompetitionResultView({
         style={{ background: `linear-gradient(135deg, ${PURPLE}, ${PURPLE_DARK})` }}
       >
         <div className="text-xs font-semibold tracking-wide uppercase opacity-80">
-          {moduleLabel(competition.quiz_config.module)} · {competition.quiz_config.items.length} ítems
+          {competitionLabel(competition.quiz_config)} · {competition.quiz_config.items.length} ítems
         </div>
 
         {me ? (

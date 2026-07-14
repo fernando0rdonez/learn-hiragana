@@ -54,6 +54,10 @@ interface Props {
   sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
+  /** Reto en curso — pool fijo de horas en vez de generar al azar. */
+  items?: TimeValue[];
+  onComplete?: (results: SessionResult[]) => void;
+  onViewCompetitionResult?: () => void;
 }
 
 export default function DateTimeRecognizeGame({
@@ -61,6 +65,9 @@ export default function DateTimeRecognizeGame({
   sessionLimit = 10,
   onProgressUpdate,
   onBack,
+  items,
+  onComplete,
+  onViewCompetitionResult,
 }: Props) {
   const [rounds, setRounds] = useState<Round[]>([]);
   const [roundIndex, setRoundIndex] = useState(0);
@@ -77,13 +84,20 @@ export default function DateTimeRecognizeGame({
     foxNeutralImg;
 
   useEffect(() => {
-    const built = Array.from({ length: sessionLimit }, buildRound);
+    const built = items && items.length > 0
+      ? items.map((t): Round => ({ correct: t, options: buildTimeOptions(t) }))
+      : Array.from({ length: sessionLimit }, buildRound);
     setRounds(built);
     setRoundIndex(0);
     if (built.length > 0) initRound();
     else setPhase("done");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (phase === "done") onComplete?.(sessionResults);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   function initRound() {
     setSelected(null);
@@ -146,7 +160,7 @@ export default function DateTimeRecognizeGame({
   }
 
   if (phase === "done" || rounds.length === 0) {
-    return <VocabSessionSummary sessionResults={sessionResults} onBack={onBack} />;
+    return <VocabSessionSummary sessionResults={sessionResults} onBack={onBack} onViewCompetitionResult={onViewCompetitionResult} />;
   }
 
   if (!currentRound) return null;

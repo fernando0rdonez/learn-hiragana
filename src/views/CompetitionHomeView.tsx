@@ -3,10 +3,12 @@ import { ArrowLeft, Plus, Trophy, ArrowRight } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
 import type { MyCompetition } from "../hooks/useCompetition";
+import { competitionLabel } from "../hooks/useCompetition";
 
 const PURPLE      = "#7B4FD4";
 const PURPLE_DARK = "#5533A8";
 const CORAL       = "#E2503F";
+const SLATE_DARK  = "#334155";
 const TEXT_MAIN   = "#1A1A2E";
 const TEXT_SECOND = "#8B7FA8";
 const BORDER      = "#EEEEEE";
@@ -23,10 +25,6 @@ interface Props {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es", { day: "numeric", month: "short" });
-}
-
-function moduleLabel(module: "hiragana" | "vocab"): string {
-  return module === "hiragana" ? "Hiragana — Reconocimiento" : "Vocabulario — Deletrear";
 }
 
 export default function CompetitionHomeView({ setView, session, authLoading, myCompetitions, loadingCompetitions, onOpen, onJoinByCode }: Props) {
@@ -126,7 +124,12 @@ function statusChip(c: MyCompetition): { label: string; bg: string; color: strin
 
 function CompetitionRow({ competition, onOpen }: { competition: MyCompetition; onOpen: (c: MyCompetition) => void }) {
   const chip = statusChip(competition);
-  const isHiragana = competition.quiz_config.module === "hiragana";
+  const module = competition.quiz_config.module;
+  const iconMeta = module === "hiragana"
+    ? { bg: "#EFE7FB", color: PURPLE, glyph: "あ" }
+    : module === "vocab"
+    ? { bg: "#FBE7E4", color: CORAL, glyph: "本" }
+    : { bg: "#F1F5F9", color: SLATE_DARK, glyph: "🕐" };
   return (
     <button
       onClick={() => onOpen(competition)}
@@ -136,15 +139,15 @@ function CompetitionRow({ competition, onOpen }: { competition: MyCompetition; o
       <span
         className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-lg font-semibold"
         style={{
-          backgroundColor: isHiragana ? "#EFE7FB" : "#FBE7E4",
-          color: isHiragana ? PURPLE : CORAL,
+          backgroundColor: iconMeta.bg,
+          color: iconMeta.color,
           fontFamily: "'Noto Sans JP', sans-serif",
         }}
       >
-        {isHiragana ? "あ" : "本"}
+        {iconMeta.glyph}
       </span>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-bold truncate" style={{ color: TEXT_MAIN }}>{moduleLabel(competition.quiz_config.module)}</div>
+        <div className="text-sm font-bold truncate" style={{ color: TEXT_MAIN }}>{competitionLabel(competition.quiz_config)}</div>
         <div className="text-xs mt-0.5" style={{ color: TEXT_SECOND }}>
           {competition.quiz_config.items.length} ítems · {competition.participantCount} jugador{competition.participantCount === 1 ? "" : "es"}
         </div>

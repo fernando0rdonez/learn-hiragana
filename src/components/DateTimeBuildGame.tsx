@@ -55,13 +55,16 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function buildRound(level: TimeBuildLevel): Round {
-  const target = randomTimeForLevel(level);
+function roundFromTarget(target: RandomTime): Round {
   const expected = timeToChips(target.hour, target.minute, target.period, target.useHan);
   const distractorCount = Math.min(3, Math.max(2, 5 - expected.length));
   const tiles = shuffle([...expected, ...buildTimeChipDistractors(expected, distractorCount)])
     .map((chip, id): TileChip => ({ ...chip, id, used: false }));
   return { target, expected, tiles };
+}
+
+function buildRound(level: TimeBuildLevel): Round {
+  return roundFromTarget(randomTimeForLevel(level));
 }
 
 interface Props {
@@ -70,6 +73,10 @@ interface Props {
   sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
+  /** Reto en curso — pool fijo de horas en vez de generar al azar. */
+  items?: RandomTime[];
+  onComplete?: (results: SessionResult[]) => void;
+  onViewCompetitionResult?: () => void;
 }
 
 export default function DateTimeBuildGame({
@@ -78,6 +85,9 @@ export default function DateTimeBuildGame({
   sessionLimit = 10,
   onProgressUpdate,
   onBack,
+  items,
+  onComplete,
+  onViewCompetitionResult,
 }: Props) {
   const [rounds, setRounds] = useState<Round[]>([]);
   const [roundIndex, setRoundIndex] = useState(0);
@@ -95,13 +105,20 @@ export default function DateTimeBuildGame({
     foxNeutralImg;
 
   useEffect(() => {
-    const built = Array.from({ length: sessionLimit }, () => buildRound(level));
+    const built = items && items.length > 0
+      ? items.map(roundFromTarget)
+      : Array.from({ length: sessionLimit }, () => buildRound(level));
     setRounds(built);
     setRoundIndex(0);
     if (built.length > 0) initRound(built[0]);
     else setPhase("done");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (phase === "done") onComplete?.(sessionResults);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   function initRound(round: Round) {
     setTiles(round.tiles.map((t) => ({ ...t, used: false })));
@@ -189,7 +206,7 @@ export default function DateTimeBuildGame({
   }
 
   if (phase === "done" || rounds.length === 0) {
-    return <VocabSessionSummary sessionResults={sessionResults} onBack={onBack} />;
+    return <VocabSessionSummary sessionResults={sessionResults} onBack={onBack} onViewCompetitionResult={onViewCompetitionResult} />;
   }
 
   if (!currentRound) return null;

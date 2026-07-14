@@ -141,13 +141,44 @@ This session also incidentally completed live verification of every item Phase C
 
 ---
 
+## Phase F — Third module: Hora (reconocer / escribir / construir) `[x]` (built and verified live, real account, hosted Supabase project)
+
+**Goal**: extend the competition module set beyond Hiragana/Vocab to Hora (spec #17), which — unlike the other two modules — has three selectable game modes instead of one fixed mode, so the creation flow needed a new mode picker, not just a new module card.
+
+**Two things checked before building, both came back clean (no fix needed, unlike Phase C/D's scoring bugs):**
+1. **No first-try-scoring bug.** All three Hora games (`DateTimeRecognizeGame`, `DateTimeWriteGame`, `DateTimeBuildGame`) judge each round exactly once and push one `SessionResult` per round — no requeue-until-correct loop like Hiragana recognition had. `results.filter(r => r.correct).length / results.length` is a fair score as-is.
+2. **No pre-answer hint to strip.** Unlike Vocab's `showRomaji`/`AudioButton`, the only audio in these games (`useSpeech`'s `speak()`) fires *after* the answer is judged, and Write mode has no audio at all — no `hideAudio`-style fairness prop was needed.
+
+**Design decision (confirmed with user before building):** all three modes ship (not just reconocer/escribir); Construir always uses the fixed `"minute"` level (hour+minute+am/pm, the most complete) with no level selector in the create UI — `randomTimeForLevel("minute")` always yields `useHan: false`, so Construir items reuse the exact same string encoding as the other two modes with no extra field.
+
+**Files**:
+- `src/dateTime.ts`: exported the previously-private `timeKey(t): string` (`"${period}-${hour}-${minute}"`) and added its inverse `parseTimeKey(key): TimeValue`; new `DateTimeCompetitionMode` type and `randomCompetitionTimeItems(mode, size): string[]` (dedup-via-`Set` generator, `randomTimeForLevel("minute")` for build / `randomTimeValue()` otherwise — mirrors `buildTimeDistractors`'s dedup-guard pattern since there's no fixed pool to shuffle from, unlike `ALL_CHARS`/`VOCABULARY`).
+- `src/components/DateTime{Recognize,Write,Build}Game.tsx`: each gained `items?: TimeValue[]` (Build: `RandomTime[]`), `onComplete?: (results: SessionResult[]) => void`, `onViewCompetitionResult?: () => void` — same additive-props pattern as `VocabularyGame`'s Phase D changes. Build's round-building logic was factored out of `buildRound(level)` into a shared `roundFromTarget(target: RandomTime): Round` so a fixed item can produce a round without going through `randomTimeForLevel`.
+- `src/hooks/useCompetition.ts`: `CompetitionModuleId` gained `"datetime"`; `QuizConfig.mode` widened to include `DateTimeCompetitionMode`; `createCompetition` gained an optional third `mode` param (hiragana/vocab still auto-derive as before, datetime always passes it explicitly from the UI); new exported `competitionLabel(quiz_config)` helper.
+- `src/views/CompetitionCreateView.tsx`: third `ModuleCard` for Hora + a 3-pill mode selector (Reconocer/Escribir/Construir) shown only when Hora is selected, styled to match the existing size-toggle pattern.
+- `src/views/modules/CompetitionModuleViews.tsx`: new `datetime` branch in `startPlayingCompetition` routing to a new `"competePlayDateTime"` view; renders the matching `DateTime*Game` by `quiz_config.mode`, resolving `quiz_config.items` back via `parseTimeKey`.
+- `src/data.ts`: `ViewName` gained `"competePlayDateTime"`.
+- **Real gap found and fixed** (not anticipated in the plan): `App.tsx`'s view-gate — the single line deciding which `view` values mount `CompetitionModuleViews` at all — was never updated to include `"competePlayDateTime"`. Symptom was a completely blank white screen with zero console errors (React rendered fine, just nothing matched any view condition anywhere in the tree). Caught via live browser testing, not code review; fixed by adding the new view name to that gate.
+- `src/views/CompetitionHomeView.tsx` + `CompetitionResultView.tsx` + `CompetitionJoinView.tsx` + `CompetitionShareView.tsx`: all four had their own duplicated local `moduleLabel(module: "hiragana"|"vocab")` (not just the two files anticipated in the plan) — all four now use the shared `competitionLabel`. `CompetitionHomeView`/`CompetitionJoinView`'s icon ternaries (`isHiragana ? "あ" : "本"`) both extended to a third `datetime` branch (🕐, slate colors matching the Hora games' own palette).
+
+**Verified live** against the hosted Supabase project, real account (`ferjordo2011@gmail.com`):
+1. Created and fully played a Reconocer/10-item reto: each round matched the competition's saved snapshot exactly, deliberately missed 2 of 10 → result screen showed **"8 de 10 correctas"** (proving accurate first-try scoring against real gameplay, not just code review), leaderboard/label ("Hora — Reconocer") correct.
+2. Created and played an Escribir/10-item reto (wrong-answer-only smoke test) → **"0 de 10 correctas"**, label "Hora — Escribir" correct, incorrect-answer reveal path (diff-highlighted typed text) confirmed working.
+3. Created and played a Construir/10-item reto (mixed correct/incorrect) → **"1 de 10 correctas"**, label "Hora — Construir" correct, both the correct-tile-order and wrong-tile-order (irregular-reading trap tile) paths confirmed.
+4. All three retos correctly listed in `CompetitionHomeView` with the clock icon and their specific mode label. Zero console errors across all three flows.
+5. `npm test` (38/38), `tsc -b`, `npm run build` all pass.
+
+---
+
 ## Critical files (full list, referenced across phases)
 
-- `supabase/migrations/0002_competitions.sql` + `0003_competition_participant_cap.sql` (new, Phase A)
-- `src/hooks/useCompetition.ts` (new, Phase B, extended in Phase C)
+- `supabase/migrations/0002_competitions.sql` + `0003_competition_participant_cap.sql` (new, Phase A) — `quiz_config` is unconstrained `jsonb`, so Phase F's new module/modes needed **no migration**.
+- `src/hooks/useCompetition.ts` (new, Phase B, extended in Phase C, D, F)
 - `src/views/modules/CompetitionModuleViews.tsx` + `src/views/Competition{Home,Create,Join}View.tsx` (new, Phase B), `CompetitionResultView.tsx` (new, Phase C)
 - `src/hooks/useSession.ts` (edit, Phase C: `startSession` completion callback, `goNext()`)
 - `src/components/VocabularyGame.tsx` (edit, Phase D: `onComplete` prop)
-- `src/App.tsx` (edit, Phase B: mount `CompetitionModuleViews`, deep-link parsing effect; Phase E: gate the deep-link effect behind `isSupabaseConfigured`)
-- `src/data.ts` (edit, Phase B: new `ViewName` members; Phase D: `"competePlayVocab"`)
+- `src/components/DateTime{Recognize,Write,Build}Game.tsx` (edit, Phase F: `items`/`onComplete`/`onViewCompetitionResult` props)
+- `src/dateTime.ts` (edit, Phase F: exported `timeKey`, added `parseTimeKey`/`randomCompetitionTimeItems`)
+- `src/App.tsx` (edit, Phase B: mount `CompetitionModuleViews`, deep-link parsing effect; Phase E: gate the deep-link effect behind `isSupabaseConfigured`; Phase F: add `"competePlayDateTime"` to the view-gate)
+- `src/data.ts` (edit, Phase B: new `ViewName` members; Phase D: `"competePlayVocab"`; Phase F: `"competePlayDateTime"`)
 - `src/views/HomeView.tsx` (edit, Phase E: gate the "Competir" card behind `isSupabaseConfigured`)
