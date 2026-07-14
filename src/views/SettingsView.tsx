@@ -3,6 +3,7 @@ import { ArrowLeft, BarChart3, Map, Download, Upload, Trash2, ChevronRight } fro
 import type { Session } from "@supabase/supabase-js";
 import type { ProgressData } from "../types";
 import SyncPanel from "../components/SyncPanel";
+import ProfileEditor from "../components/ProfileEditor";
 import type { ViewName } from "../data";
 import foxImg from "../assets/character/fox-calm.png";
 import foxSearchingImg from "../assets/character/fox-searching.png";
@@ -37,12 +38,16 @@ interface Props {
   signOut: () => Promise<void>;
   pushNow: () => Promise<void>;
   syncing: boolean;
+  myDisplayName: string | null;
+  myAvatarId: string | null;
+  updateProfile: (displayName: string, avatarId: string) => Promise<{ ok: true } | { ok: false; error: string }>;
 }
 
 export default function SettingsView({
   setView, resetConfirm, setResetConfirm, resetProgress, exportProgress,
   importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
   session, authLoading, otpStage, otpError, pendingEmail, cooldownSeconds, requestCode, verifyCode, cancelOtp, signOut, pushNow, syncing,
+  myDisplayName, myAvatarId, updateProfile,
 }: Props) {
   const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -97,6 +102,15 @@ export default function SettingsView({
           syncing={syncing}
         />
       </div>
+
+      {session && (
+        <>
+          <SectionLabel>Perfil de competencia</SectionLabel>
+          <div className="rounded-2xl border mt-3 overflow-hidden" style={{ borderColor: BORDER }}>
+            <ProfileEditor myDisplayName={myDisplayName} myAvatarId={myAvatarId} updateProfile={updateProfile} />
+          </div>
+        </>
+      )}
 
       {/* ── Progreso ── */}
       <SectionLabel>Progreso</SectionLabel>

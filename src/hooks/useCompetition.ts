@@ -4,6 +4,7 @@ import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { ALL_CHARS } from "../data";
 import { VOCABULARY } from "../vocabulary";
 import { randomCompetitionTimeItems, type DateTimeCompetitionMode } from "../dateTime";
+import { DEFAULT_AVATAR_ID } from "../avatars";
 
 export type CompetitionModuleId = "hiragana" | "vocab" | "datetime";
 export type CompetitionSize = 10 | 20;
@@ -44,6 +45,7 @@ export interface MyCompetition extends CompetitionRow {
 export interface CompetitionPreview {
   competition: CompetitionRow;
   creatorName: string;
+  creatorAvatarId: string;
   participantCount: number;
   expired: boolean;
   full: boolean;
@@ -52,6 +54,7 @@ export interface CompetitionPreview {
 export interface LeaderboardEntry {
   userId: string;
   displayName: string;
+  avatarId: string;
   submitted: boolean;
   score: number | null;
   correct: number | null;
@@ -62,6 +65,7 @@ export interface LeaderboardEntry {
 export interface RivalHistory {
   rivalId: string;
   rivalName: string;
+  rivalAvatarId: string;
   wins: number;
   losses: number;
   ties: number;
@@ -94,6 +98,7 @@ export function useCompetition({ session }: Params) {
   const [myCompetitions, setMyCompetitions] = useState<MyCompetition[]>([]);
   const [loadingCompetitions, setLoadingCompetitions] = useState(false);
   const [myDisplayName, setMyDisplayName] = useState<string | null>(null);
+  const [myAvatarId, setMyAvatarId] = useState<string | null>(null);
   const [pendingInviteCode, setPendingInviteCode] = useState<string | null>(() =>
     typeof window !== "undefined" ? sessionStorage.getItem(INVITE_CODE_STORAGE_KEY) : null
   );
@@ -170,15 +175,34 @@ export function useCompetition({ session }: Params) {
   useEffect(() => {
     if (!isSupabaseConfigured || !session) {
       setMyDisplayName(null);
+      setMyAvatarId(null);
       return;
     }
     supabase
       .from("profiles")
-      .select("display_name")
+      .select("display_name, avatar_id")
       .eq("id", session.user.id)
       .maybeSingle()
-      .then(({ data }) => setMyDisplayName(data?.display_name ?? null));
+      .then(({ data }) => {
+        setMyDisplayName(data?.display_name ?? null);
+        setMyAvatarId(data?.avatar_id ?? null);
+      });
   }, [session]);
+
+  /** Actualiza nombre público y/o avatar del perfil propio (editor en Ajustes). */
+  async function updateProfile(displayName: string, avatarId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+    if (!isSupabaseConfigured || !session) return { ok: false, error: "Inicia sesión para editar tu perfil." };
+    const trimmed = displayName.trim();
+    if (!trimmed) return { ok: false, error: "El nombre no puede estar vacío." };
+    const { error } = await supabase
+      .from("profiles")
+      .update({ display_name: trimmed, avatar_id: avatarId })
+      .eq("id", session.user.id);
+    if (error) return { ok: false, error: "No se pudo guardar tu perfil." };
+    setMyDisplayName(trimmed);
+    setMyAvatarId(avatarId);
+    return { ok: true };
+  }
 
   function resolveItems(module: CompetitionModuleId, size: number, mode: CompetitionMode): string[] {
     if (module === "hiragana") return shuffle(ALL_CHARS.map((c) => c.kana)).slice(0, size);
@@ -212,13 +236,14 @@ export function useCompetition({ session }: Params) {
 
     const expired = new Date(competition.expires_at).getTime() < Date.now();
     const [{ data: creatorProfile }, { count }] = await Promise.all([
-      supabase.from("profiles").select("display_name").eq("id", competition.created_by).maybeSingle(),
+      supabase.from("profiles").select("display_name, avatar_id").eq("id", competition.created_by).maybeSingle(),
       supabase.from("competition_participants").select("*", { count: "exact", head: true }).eq("competition_id", competition.id),
     ]);
 
     return {
       competition: competition as CompetitionRow,
       creatorName: creatorProfile?.display_name ?? "alguien",
+      creatorAvatarId: creatorProfile?.avatar_id ?? DEFAULT_AVATAR_ID,
       participantCount: count ?? 0,
       expired,
       full: (count ?? 0) >= MAX_PLAYERS,
@@ -272,8 +297,9 @@ export function useCompetition({ session }: Params) {
 
     const resultByUser = new Map((results ?? []).map((r) => [r.user_id, r]));
     const userIds = participants.map((p) => p.user_id);
-    const { data: profiles } = await supabase.from("profiles").select("id, display_name").in("id", userIds);
+    const { data: profiles } = await supabase.from("profiles").select("id, display_name, avatar_id").in("id", userIds);
     const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+    const avatarById = new Map((profiles ?? []).map((p) => [p.id, p.avatar_id]));
     const myId = session?.user.id;
 
     const entries: LeaderboardEntry[] = participants.map((p) => {
@@ -281,6 +307,7 @@ export function useCompetition({ session }: Params) {
       return {
         userId: p.user_id,
         displayName: nameById.get(p.user_id) ?? "alguien",
+        avatarId: avatarById.get(p.user_id) ?? DEFAULT_AVATAR_ID,
         submitted: !!r,
         score: r?.score ?? null,
         correct: r?.correct ?? null,
@@ -314,8 +341,9 @@ export function useCompetition({ session }: Params) {
     if (!rows || rows.length === 0) return empty;
 
     const rivalIds = [...new Set(rows.map((r) => (r.user_a === myId ? r.user_b : r.user_a)))];
-    const { data: profiles } = await supabase.from("profiles").select("id, display_name").in("id", rivalIds);
+    const { data: profiles } = await supabase.from("profiles").select("id, display_name, avatar_id").in("id", rivalIds);
     const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+    const avatarById = new Map((profiles ?? []).map((p) => [p.id, p.avatar_id]));
 
     const byRival = new Map<string, RivalHistory>();
     for (const row of rows) {
@@ -324,7 +352,12 @@ export function useCompetition({ session }: Params) {
       const rivalScore = row.user_a === myId ? row.score_b : row.score_a;
       const outcome: "win" | "loss" | "tie" = myScore > rivalScore ? "win" : myScore < rivalScore ? "loss" : "tie";
 
-      const prev = byRival.get(rivalId) ?? { rivalId, rivalName: nameById.get(rivalId) ?? "alguien", wins: 0, losses: 0, ties: 0, streak: 0 };
+      const prev = byRival.get(rivalId) ?? {
+        rivalId,
+        rivalName: nameById.get(rivalId) ?? "alguien",
+        rivalAvatarId: avatarById.get(rivalId) ?? DEFAULT_AVATAR_ID,
+        wins: 0, losses: 0, ties: 0, streak: 0,
+      };
       if (outcome === "win") prev.wins += 1;
       else if (outcome === "loss") prev.losses += 1;
       else prev.ties += 1;
@@ -342,6 +375,8 @@ export function useCompetition({ session }: Params) {
     myCompetitions,
     loadingCompetitions,
     myDisplayName,
+    myAvatarId,
+    updateProfile,
     pendingInviteCode,
     stashInviteCode,
     consumeInviteCode,
