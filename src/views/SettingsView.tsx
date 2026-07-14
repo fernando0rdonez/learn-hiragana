@@ -106,7 +106,7 @@ export default function SettingsView({
       {session && (
         <>
           <SectionLabel>Perfil de competencia</SectionLabel>
-          <div className="rounded-2xl border p-4 mt-3" style={{ borderColor: BORDER }}>
+          <div className="rounded-2xl border mt-3 overflow-hidden" style={{ borderColor: BORDER }}>
             <ProfileEditor myDisplayName={myDisplayName} myAvatarId={myAvatarId} updateProfile={updateProfile} />
           </div>
         </>
