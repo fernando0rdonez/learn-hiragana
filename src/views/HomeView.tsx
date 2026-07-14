@@ -13,6 +13,7 @@ import { GRAMMAR_LESSONS } from "../grammar";
 import { LISTENING_SENTENCES } from "../listening";
 import { isSupabaseConfigured } from "../lib/supabase";
 import foxStudying from "../assets/character/fox-studying.png";
+import foxTeaching from "../assets/character/fox-teaching.png";
 import foxCheering from "../assets/character/fox-cheering.png";
 import foxLocked from "../assets/character/fox-locked.png";
 import foxSleepy from "../assets/character/fox-sleepy.png";
@@ -158,10 +159,10 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
         )}
 
         <img
-          src={foxStudying}
-          alt="El zorro estudiando con sus cuadernos"
+          src={foxTeaching}
+          alt="El zorro enseñando japonés en su pizarra"
           className="absolute pointer-events-none select-none"
-          style={{ width: 140, height: "auto", bottom: -56, right: 14, zIndex: 2, filter: "drop-shadow(0 10px 14px rgba(0,0,0,0.25))" }}
+          style={{ width: 150, height: "auto", bottom: -50, right: 10, zIndex: 2, filter: "drop-shadow(0 10px 14px rgba(0,0,0,0.25))" }}
         />
       </div>
 
