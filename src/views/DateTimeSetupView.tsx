@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ArrowLeft, Play, Eye, PenLine, Blocks } from "lucide-react";
+import { ArrowLeft, Play, Eye, PenLine, Blocks, Clock } from "lucide-react";
 import type { ViewName } from "../data";
 import type { ProgressItems, CharStatus } from "../types";
 import type { TimeBuildLevel } from "../dateTime";
@@ -22,7 +22,7 @@ const STATUS_STYLES: Record<CharStatus, { backgroundColor: string; borderColor: 
   mastered:   { backgroundColor: "#E3FAF3", borderColor: "#9FE3D2",   color: "#0A6E54" },
 };
 
-export type DateTimeGameMode = "recognize" | "write" | "build";
+export type DateTimeGameMode = "recognize" | "write" | "build" | "clock";
 
 interface Props {
   progress: ProgressItems;
@@ -38,6 +38,7 @@ export default function DateTimeSetupView({ progress, buildLevel, setBuildLevel,
   function handleStart() {
     if (gameMode === "recognize") setView("dateTimeRecognize");
     else if (gameMode === "write") setView("dateTimeWrite");
+    else if (gameMode === "clock") setView("dateTimeClock");
     else setView("dateTimeBuild");
   }
 
@@ -63,7 +64,7 @@ export default function DateTimeSetupView({ progress, buildLevel, setBuildLevel,
       {/* ── Modo ── */}
       <div className="mt-6">
         <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Modo</span>
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2 mt-2">
           <button
             onClick={() => setGameMode("recognize")}
             className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors"
@@ -84,6 +85,13 @@ export default function DateTimeSetupView({ progress, buildLevel, setBuildLevel,
             style={modeButtonStyle(gameMode === "build")}
           >
             <Blocks size={14} /> Construir
+          </button>
+          <button
+            onClick={() => setGameMode("clock")}
+            className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors"
+            style={modeButtonStyle(gameMode === "clock")}
+          >
+            <Clock size={14} /> Reloj
           </button>
         </div>
       </div>
@@ -116,6 +124,12 @@ export default function DateTimeSetupView({ progress, buildLevel, setBuildLevel,
       {gameMode === "write" && (
         <p className="text-sm mt-6 rounded-xl p-4" style={{ backgroundColor: SLATE_LIGHT, color: SLATE_DARK }}>
           Verás una hora y escribirás su lectura completa en hiragana.
+        </p>
+      )}
+
+      {gameMode === "clock" && (
+        <p className="text-sm mt-6 rounded-xl p-4" style={{ backgroundColor: SLATE_LIGHT, color: SLATE_DARK }}>
+          Verás una lectura en hiragana y colocarás la hora exacta con hora, minutos y am/pm — sin opciones para elegir.
         </p>
       )}
 

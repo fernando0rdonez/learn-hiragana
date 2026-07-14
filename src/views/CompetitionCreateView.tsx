@@ -21,6 +21,7 @@ const DATETIME_MODE_LABELS: Record<DateTimeCompetitionMode, string> = {
   recognize: "Reconocer",
   write: "Escribir",
   build: "Construir",
+  clock: "Reloj",
 };
 
 function inviteUrl(code: string): string {
@@ -152,12 +153,12 @@ export default function CompetitionCreateView({ setView, createCompetition }: Pr
       {module === "datetime" && (
         <>
           <div className="text-[11px] font-bold uppercase tracking-wide mt-6 mb-2.5" style={{ color: TEXT_SECOND }}>Modo</div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {(Object.keys(DATETIME_MODE_LABELS) as DateTimeCompetitionMode[]).map((m) => (
               <button
                 key={m}
                 onClick={() => setDateTimeMode(m)}
-                className="flex-1 text-center rounded-xl py-2.5 text-sm font-bold border-[1.5px]"
+                className="text-center rounded-xl py-2.5 text-sm font-bold border-[1.5px]"
                 style={dateTimeMode === m
                   ? { borderColor: SLATE_DARK, backgroundColor: "#F1F5F9", color: SLATE_DARK }
                   : { borderColor: BORDER, color: TEXT_SECOND }}
