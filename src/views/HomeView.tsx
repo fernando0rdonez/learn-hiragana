@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, GraduationCap, SpellCheck2, Headphones, Trophy, Clock } from "lucide-react";
+import { useState } from "react";
 import type { StreakData } from "../types";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
@@ -12,7 +12,11 @@ import { KANJI } from "../kanji";
 import { GRAMMAR_LESSONS } from "../grammar";
 import { LISTENING_SENTENCES } from "../listening";
 import { isSupabaseConfigured } from "../lib/supabase";
-import foxImg from "../assets/character/fox-neutral.png";
+import foxTeaching from "../assets/character/fox-teaching.png";
+import foxStudying from "../assets/character/fox-studying.png";
+import foxCheering from "../assets/character/fox-cheering.png";
+import foxLocked from "../assets/character/fox-locked.png";
+import foxSleepy from "../assets/character/fox-sleepy.png";
 
 interface Props {
   streak: StreakData;
@@ -38,21 +42,39 @@ const HERO_GRADIENT: Record<ModuleId, string> = {
   vocab: "linear-gradient(135deg, #E85D3A, #C03A1E)",
 };
 
-function readLastUsedModule(): { moduleId: ModuleId; wasStored: boolean } {
+function readLastUsedModule(): ModuleId {
   const stored = localStorage.getItem(LAST_USED_MODULE_KEY);
-  if (stored === "hiragana" || stored === "vocab") return { moduleId: stored, wasStored: true };
-  return { moduleId: "hiragana", wasStored: false };
+  if (stored === "hiragana" || stored === "vocab") return stored;
+  return "hiragana";
+}
+
+function pct(mastered: number, total: number): number {
+  return total > 0 ? Math.round((mastered / total) * 100) : 0;
 }
 
 export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, setView }: Props) {
-  const [{ moduleId: heroModule, wasStored }] = useState(readLastUsedModule);
+  const [heroModule] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
     if (moduleId) localStorage.setItem(LAST_USED_MODULE_KEY, moduleId);
     setView(view);
   }
 
-  const hiraganaPct = Math.round((masteredTotal / ALL_CHARS.length) * 100);
+  const hiraganaPct = pct(masteredTotal, ALL_CHARS.length);
+  const hiraganaRemaining = ALL_CHARS.length - masteredTotal;
+
+  // El módulo que más se está quedando atrás — el zorro "dormido" lo señala en la grilla.
+  const moduleStats: { id: string; pct: number }[] = [
+    { id: "hiragana", pct: hiraganaPct },
+    { id: "katakana", pct: pct(masteredKataTotal, KATAKANA_ALL_CHARS.length) },
+    { id: "numbers", pct: pct(masteredNumberKeys, KEY_NUMBERS.length) },
+    { id: "datetime", pct: pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length) },
+    { id: "phrases", pct: pct(masteredPhrasesTotal, PHRASES.length) },
+    { id: "kanji", pct: pct(masteredKanjiTotal, KANJI.length) },
+    { id: "grammar", pct: pct(masteredGrammarTotal, GRAMMAR_LESSONS.length) },
+    { id: "listening", pct: pct(masteredListeningTotal, LISTENING_SENTENCES.length) },
+  ];
+  const neediestModuleId = moduleStats.reduce((min, m) => (m.pct < min.pct ? m : min)).id;
 
   return (
     <div className="pb-24">
@@ -89,31 +111,29 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
         </div>
       </div>
 
-      {/* ── Hero card ── */}
+      {/* ── Hero: el zorro recomienda el siguiente paso ── */}
       <div
-        className="relative mt-6 rounded-3xl pt-6 px-6 pb-20 text-white shadow-lg"
-        style={{ background: HERO_GRADIENT[heroModule], overflow: "visible", zIndex: 1 }}
+        className="mt-6 rounded-3xl p-5 text-white shadow-lg"
+        style={{ background: HERO_GRADIENT[heroModule] }}
       >
-        <div className="text-xs font-semibold tracking-wide uppercase opacity-80">
-          {wasStored ? "Último módulo" : "Empieza aquí"}
-        </div>
+        <div className="text-xs font-semibold tracking-wide uppercase opacity-80">Siguiente paso recomendado</div>
 
         {heroModule === "hiragana" ? (
           <>
-            <div className="flex items-start justify-between mt-2">
-              <div>
-                <div className="text-2xl font-bold" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Hiragana</div>
-                <div className="text-sm opacity-90 mt-1">{masteredTotal} de {ALL_CHARS.length} caracteres dominados</div>
-              </div>
-              <span className="text-4xl shrink-0" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>あ</span>
+            <div className="mt-2.5 bg-white/15 border border-white/20 rounded-2xl px-4 py-3 text-[14.5px] font-semibold leading-snug max-w-[85%]">
+              {hiraganaRemaining > 0
+                ? <>¡Vamos con <b>Hiragana</b>! Te quedan {hiraganaRemaining} caracteres por dominar.</>
+                : <>¡Dominaste <b>Hiragana</b>! Un repaso corto mantiene la racha viva.</>}
             </div>
 
-            <div className="w-full h-2 bg-white/25 rounded-full mt-4 overflow-hidden">
-              <div className="h-full bg-white rounded-full transition-all" style={{ width: `${hiraganaPct}%` }} />
-            </div>
-            <div className="flex items-center justify-between mt-1.5 text-xs opacity-80">
-              <span>{hiraganaPct}% completado</span>
-              <span>{ALL_CHARS.length - masteredTotal} por aprender</span>
+            <div className="mt-3.5 max-w-[85%]">
+              <div className="w-full h-1.5 bg-white/25 rounded-full overflow-hidden">
+                <div className="h-full bg-white rounded-full transition-all" style={{ width: `${hiraganaPct}%` }} />
+              </div>
+              <div className="flex items-center justify-between mt-1.5 text-xs opacity-80 font-semibold">
+                <span>{hiraganaPct}% completado</span>
+                <span>{masteredTotal} de {ALL_CHARS.length}</span>
+              </div>
             </div>
 
             <button
@@ -125,137 +145,168 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
           </>
         ) : (
           <>
-            <div className="flex items-start justify-between mt-2">
-              <div>
-                <div className="text-2xl font-bold" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Vocabulario</div>
-                <div className="text-sm opacity-90 mt-1">{VOCABULARY.length} palabras · {VOCAB_CATEGORIES.length} categorías</div>
-              </div>
-              <span className="shrink-0 w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center">
-                <BookOpen size={22} />
-              </span>
+            <div className="mt-2.5 bg-white/15 border border-white/20 rounded-2xl px-4 py-3 text-[14.5px] font-semibold leading-snug max-w-[85%]">
+              ¡Vamos con <b>Vocabulario</b>! {VOCABULARY.length} palabras en {VOCAB_CATEGORIES.length} categorías te esperan.
             </div>
 
             <button
               onClick={() => goTo("vocabCategory", "vocab")}
-              className="mt-5 flex items-center gap-2 bg-white/15 hover:bg-white/25 transition-colors rounded-xl px-4 py-2.5 text-sm font-semibold"
+              className="mt-4 flex items-center gap-2 bg-white/15 hover:bg-white/25 transition-colors rounded-xl px-4 py-2.5 text-sm font-semibold"
             >
               <span className="text-[10px]">▶</span> Comenzar sesión
             </button>
           </>
         )}
 
-        <img
-          src={foxImg}
-          alt=""
-          className="absolute pointer-events-none select-none"
-          style={{ width: 130, height: "auto", bottom: -65, right: 12, zIndex: 2 }}
-        />
+        <div className="flex justify-center mt-3">
+          <img
+            src={foxTeaching}
+            alt="El zorro enseñando japonés"
+            className="w-full max-w-[220px] h-auto"
+            style={{ filter: "drop-shadow(0 8px 12px rgba(0,0,0,0.2))" }}
+          />
+        </div>
       </div>
 
-      {/* ── Secondary modules ── */}
+      {/* ── Módulos: grilla compacta ── */}
       <div className="mt-8">
         <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: "#8B7FA8" }}>Tus módulos</div>
 
-        <div className="mt-3 flex flex-col gap-3">
-          {isSupabaseConfigured && (
-            <ModuleCard
-              bg="#DCFCE7" border="#16A34A"
-              icon={<Trophy size={20} style={{ color: "#16A34A" }} />}
-              title="Competir"
-              subtitle="Reta a tus amigos — hasta 6 jugadores"
-              onClick={() => setView("competeHome")}
-            />
-          )}
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
+          <ModuleTile
+            bg="#EDE7F9" fg="#7B4FD4"
+            icon={<span className="text-lg font-bold" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>あ</span>}
+            title="Hiragana"
+            meta={`${hiraganaPct}%`}
+            pctValue={hiraganaPct}
+            onClick={() => goTo("hiraganaSetup", "hiragana")}
+            badgeImg={heroModule === "hiragana" ? foxStudying : undefined}
+            badgeAlt="En progreso"
+          />
 
-          {heroModule === "vocab" && (
-            <ModuleCard
-              bg="#EDE7F9" border="#7B4FD4"
-              icon={<span className="text-xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>あ</span>}
-              title="Hiragana"
-              subtitle={`${masteredTotal} de ${ALL_CHARS.length} caracteres dominados`}
-              onClick={() => goTo("hiraganaSetup", "hiragana")}
-            />
-          )}
-
-          <ModuleCard
-            bg="#FFEEEA" border="#E85D3A"
-            icon={<BookOpen size={20} style={{ color: "#E85D3A" }} />}
+          <ModuleTile
+            bg="#FFEEEA" fg="#E85D3A"
+            icon={<BookOpen size={18} />}
             title="Vocabulario"
-            subtitle={`${VOCABULARY.length} palabras · ${VOCAB_CATEGORIES.length} categorías`}
+            meta={`${VOCABULARY.length} palabras`}
             onClick={() => goTo("vocabCategory", "vocab")}
+            badgeImg={heroModule === "vocab" ? foxStudying : undefined}
+            badgeAlt="En progreso"
           />
 
-          <ModuleCard
-            bg="#E7EFFD" border="#2F6FE4"
-            icon={<span className="text-xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>ア</span>}
+          <ModuleTile
+            bg="#E7EFFD" fg="#2F6FE4"
+            icon={<span className="text-lg font-bold" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>ア</span>}
             title="Katakana"
-            subtitle={`${masteredKataTotal} de ${KATAKANA_ALL_CHARS.length} caracteres dominados`}
+            meta={`${pct(masteredKataTotal, KATAKANA_ALL_CHARS.length)}%`}
+            pctValue={pct(masteredKataTotal, KATAKANA_ALL_CHARS.length)}
             onClick={() => goTo("katakanaSetup")}
+            badgeImg={neediestModuleId === "katakana" ? foxSleepy : undefined}
+            badgeAlt="Necesita repaso"
           />
 
-          <ModuleCard
-            bg="#FFF4E5" border="#F5A623"
-            icon={<Hash size={20} style={{ color: "#F5A623" }} />}
+          <ModuleTile
+            bg="#FFF4E5" fg="#C97F0B"
+            icon={<Hash size={18} />}
             title="Números"
-            subtitle={`${masteredNumberKeys} de ${KEY_NUMBERS.length} números clave dominados`}
+            meta={`${pct(masteredNumberKeys, KEY_NUMBERS.length)}%`}
+            pctValue={pct(masteredNumberKeys, KEY_NUMBERS.length)}
             onClick={() => goTo("numberSetup")}
+            badgeImg={neediestModuleId === "numbers" ? foxSleepy : undefined}
+            badgeAlt="Necesita repaso"
           />
 
-          <ModuleCard
-            bg="#F1F5F9" border="#475569"
-            icon={<Clock size={20} style={{ color: "#475569" }} />}
+          <ModuleTile
+            bg="#FCEAF3" fg="#D14B8F"
+            icon={<MessageCircle size={18} />}
+            title="Frases"
+            meta={`${pct(masteredPhrasesTotal, PHRASES.length)}%`}
+            pctValue={pct(masteredPhrasesTotal, PHRASES.length)}
+            onClick={() => goTo("phraseSetup")}
+            badgeImg={neediestModuleId === "phrases" ? foxSleepy : undefined}
+            badgeAlt="Necesita repaso"
+          />
+
+          <ModuleTile
+            bg="#FBEAEA" fg="#B3261E"
+            icon={<GraduationCap size={18} />}
+            title="Kanji"
+            meta={`${pct(masteredKanjiTotal, KANJI.length)}%`}
+            pctValue={pct(masteredKanjiTotal, KANJI.length)}
+            onClick={() => goTo("kanjiSetup")}
+            badgeImg={neediestModuleId === "kanji" ? foxSleepy : undefined}
+            badgeAlt="Necesita repaso"
+          />
+
+          <ModuleTile
+            bg="#EDEFFB" fg="#4C5FBF"
+            icon={<SpellCheck2 size={18} />}
+            title="Gramática"
+            meta={`${pct(masteredGrammarTotal, GRAMMAR_LESSONS.length)}%`}
+            pctValue={pct(masteredGrammarTotal, GRAMMAR_LESSONS.length)}
+            onClick={() => goTo("grammarSetup")}
+            badgeImg={neediestModuleId === "grammar" ? foxSleepy : undefined}
+            badgeAlt="Necesita repaso"
+          />
+
+          <ModuleTile
+            bg="#E0F7FA" fg="#0891B2"
+            icon={<Headphones size={18} />}
+            title="Listening"
+            meta={`${pct(masteredListeningTotal, LISTENING_SENTENCES.length)}%`}
+            pctValue={pct(masteredListeningTotal, LISTENING_SENTENCES.length)}
+            onClick={() => goTo("listeningSetup")}
+            badgeImg={neediestModuleId === "listening" ? foxSleepy : undefined}
+            badgeAlt="Necesita repaso"
+          />
+
+          {/* Fechas y Horas y Fonética: al final de la lista, son el complemento menos frecuentado */}
+          <ModuleTile
+            bg="#F1F5F9" fg="#475569"
+            icon={<Clock size={18} />}
             title="Fechas y Horas"
-            subtitle={`${masteredDateTimeKeys} de ${KEY_HOURS.length + KEY_MINUTE_UNITS.length} claves dominadas`}
+            meta={`${pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length)}%`}
+            pctValue={pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length)}
             onClick={() => goTo("dateTimeSetup")}
+            badgeImg={neediestModuleId === "datetime" ? foxSleepy : undefined}
+            badgeAlt="Necesita repaso"
           />
 
-          <ModuleCard
-            bg="#E3FAF3" border="#15C0A0"
-            icon={<Mic size={20} style={{ color: "#15C0A0" }} />}
+          <ModuleTile
+            bg="#E3FAF3" fg="#15C0A0"
+            icon={<Mic size={18} />}
             title="Fonética"
-            subtitle="Cómo suenan las palabras"
+            meta="Cómo suenan"
             onClick={() => goTo("phoneticSetup")}
           />
+        </div>
 
-          <ModuleCard
-            bg="#FCEAF3" border="#D14B8F"
-            icon={<MessageCircle size={20} style={{ color: "#D14B8F" }} />}
-            title="Frases"
-            subtitle={`${masteredPhrasesTotal} de ${PHRASES.length} frases dominadas`}
-            onClick={() => goTo("phraseSetup")}
-          />
+        {isSupabaseConfigured && (
+          <button
+            onClick={() => setView("competeHome")}
+            className="relative w-full mt-3 flex items-center gap-3 rounded-2xl pl-4 pr-16 py-3 text-left overflow-hidden"
+            style={{ border: "1.5px dashed #BFE6D3", backgroundColor: "#F4FCF8" }}
+          >
+            <Trophy size={18} style={{ color: "#178A5C" }} className="shrink-0" />
+            <div className="min-w-0">
+              <div className="text-[13px] font-bold" style={{ color: "#178A5C" }}>Reta a un amigo</div>
+              <div className="text-[11px] font-semibold" style={{ color: "#4E9C7C" }}>Hasta 6 jugadores · opcional</div>
+            </div>
+            <ChevronRight size={16} className="shrink-0 ml-auto mr-8" style={{ color: "#178A5C" }} />
+            <img
+              src={foxCheering}
+              alt=""
+              className="absolute -right-1 -bottom-3 w-14 h-auto pointer-events-none select-none"
+            />
+          </button>
+        )}
 
-          <ModuleCard
-            bg="#FBEAEA" border="#B3261E"
-            icon={<GraduationCap size={20} style={{ color: "#B3261E" }} />}
-            title="Kanji"
-            subtitle={`${masteredKanjiTotal} de ${KANJI.length} kanji dominados`}
-            onClick={() => goTo("kanjiSetup")}
-          />
-
-          <ModuleCard
-            bg="#EDEFFB" border="#4C5FBF"
-            icon={<SpellCheck2 size={20} style={{ color: "#4C5FBF" }} />}
-            title="Gramática"
-            subtitle={`${masteredGrammarTotal} de ${GRAMMAR_LESSONS.length} lecciones dominadas`}
-            onClick={() => goTo("grammarSetup")}
-          />
-
-          <ModuleCard
-            bg="#E0F7FA" border="#0891B2"
-            icon={<Headphones size={20} style={{ color: "#0891B2" }} />}
-            title="Listening"
-            subtitle={`${masteredListeningTotal} de ${LISTENING_SENTENCES.length} frases dominadas`}
-            onClick={() => goTo("listeningSetup")}
-          />
-
-          <ModuleCard
-            bg="#F5F5F5" border="#C9C9C9" dashed disabled
-            icon={<PenLine size={20} style={{ color: "#8B7FA8" }} />}
-            title="Lectura"
-            subtitle="Se desbloquea al completar vocabulario base"
-            badge="Próximamente"
-          />
+        <div className="flex items-center gap-2.5 mt-2.5 px-1 py-2">
+          <img src={foxLocked} alt="" className="w-6 h-auto opacity-90 shrink-0" />
+          <span className="text-xs font-semibold" style={{ color: "#A69FBB" }}>
+            <PenLine size={12} className="inline mr-1 -mt-0.5" />
+            Lectura — se desbloquea al completar vocabulario base
+          </span>
         </div>
       </div>
 
@@ -266,54 +317,46 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
   );
 }
 
-// ── Secondary module card ───────────────────────────────────────────────────
+// ── Tarjeta compacta de módulo ──────────────────────────────────────────────
 
-interface ModuleCardProps {
+interface ModuleTileProps {
   bg: string;
-  border: string;
+  fg: string;
   icon: React.ReactNode;
   title: string;
-  subtitle: string;
+  meta: string;
+  pctValue?: number;
   onClick?: () => void;
-  badge?: string;
-  dashed?: boolean;
-  disabled?: boolean;
+  badgeImg?: string;
+  badgeAlt?: string;
 }
 
-function ModuleCard({ bg, border, icon, title, subtitle, onClick, badge, dashed, disabled }: ModuleCardProps) {
-  const content = (
-    <div className="flex items-center gap-3">
-      <span className="shrink-0 w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-        {icon}
-      </span>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-base font-semibold" style={{ color: "#1A1A2E" }}>{title}</span>
-          {badge && (
-            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-white/70" style={{ color: "#8B7FA8" }}>
-              {badge}
-            </span>
-          )}
-        </div>
-        <div className="text-sm mt-0.5" style={{ color: "#8B7FA8" }}>{subtitle}</div>
-      </div>
-      {!disabled && <ChevronRight size={18} className="shrink-0" style={{ color: "#8B7FA8" }} />}
-    </div>
-  );
-
-  const className = "w-full text-left rounded-2xl p-4 shadow-sm transition-transform" + (disabled ? "" : " hover:scale-[1.01]");
-  const style: React.CSSProperties = {
-    backgroundColor: bg,
-    border: `${dashed ? "2px dashed" : "1.5px solid"} ${border}`,
-    opacity: disabled ? 0.5 : 1,
-  };
-
-  if (disabled) {
-    return <div className={className} style={style}>{content}</div>;
-  }
+function ModuleTile({ bg, fg, icon, title, meta, pctValue, onClick, badgeImg, badgeAlt }: ModuleTileProps) {
   return (
-    <button onClick={onClick} className={className} style={style}>
-      {content}
+    <button
+      onClick={onClick}
+      className="relative text-left rounded-2xl p-3 bg-white shadow-sm hover:shadow-md transition-shadow"
+      style={{ border: `1.5px solid ${fg}26` }}
+    >
+      {badgeImg && (
+        <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white shadow-sm overflow-hidden border-2 border-white">
+          <img src={badgeImg} alt={badgeAlt ?? ""} className="w-full h-full object-cover" style={{ objectPosition: "50% 15%", transform: "scale(1.7)" }} />
+        </span>
+      )}
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className="shrink-0 w-9 h-9 rounded-[10px] flex items-center justify-center" style={{ backgroundColor: bg, color: fg }}>
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <div className="text-[13.5px] font-bold truncate" style={{ color: "#1A1A2E" }}>{title}</div>
+          <div className="text-[11px] font-semibold" style={{ color: "#8B7FA8" }}>{meta}</div>
+        </div>
+      </div>
+      {pctValue !== undefined && (
+        <div className="h-[3px] rounded-full mt-2.5 overflow-hidden" style={{ backgroundColor: "#F1EEF7" }}>
+          <div className="h-full rounded-full" style={{ width: `${pctValue}%`, backgroundColor: fg }} />
+        </div>
+      )}
     </button>
   );
 }
