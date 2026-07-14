@@ -5,6 +5,7 @@ import type { ProgressData } from "../types";
 import SyncPanel from "../components/SyncPanel";
 import type { ViewName } from "../data";
 import foxImg from "../assets/character/fox-calm.png";
+import foxSearchingImg from "../assets/character/fox-searching.png";
 
 const PURPLE      = "#7B4FD4";
 const PURPLE_DARK = "#5533A8";
@@ -71,7 +72,7 @@ export default function SettingsView({
           Sincroniza entre dispositivos, exporta una copia o borra tu progreso.
         </p>
         <img
-          src={foxImg}
+          src={session ? foxImg : foxSearchingImg}
           alt=""
           className="absolute pointer-events-none select-none"
           style={{ width: 96, height: "auto", bottom: -18, right: 10, zIndex: 2 }}
