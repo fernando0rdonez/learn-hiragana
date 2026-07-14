@@ -119,13 +119,13 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
 
         {heroModule === "hiragana" ? (
           <>
-            <div className="mt-2.5 bg-white/15 border border-white/20 rounded-2xl px-4 py-3 text-[14.5px] font-semibold leading-snug max-w-[85%]">
+            <div className="mt-2.5 bg-white/15 border border-white/20 rounded-2xl px-4 py-3 text-[14.5px] font-semibold leading-snug">
               {hiraganaRemaining > 0
                 ? <>¡Vamos con <b>Hiragana</b>! Te quedan {hiraganaRemaining} caracteres por dominar.</>
                 : <>¡Dominaste <b>Hiragana</b>! Un repaso corto mantiene la racha viva.</>}
             </div>
 
-            <div className="mt-3.5 max-w-[85%]">
+            <div className="mt-3.5">
               <div className="w-full h-1.5 bg-white/25 rounded-full overflow-hidden">
                 <div className="h-full bg-white rounded-full transition-all" style={{ width: `${hiraganaPct}%` }} />
               </div>
@@ -144,7 +144,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
           </>
         ) : (
           <>
-            <div className="mt-2.5 bg-white/15 border border-white/20 rounded-2xl px-4 py-3 text-[14.5px] font-semibold leading-snug max-w-[85%]">
+            <div className="mt-2.5 bg-white/15 border border-white/20 rounded-2xl px-4 py-3 text-[14.5px] font-semibold leading-snug">
               ¡Vamos con <b>Vocabulario</b>! {VOCABULARY.length} palabras en {VOCAB_CATEGORIES.length} categorías te esperan.
             </div>
 
