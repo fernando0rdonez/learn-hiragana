@@ -30,8 +30,7 @@ function toISODate(d: Date = new Date()): string {
 
 type GamePhase = "playing" | "correct" | "wrong" | "done";
 
-const AMBER      = "#F5A623";
-const AMBER_DARK = "#C77F00";
+const AMBER = "#F5A623";
 
 interface Props {
   level: BuildLevelDef;
@@ -215,7 +214,6 @@ export default function NumberDigitInputGame({
           kanji={findNumberKanji(currentTarget)}
           romaji={numberToRomaji(currentTarget)}
           meaning={currentTarget.toLocaleString("es")}
-          accent={{ text: AMBER_DARK, bg: "#FDF2E3" }}
           extra={
             phase === "wrong" ? (
               <p className="text-xs mt-2" style={{ opacity: 0.75 }}>

@@ -46,8 +46,7 @@ interface Round {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const AMBER      = "#F5A623";
-const AMBER_DARK = "#C77F00";
+const AMBER = "#F5A623";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -296,7 +295,6 @@ export default function NumberBuildGame({
           kanji={findNumberKanji(currentRound.target)}
           romaji={numberToRomaji(currentRound.target)}
           meaning={currentRound.target.toLocaleString("es")}
-          accent={{ text: AMBER_DARK, bg: "#FDF2E3" }}
           onContinue={handleContinue}
         />
       )}
