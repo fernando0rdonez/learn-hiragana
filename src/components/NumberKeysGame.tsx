@@ -243,7 +243,6 @@ export default function NumberKeysGame({
           kanji={findNumberKanji(currentKey.value)}
           romaji={currentKey.romaji}
           meaning={currentKey.value.toLocaleString("es")}
-          accent={{ text: AMBER_DARK, bg: "#FDF2E3" }}
           extra={currentKey.irregular ? (
             <p className="text-xs mt-1" style={{ color: AMBER_DARK }}>¡forma irregular!</p>
           ) : undefined}

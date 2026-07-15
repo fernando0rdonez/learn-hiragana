@@ -4,6 +4,7 @@ import type { ViewName } from "../../data";
 import NumberSetupView, { type NumberKeysLength } from "../NumberSetupView";
 import NumberKeysGame from "../../components/NumberKeysGame";
 import NumberBuildGame from "../../components/NumberBuildGame";
+import NumberDigitInputGame from "../../components/NumberDigitInputGame";
 import VocabCountingGame from "../../components/VocabCountingGame";
 import { VOCABULARY } from "../../vocabulary";
 
@@ -55,6 +56,16 @@ export default function NumberModuleViews({
 
       {view === "numberBuild" && (
         <NumberBuildGame
+          level={numberBuildLevelDef}
+          progress={progress}
+          sessionLimit={10}
+          onProgressUpdate={onProgressUpdate}
+          onBack={() => setView("numberSetup")}
+        />
+      )}
+
+      {view === "numberDigits" && (
+        <NumberDigitInputGame
           level={numberBuildLevelDef}
           progress={progress}
           sessionLimit={10}
