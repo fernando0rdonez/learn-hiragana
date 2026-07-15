@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, Play, Eye, PenLine, Hash, Lock } from "lucide-react";
+import { ArrowLeft, Play, Eye, PenLine, Hash, Lock, Keyboard } from "lucide-react";
 import type { ViewName } from "../data";
 import type { ProgressItems, CharStatus } from "../types";
 import type { BuildLevel } from "../numbers";
@@ -28,7 +28,7 @@ const STATUS_STYLES: Record<CharStatus, { backgroundColor: string; borderColor: 
   mastered:   { backgroundColor: "#E3FAF3", borderColor: "#9FE3D2", color: "#0A6E54" },
 };
 
-export type NumberGameMode = "keys" | "build" | "count";
+export type NumberGameMode = "keys" | "build" | "digits" | "count";
 export type NumberKeysLength = 10 | 20 | "all";
 
 interface Props {
@@ -61,7 +61,7 @@ export default function NumberSetupView({
 
   const canStart =
     gameMode === "keys" ? selectedNumbers.length > 0 :
-    gameMode === "build" ? buildUnlocked :
+    gameMode === "build" || gameMode === "digits" ? buildUnlocked :
     true;
 
   const startCount =
@@ -71,6 +71,7 @@ export default function NumberSetupView({
     if (!canStart) return;
     if (gameMode === "keys") setView("numberKeys");
     else if (gameMode === "build") setView("numberBuild");
+    else if (gameMode === "digits") setView("numberDigits");
     else setView("countIt");
   }
 
@@ -96,7 +97,7 @@ export default function NumberSetupView({
       {/* ── Modo ── */}
       <div className="mt-6">
         <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Modo</span>
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2 mt-2">
           <button
             onClick={() => setGameMode("keys")}
             className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors"
@@ -110,6 +111,13 @@ export default function NumberSetupView({
             style={modeButtonStyle(gameMode === "build")}
           >
             <PenLine size={14} /> Formar
+          </button>
+          <button
+            onClick={() => setGameMode("digits")}
+            className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors"
+            style={modeButtonStyle(gameMode === "digits")}
+          >
+            <Keyboard size={14} /> Dígitos
           </button>
           <button
             onClick={() => setGameMode("count")}
@@ -198,8 +206,8 @@ export default function NumberSetupView({
         </>
       )}
 
-      {/* ── Formar: nivel de dificultad con desbloqueo ── */}
-      {gameMode === "build" && (
+      {/* ── Formar / Dígitos: nivel de dificultad con desbloqueo ── */}
+      {(gameMode === "build" || gameMode === "digits") && (
         <div className="mt-6">
           <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Dificultad</span>
           <div className="grid grid-cols-2 gap-2 mt-2">
@@ -229,9 +237,14 @@ export default function NumberSetupView({
                 : "Primero practica los números clave de esta magnitud en el modo Claves — reconocer antes de formar."}
             </p>
           )}
-          {buildUnlocked && (
+          {buildUnlocked && gameMode === "build" && (
             <p className="text-xs mt-3" style={{ color: TEXT_MUTED }}>
               Se te mostrará una cifra (p. ej. 4638) y la formarás con bloques en hiragana. Los irregulares aparecen más a menudo.
+            </p>
+          )}
+          {buildUnlocked && gameMode === "digits" && (
+            <p className="text-xs mt-3" style={{ color: TEXT_MUTED }}>
+              Escucharás/leerás un número en hiragana (p. ej. よんせんろっぴゃくさんじゅうはち) y escribirás la cifra exacta con el teclado — sin bloques ni opciones, precisión de dígito.
             </p>
           )}
         </div>

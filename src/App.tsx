@@ -52,7 +52,7 @@ import CompetitionModuleViews from "./views/modules/CompetitionModuleViews";
 // que no está en el set dispara un push (ver setView más abajo).
 const STUDY_VIEWS = new Set<ViewName>([
   "quiz", "preview", "summary", "spellIt", "recognizeIt", "listenIt",
-  "numberKeys", "numberBuild", "countIt", "phonetics",
+  "numberKeys", "numberBuild", "numberDigits", "countIt", "phonetics",
   "dateTimeRecognize", "dateTimeWrite", "dateTimeBuild", "dateTimeClock",
   "phraseMeaning", "phraseListening",
   "kanjiMeaning", "kanjiReading", "kanjiMatch",
@@ -588,7 +588,7 @@ export default function HiraganaTrainer() {
         )}
 
         {/* ── Números ── */}
-        {(view === "numberSetup" || view === "numberKeys" || view === "numberBuild" || view === "countIt") && (
+        {(view === "numberSetup" || view === "numberKeys" || view === "numberBuild" || view === "numberDigits" || view === "countIt") && (
           <NumberModuleViews
             view={view}
             setView={setView}
