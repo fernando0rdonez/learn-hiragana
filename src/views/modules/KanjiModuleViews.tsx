@@ -1,7 +1,9 @@
 import type { ProgressItems, VocabSessionLength } from "../../types";
 import type { KanjiEntry } from "../../kanji";
 import type { ViewName } from "../../data";
+import { kanjiGroupsNeedingReadingIntro } from "../../utils";
 import KanjiSetupView from "../KanjiSetupView";
+import KanjiReadingIntroView from "../KanjiReadingIntroView";
 import KanjiMeaningGame from "../../components/KanjiMeaningGame";
 import KanjiReadingGame from "../../components/KanjiReadingGame";
 import KanjiMatchGame from "../../components/KanjiMatchGame";
@@ -38,6 +40,13 @@ export default function KanjiModuleViews({
           kanjiSessionLength={kanjiSessionLength}
           setKanjiSessionLength={setKanjiSessionLength}
           filteredKanji={filteredKanji}
+          setView={setView}
+        />
+      )}
+
+      {view === "kanjiReadingIntro" && (
+        <KanjiReadingIntroView
+          groups={kanjiGroupsNeedingReadingIntro(kanjiSessionPool, progress)}
           setView={setView}
         />
       )}

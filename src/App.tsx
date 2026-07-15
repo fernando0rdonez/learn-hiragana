@@ -544,7 +544,7 @@ export default function HiraganaTrainer() {
         )}
 
         {/* ── Kanji ── */}
-        {(view === "kanjiSetup" || view === "kanjiMeaning" || view === "kanjiReading" || view === "kanjiMatch") && (
+        {(view === "kanjiSetup" || view === "kanjiReadingIntro" || view === "kanjiMeaning" || view === "kanjiReading" || view === "kanjiMatch") && (
           <KanjiModuleViews
             view={view}
             setView={setView}

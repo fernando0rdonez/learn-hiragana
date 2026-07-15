@@ -8,7 +8,7 @@ import { WORDS } from "./words";
 import { KATAKANA_WORDS } from "./wordsKatakana";
 import { VOCABULARY, type VocabWord } from "./vocabulary";
 import { PHRASES, type Phrase } from "./phrases";
-import { KANJI, type KanjiEntry } from "./kanji";
+import { KANJI, KANJI_GROUPS, type KanjiEntry, type KanjiGroup } from "./kanji";
 import { LISTENING_SENTENCES, type ListeningSentence, type ListeningLevel } from "./listening";
 import { GRAMMAR_LESSONS } from "./grammar";
 import { PHONETIC_WORDS, type PhoneticEntry } from "./phonetics";
@@ -269,6 +269,22 @@ export function kanjiGroupStats(progress: ProgressItems, groupId: string): { tot
 
 export function notMasteredKanji(progress: ProgressItems, items: KanjiEntry[]): KanjiEntry[] {
   return items.filter((k) => kanjiStatus(progress, k.kanji) !== "mastered");
+}
+
+/**
+ * Grupos seleccionados con explicación de Lectura (`readingIntro`) que aún tienen
+ * algún kanji sin practicar en ese modo — se muestran antes del quiz, igual que
+ * el preview de kana nuevos en hiragana/katakana.
+ */
+export function kanjiGroupsNeedingReadingIntro(kanjiList: KanjiEntry[], progress: ProgressItems): KanjiGroup[] {
+  return KANJI_GROUPS.filter((group) => {
+    if (!group.readingIntro) return false;
+    const groupKanji = kanjiList.filter((k) => k.group === group.id);
+    return groupKanji.some((k) => {
+      const p = progress[kanjiProgressKey("kanji-reading", k.kanji)];
+      return !p || p.attempts === 0;
+    });
+  });
 }
 
 /** Resolves a chosen session length into the actual kanji pool + count to play. */
