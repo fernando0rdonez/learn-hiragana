@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { KanjiEntry } from "../kanji";
@@ -7,6 +7,7 @@ import { advanceBox, isDue } from "../leitner";
 import { kanjiProgressKey } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { fireConfetti } from "./ConfettiOverlay";
+import AnswerReveal from "./AnswerReveal";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxWorriedImg from "../assets/character/fox-worried.png";
@@ -31,7 +32,6 @@ const TIME_LIMIT = 10;
 const WORRIED_AT = 4;
 const RING_RADIUS = 26;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-const ANSWER_DELAY = 1800;
 
 const CRIMSON      = "#B3261E";
 const CRIMSON_DARK = "#8C1D17";
@@ -149,15 +149,6 @@ export default function KanjiMeaningGame({
     setSessionResults((prev) => [...prev, { word: { hiragana: kanji.kanji, romaji: kanji.onyomi[0] ?? kanji.kunyomi[0] ?? "", meaning: meaningLabel(kanji) }, correct: isCorrect }]);
   }
 
-  const finishAnswer = useCallback(
-    (kanji: KanjiEntry, isCorrect: boolean) => {
-      recordResult(kanji, isCorrect);
-      setTimeout(() => advanceToNext(), ANSWER_DELAY);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queueIndex, queue]
-  );
-
   function handleAnswer(option: KanjiEntry) {
     if (phase !== "playing" || !currentKanji) return;
     setSelected(option.kanji);
@@ -170,7 +161,11 @@ export default function KanjiMeaningGame({
       playBuzz();
       setPhase("wrong");
     }
-    finishAnswer(currentKanji, isCorrect);
+    recordResult(currentKanji, isCorrect);
+  }
+
+  function handleContinue() {
+    advanceToNext();
   }
 
   // Countdown ticker
@@ -189,7 +184,7 @@ export default function KanjiMeaningGame({
     if (phase === "playing" && timeLeft <= 0 && currentKanji) {
       playBuzz();
       setPhase("timeout");
-      finishAnswer(currentKanji, false);
+      recordResult(currentKanji, false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, phase]);
@@ -280,14 +275,14 @@ export default function KanjiMeaningGame({
       </div>
 
       {/* Feedback */}
-      {phase === "correct" && (
-        <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto! · {currentKanji.onyomi.join("・")} · {currentKanji.kunyomi.join("・")}</p>
-      )}
-      {phase === "wrong" && (
-        <p className="text-[#C03A1E] font-semibold text-sm">❌ Era: {meaningLabel(currentKanji)}</p>
-      )}
-      {phase === "timeout" && (
-        <p className="text-[#C03A1E] font-semibold text-sm">⏱️ ¡Se acabó el tiempo! Era: {meaningLabel(currentKanji)}</p>
+      {phase !== "playing" && (
+        <AnswerReveal
+          status={phase}
+          kana={[...currentKanji.onyomi, ...currentKanji.kunyomi].join("・")}
+          kanji={currentKanji.kanji}
+          meaning={meaningLabel(currentKanji)}
+          onContinue={handleContinue}
+        />
       )}
     </div>
   );

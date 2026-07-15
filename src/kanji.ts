@@ -13,15 +13,25 @@ export interface KanjiEntry {
   group: string;       // KanjiGroup.id
 }
 
+export interface KanjiGroupIntro {
+  title: string;
+  body: string;
+}
+
 export interface KanjiGroup {
   id: string;
   label: string;
   emoji: string;
   image?: string;      // slug key into getVocabImageUrl() (src/vocabImages.ts); fallback al emoji si no hay imagen generada
+  /** Explicación mostrada antes de la primera sesión de Lectura de este grupo (BACKLOG: つ para contar cosas). */
+  readingIntro?: KanjiGroupIntro;
 }
 
 export const KANJI_GROUPS: KanjiGroup[] = [
-  { id: "numeros",    label: "Números",              emoji: "🔢" , image: "category-numeros" },
+  { id: "numeros",    label: "Números",              emoji: "🔢" , image: "category-numeros", readingIntro: {
+    title: "Una lectura especial para contar",
+    body: "Además del número simple (一 いち, 二 に, 三 さん…), el japonés tiene una serie distinta con 「つ」 para contar cosas en general: 一つ ひとつ, 二つ ふたつ, 三つ みっつ… No es un error ni una lectura rara: es la lectura kun que vas a ver en las palabras de ejemplo de este grupo, y conviene aprenderla como una lectura más de cada kanji.",
+  } },
   { id: "calendario", label: "Calendario",           emoji: "📅" },
   { id: "tiempo",     label: "Tiempo",               emoji: "⏰" , image: "category-tiempo" },
   { id: "naturaleza", label: "Naturaleza",           emoji: "🌿" , image: "category-naturaleza" },

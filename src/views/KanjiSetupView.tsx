@@ -4,7 +4,7 @@ import type { KanjiEntry } from "../kanji";
 import { KANJI, KANJI_GROUPS } from "../kanji";
 import type { ViewName } from "../data";
 import type { ProgressItems, VocabSessionLength } from "../types";
-import { kanjiGroupStats, notMasteredKanji, resolveKanjiSession } from "../utils";
+import { kanjiGroupStats, kanjiGroupsNeedingReadingIntro, notMasteredKanji, resolveKanjiSession } from "../utils";
 import { getVocabImageUrl } from "../vocabImages";
 import foxImg from "../assets/character/fox-neutral.png";
 import FloatingStartButton from "../components/FloatingStartButton";
@@ -96,13 +96,21 @@ export default function KanjiSetupView({
     setSelectedKanjiGroups(allSelected ? new Set() : new Set(KANJI_GROUPS.map((g) => g.id)));
   }
 
+  function startModeOrIntro(mode: KanjiGameMode, pool: KanjiEntry[]) {
+    if (mode === "reading" && kanjiGroupsNeedingReadingIntro(pool, progress).length > 0) {
+      setView("kanjiReadingIntro");
+    } else {
+      setView(viewForMode(mode));
+    }
+  }
+
   function handleStartSession() {
     localStorage.setItem(LAST_SESSION_KEY, JSON.stringify({
       groupIds: [...selectedKanjiGroups],
       length: kanjiSessionLength,
       mode: gameMode,
     } satisfies KanjiLastSession));
-    setView(viewForMode(gameMode));
+    startModeOrIntro(gameMode, filteredKanji);
   }
 
   function handleContinue() {
@@ -113,7 +121,7 @@ export default function KanjiSetupView({
     setSelectedKanjiGroups(new Set(lastSession.groupIds));
     setKanjiSessionLength(lastSession.length);
     setGameMode(lastSession.mode);
-    setView(viewForMode(lastSession.mode));
+    startModeOrIntro(lastSession.mode, pool);
   }
 
   return (
