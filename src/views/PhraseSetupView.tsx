@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Check, Play, Eye, Headphones } from "lucide-react";
+import { ArrowLeft, Check, Play, Eye, Headphones, Puzzle } from "lucide-react";
 import type { Phrase } from "../phrases";
 import { PHRASES, PHRASE_CATEGORIES } from "../phrases";
 import type { ViewName } from "../data";
@@ -31,7 +31,7 @@ const TEXT_MUTED  = "#AAAAAA";
 
 const LAST_SESSION_KEY = "phrase_last_session";
 
-type PhraseGameMode = "meaning" | "listen";
+type PhraseGameMode = "meaning" | "listen" | "build";
 
 interface PhraseLastSession {
   categoryIds: string[];
@@ -44,11 +44,15 @@ function isPhraseLastSession(v: unknown): v is PhraseLastSession {
   const o = v as Record<string, unknown>;
   return Array.isArray(o.categoryIds)
     && (o.length === 10 || o.length === 20 || o.length === "all" || o.length === "repasar")
-    && (o.mode === "meaning" || o.mode === "listen");
+    && (o.mode === "meaning" || o.mode === "listen" || o.mode === "build");
 }
 
 function viewForMode(mode: PhraseGameMode): ViewName {
-  return mode === "listen" ? "phraseListening" : "phraseMeaning";
+  return mode === "listen" ? "phraseListening" : mode === "build" ? "phraseBuild" : "phraseMeaning";
+}
+
+function modeLabel(mode: PhraseGameMode): string {
+  return mode === "listen" ? "Escuchar" : mode === "build" ? "Construir" : "Reconocer";
 }
 
 function lengthLabel(length: VocabSessionLength): string {
@@ -143,7 +147,7 @@ export default function PhraseSetupView({
               ×{lengthLabel(lastSession.length)}
             </span>
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/20">
-              {lastSession.mode === "listen" ? "Escuchar" : "Reconocer"}
+              {modeLabel(lastSession.mode)}
             </span>
           </div>
           <button
@@ -165,7 +169,7 @@ export default function PhraseSetupView({
       {/* ── Configurar sesión ── */}
       <div className="mt-8">
         <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Modo</span>
-        <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="grid grid-cols-3 gap-2 mt-2">
           <button
             onClick={() => setGameMode("meaning")}
             className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors"
@@ -185,6 +189,16 @@ export default function PhraseSetupView({
             }
           >
             <Headphones size={14} /> Escuchar
+          </button>
+          <button
+            onClick={() => setGameMode("build")}
+            className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors"
+            style={gameMode === "build"
+              ? { borderColor: PINK, backgroundColor: PINK_LIGHT, color: PINK_DARK }
+              : { borderColor: BORDER, backgroundColor: "#FFFFFF", color: TEXT_SECOND }
+            }
+          >
+            <Puzzle size={14} /> Construir
           </button>
         </div>
 

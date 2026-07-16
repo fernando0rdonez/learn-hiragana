@@ -15,7 +15,7 @@ const FILLED_STYLES: Record<SlotStatus, string> = {
 
 export default function WordSlots({ slots, animClass, status = "idle", onTapSlot }: Props) {
   return (
-    <div className={`flex gap-2 justify-center ${animClass}`}>
+    <div className={`flex flex-wrap gap-2 justify-center ${animClass}`}>
       {slots.map((kana, i) => (
         <button
           key={i}
