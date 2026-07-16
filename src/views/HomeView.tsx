@@ -24,6 +24,7 @@ interface Props {
   masteredKataTotal: number;
   masteredNumberKeys: number;
   masteredDateTimeKeys: number;
+  masteredVocabTotal: number;
   masteredPhrasesTotal: number;
   masteredKanjiTotal: number;
   masteredGrammarTotal: number;
@@ -52,7 +53,7 @@ function pct(mastered: number, total: number): number {
   return total > 0 ? Math.round((mastered / total) * 100) : 0;
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, setView }: Props) {
   const [heroModule] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -62,10 +63,12 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
 
   const hiraganaPct = pct(masteredTotal, ALL_CHARS.length);
   const hiraganaRemaining = ALL_CHARS.length - masteredTotal;
+  const vocabPct = pct(masteredVocabTotal, VOCABULARY.length);
 
   // El módulo que más se está quedando atrás — el zorro "dormido" lo señala en la grilla.
   const moduleStats: { id: string; pct: number }[] = [
     { id: "hiragana", pct: hiraganaPct },
+    { id: "vocab", pct: vocabPct },
     { id: "katakana", pct: pct(masteredKataTotal, KATAKANA_ALL_CHARS.length) },
     { id: "numbers", pct: pct(masteredNumberKeys, KEY_NUMBERS.length) },
     { id: "datetime", pct: pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length) },
@@ -186,10 +189,11 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             bg="#FFEEEA" fg="#E85D3A"
             icon={<BookOpen size={18} />}
             title="Vocabulario"
-            meta={`${VOCABULARY.length} palabras`}
+            meta={`${vocabPct}%`}
+            pctValue={vocabPct}
             onClick={() => goTo("vocabCategory", "vocab")}
-            badgeImg={heroModule === "vocab" ? foxStudying : undefined}
-            badgeAlt="En progreso"
+            badgeImg={heroModule === "vocab" ? foxStudying : neediestModuleId === "vocab" ? foxSleepy : undefined}
+            badgeAlt={heroModule === "vocab" ? "En progreso" : "Necesita repaso"}
           />
 
           <ModuleTile

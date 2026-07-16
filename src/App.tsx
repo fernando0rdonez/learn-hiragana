@@ -20,7 +20,7 @@ import { getAvailablePhonetics } from "./phonetics";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
 import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS } from "./dataKatakana";
-import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus, grammarStatus, resolveListeningSession, listeningStatus } from "./utils";
+import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, vocabStatus, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus, grammarStatus, resolveListeningSession, listeningStatus } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
@@ -337,6 +337,7 @@ export default function HiraganaTrainer() {
     ? VOCABULARY.filter((w) => selectedVocabCategories.has(w.category))
     : [];
   const { pool: vocabSessionPool, limit: vocabSessionLimit } = resolveVocabSession(filteredVocabulary, vocabSessionLength, progress);
+  const masteredVocabTotal = VOCABULARY.filter((w) => vocabStatus(progress, w.hiragana) === "mastered").length;
 
   const filteredPhrases = selectedPhraseCategories.size > 0
     ? PHRASES.filter((p) => selectedPhraseCategories.has(p.category))
@@ -393,6 +394,7 @@ export default function HiraganaTrainer() {
             masteredKataTotal={masteredKataTotal}
             masteredNumberKeys={masteredNumberKeys}
             masteredDateTimeKeys={masteredDateTimeKeys}
+            masteredVocabTotal={masteredVocabTotal}
             masteredPhrasesTotal={masteredPhrasesTotal}
             masteredKanjiTotal={masteredKanjiTotal}
             masteredGrammarTotal={masteredGrammarTotal}
