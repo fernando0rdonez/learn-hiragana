@@ -54,7 +54,7 @@ const STUDY_VIEWS = new Set<ViewName>([
   "quiz", "preview", "summary", "spellIt", "recognizeIt", "listenIt",
   "numberKeys", "numberBuild", "numberDigits", "countIt", "phonetics",
   "dateTimeRecognize", "dateTimeWrite", "dateTimeBuild", "dateTimeClock",
-  "phraseMeaning", "phraseListening",
+  "phraseMeaning", "phraseListening", "phraseBuild",
   "kanjiMeaning", "kanjiReading", "kanjiMatch",
   "grammarLesson",
   "listeningComprehension", "listeningDictation",
@@ -526,7 +526,7 @@ export default function HiraganaTrainer() {
         )}
 
         {/* ── Frases ── */}
-        {(view === "phraseSetup" || view === "phraseMeaning" || view === "phraseListening") && (
+        {(view === "phraseSetup" || view === "phraseMeaning" || view === "phraseListening" || view === "phraseBuild") && (
           <PhraseModuleViews
             view={view}
             setView={setView}

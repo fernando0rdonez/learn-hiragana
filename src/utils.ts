@@ -179,9 +179,9 @@ export function resolveVocabSession(
   return { pool: words, limit: Math.min(length, words.length) };
 }
 
-export type PhrasePracticeMode = "phrase-meaning" | "phrase-listening";
+export type PhrasePracticeMode = "phrase-meaning" | "phrase-listening" | "phrase-build";
 
-const PHRASE_MODES: PhrasePracticeMode[] = ["phrase-meaning", "phrase-listening"];
+const PHRASE_MODES: PhrasePracticeMode[] = ["phrase-meaning", "phrase-listening", "phrase-build"];
 
 export function phraseProgressKey(mode: PhrasePracticeMode, id: string): string {
   return `${mode}:${id}`;

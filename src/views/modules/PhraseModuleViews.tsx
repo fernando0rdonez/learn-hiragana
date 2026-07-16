@@ -4,6 +4,7 @@ import type { ViewName } from "../../data";
 import PhraseSetupView from "../PhraseSetupView";
 import PhraseMeaningGame from "../../components/PhraseMeaningGame";
 import PhraseListeningGame from "../../components/PhraseListeningGame";
+import PhraseBuildGame from "../../components/PhraseBuildGame";
 
 interface Props {
   view: ViewName;
@@ -53,6 +54,16 @@ export default function PhraseModuleViews({
 
       {view === "phraseListening" && (
         <PhraseListeningGame
+          phrases={phraseSessionPool}
+          progress={progress}
+          sessionLimit={phraseSessionLimit}
+          onProgressUpdate={onProgressUpdate}
+          onBack={() => setView("home")}
+        />
+      )}
+
+      {view === "phraseBuild" && (
+        <PhraseBuildGame
           phrases={phraseSessionPool}
           progress={progress}
           sessionLimit={phraseSessionLimit}
