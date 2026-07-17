@@ -163,7 +163,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
 
         <img
           src={foxStudyingHappy}
-          alt="El zorro estudiando feliz con sus cuadernos"
+          alt="Kitsu estudiando feliz con sus cuadernos"
           className="absolute pointer-events-none select-none"
           style={{ width: 140, height: "auto", bottom: -56, right: 14, zIndex: 2, filter: "drop-shadow(0 10px 14px rgba(0,0,0,0.25))" }}
         />
