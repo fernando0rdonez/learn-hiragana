@@ -26,7 +26,11 @@ export default function StreakCelebrationView({ streak, dailyProgress, celebrate
   const today = toISODate();
   const goalMetToday = dailyProgress.date === today && dailyProgress.correctToday >= DAILY_GOAL;
   const correctToday = dailyProgress.date === today ? dailyProgress.correctToday : 0;
-  const week = weekAroundToday(streak.practiceDates, today);
+  // practiceDates puede no traer el día de hoy todavía (racha ganada antes de que este campo
+  // existiera, o el registro se hizo con una versión anterior de la app) — dailyProgress es la
+  // fuente de verdad más reciente, así que la fila semanal no debe contradecir el mensaje de arriba.
+  const week = weekAroundToday(streak.practiceDates, today)
+    .map((day) => (day.isToday && goalMetToday ? { ...day, done: true } : day));
   const nextMilestone = STREAK_MILESTONES.find((m) => m.days > streak.longest);
 
   return (
