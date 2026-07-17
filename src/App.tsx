@@ -495,12 +495,25 @@ export default function HiraganaTrainer() {
           />
         )}
 
-        {/* ── Racha: pantalla de celebración al cumplir la meta diaria ── */}
+        {/* ── Racha: celebración al cumplir la meta diaria (tras una sesión) ── */}
         {view === "streakCelebration" && (
           <StreakCelebrationView
             streak={streak}
             dailyProgress={dailyProgress}
+            celebrate
+            ctaLabel="Continuar"
             onContinue={() => setView("summary")}
+          />
+        )}
+
+        {/* ── Racha: detalle al tocar la llama desde el home ── */}
+        {view === "streakDetail" && (
+          <StreakCelebrationView
+            streak={streak}
+            dailyProgress={dailyProgress}
+            celebrate={false}
+            ctaLabel="Volver"
+            onContinue={() => setView("home")}
           />
         )}
 
