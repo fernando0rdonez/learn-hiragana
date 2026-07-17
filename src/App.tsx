@@ -37,6 +37,7 @@ import { KEY_HOURS, KEY_MINUTE_UNITS, hourKeyStatus, minuteKeyStatus } from "./d
 import HiraganaSetupView from "./views/HiraganaSetupView";
 import KatakanaSetupView from "./views/KatakanaSetupView";
 import QuizView from "./views/QuizView";
+import StreakCelebrationView from "./views/StreakCelebrationView";
 import CoreViews from "./views/modules/CoreViews";
 import PhoneticsModuleViews from "./views/modules/PhoneticsModuleViews";
 import VocabModuleViews from "./views/modules/VocabModuleViews";
@@ -491,6 +492,15 @@ export default function HiraganaTrainer() {
             nextBtnRef={nextBtnRef}
             activeCompetitionId={activeCompetitionId}
             setActiveCompetitionId={setActiveCompetitionId}
+          />
+        )}
+
+        {/* ── Racha: pantalla de celebración al cumplir la meta diaria ── */}
+        {view === "streakCelebration" && (
+          <StreakCelebrationView
+            streak={streak}
+            dailyProgress={dailyProgress}
+            onContinue={() => setView("summary")}
           />
         )}
 

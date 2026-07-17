@@ -44,17 +44,31 @@ test("es idempotente: fusionar consigo mismo no cambia nada", () => {
 // ── streak ───────────────────────────────────────────────────────────────
 
 test("streak: misma fecha, toma el current/longest más alto", () => {
-  const a: ProgressData = { items: {}, streak: { current: 3, longest: 10, lastSuccessDate: "2026-07-12" } };
-  const b: ProgressData = { items: {}, streak: { current: 5, longest: 6, lastSuccessDate: "2026-07-12" } };
+  const a: ProgressData = { items: {}, streak: { current: 3, longest: 10, lastSuccessDate: "2026-07-12", practiceDates: [] } };
+  const b: ProgressData = { items: {}, streak: { current: 5, longest: 6, lastSuccessDate: "2026-07-12", practiceDates: [] } };
   const merged = mergeProgressData(a, b);
-  assert.deepEqual(merged.streak, { current: 5, longest: 10, lastSuccessDate: "2026-07-12" });
+  assert.deepEqual(merged.streak, { current: 5, longest: 10, lastSuccessDate: "2026-07-12", practiceDates: [] });
 });
 
 test("streak: fechas distintas, gana el estado más reciente pero longest es el máximo global", () => {
-  const a: ProgressData = { items: {}, streak: { current: 2, longest: 20, lastSuccessDate: "2026-07-10" } };
-  const b: ProgressData = { items: {}, streak: { current: 4, longest: 6, lastSuccessDate: "2026-07-12" } };
+  const a: ProgressData = { items: {}, streak: { current: 2, longest: 20, lastSuccessDate: "2026-07-10", practiceDates: [] } };
+  const b: ProgressData = { items: {}, streak: { current: 4, longest: 6, lastSuccessDate: "2026-07-12", practiceDates: [] } };
   const merged = mergeProgressData(a, b);
-  assert.deepEqual(merged.streak, { current: 4, longest: 20, lastSuccessDate: "2026-07-12" });
+  assert.deepEqual(merged.streak, { current: 4, longest: 20, lastSuccessDate: "2026-07-12", practiceDates: [] });
+});
+
+test("streak: practiceDates se fusiona como unión sin duplicados, ordenada", () => {
+  const a: ProgressData = { items: {}, streak: { current: 3, longest: 3, lastSuccessDate: "2026-07-12", practiceDates: ["2026-07-10", "2026-07-11", "2026-07-12"] } };
+  const b: ProgressData = { items: {}, streak: { current: 2, longest: 3, lastSuccessDate: "2026-07-11", practiceDates: ["2026-07-11", "2026-07-09"] } };
+  const merged = mergeProgressData(a, b);
+  assert.deepEqual(merged.streak?.practiceDates, ["2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12"]);
+});
+
+test("streak: si falta de un lado, se rellena con practiceDates vacío en vez de undefined", () => {
+  const a: ProgressData = { items: {}, streak: { current: 3, longest: 3, lastSuccessDate: "2026-07-12", practiceDates: ["2026-07-12"] } };
+  const b: ProgressData = { items: {} };
+  const merged = mergeProgressData(a, b);
+  assert.deepEqual(merged.streak, { current: 3, longest: 3, lastSuccessDate: "2026-07-12", practiceDates: ["2026-07-12"] });
 });
 
 // ── dailyProgress ────────────────────────────────────────────────────────
