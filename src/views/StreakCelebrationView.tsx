@@ -50,7 +50,7 @@ export default function StreakCelebrationView({ streak, dailyProgress, onContinu
         >
           <img src={foxCelebrating} alt="" className="w-11 h-11 object-contain" />
           <span className="text-xs font-semibold text-left" style={{ color: "#B8790E" }}>
-            El zorro está orgulloso de ti hoy
+            Kitsu está orgulloso de ti hoy
           </span>
         </div>
       </div>
