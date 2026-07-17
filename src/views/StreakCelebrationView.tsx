@@ -9,17 +9,24 @@ import foxCelebrating from "../assets/character/fox-celebrating.png";
 interface Props {
   streak: StreakData;
   dailyProgress: DailyProgress;
+  /** true solo justo al terminar la sesión que cumplió la meta del día — dispara confeti y el copy de celebración. */
+  celebrate: boolean;
+  ctaLabel: string;
   onContinue: () => void;
 }
 
 const MILESTONE_ICONS: LucideIcon[] = [Sparkles, Target, Shield, Award, Crown, Star];
 
-export default function StreakCelebrationView({ streak, dailyProgress, onContinue }: Props) {
+export default function StreakCelebrationView({ streak, dailyProgress, celebrate, ctaLabel, onContinue }: Props) {
   useEffect(() => {
-    fireConfetti();
+    if (celebrate) fireConfetti();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const week = weekAroundToday(streak.practiceDates, toISODate());
+  const today = toISODate();
+  const goalMetToday = dailyProgress.date === today && dailyProgress.correctToday >= DAILY_GOAL;
+  const correctToday = dailyProgress.date === today ? dailyProgress.correctToday : 0;
+  const week = weekAroundToday(streak.practiceDates, today);
   const nextMilestone = STREAK_MILESTONES.find((m) => m.days > streak.longest);
 
   return (
@@ -41,7 +48,15 @@ export default function StreakCelebrationView({ streak, dailyProgress, onContinu
           día{streak.current === 1 ? "" : "s"} de racha
         </div>
         <p className="text-sm mt-1.5 max-w-xs" style={{ color: "#6B6259" }}>
-          ¡Meta del día cumplida! <b style={{ color: "#1A1A2E" }}>{Math.min(dailyProgress.correctToday, DAILY_GOAL)}/{DAILY_GOAL}</b> respuestas correctas.
+          {celebrate ? (
+            <>¡Meta del día cumplida! <b style={{ color: "#1A1A2E" }}>{Math.min(correctToday, DAILY_GOAL)}/{DAILY_GOAL}</b> respuestas correctas.</>
+          ) : goalMetToday ? (
+            <>Ya cumpliste la meta de hoy — <b style={{ color: "#1A1A2E" }}>{Math.min(correctToday, DAILY_GOAL)}/{DAILY_GOAL}</b> respuestas correctas. ¡Vuelve mañana!</>
+          ) : streak.current === 0 ? (
+            <>Aún no tienes una racha activa. Practica hoy para empezar una.</>
+          ) : (
+            <>Llevas <b style={{ color: "#1A1A2E" }}>{correctToday}/{DAILY_GOAL}</b> respuestas correctas hoy — sigue practicando para no perder tu racha.</>
+          )}
         </p>
 
         <div
@@ -50,7 +65,7 @@ export default function StreakCelebrationView({ streak, dailyProgress, onContinu
         >
           <img src={foxCelebrating} alt="" className="w-11 h-11 object-contain" />
           <span className="text-xs font-semibold text-left" style={{ color: "#B8790E" }}>
-            Kitsu está orgulloso de ti hoy
+            {celebrate || goalMetToday ? "Kitsu está orgulloso de ti hoy" : "Kitsu te espera para seguir practicando"}
           </span>
         </div>
       </div>
@@ -133,7 +148,7 @@ export default function StreakCelebrationView({ streak, dailyProgress, onContinu
         className="w-full max-w-xs px-8 py-3.5 rounded-2xl text-white font-bold"
         style={{ background: "linear-gradient(90deg, #7B4FD4, #5533A8)" }}
       >
-        Continuar
+        {ctaLabel}
       </button>
       <p className="text-[11px] -mt-3" style={{ color: "#A69D92" }}>
         Meta diaria: {DAILY_GOAL} respuestas correctas

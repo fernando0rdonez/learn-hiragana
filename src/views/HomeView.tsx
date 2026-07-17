@@ -88,13 +88,15 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
           <span style={{ color: "#7B4FD4" }}>道</span>
         </h1>
         <div className="flex items-center gap-2">
-          <span
+          <button
+            onClick={() => setView("streakDetail")}
+            aria-label="Ver detalle de tu racha"
             className="flex items-center gap-1 text-sm font-semibold px-3 py-1 rounded-full"
             style={{ backgroundColor: "#FFF4E5", color: "#F5A623" }}
           >
             <Flame size={14} />
             {streak.current} día{streak.current === 1 ? "" : "s"}
-          </span>
+          </button>
           <button
             onClick={() => setView("methodology")}
             aria-label="Cómo estudiar"
