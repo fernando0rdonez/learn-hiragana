@@ -1,7 +1,7 @@
 import type { ProgressData, ProgressItems, ItemProgress, StreakData, DailyProgress } from "./types";
 import { WORDS } from "./words";
 import { VOCABULARY } from "./vocabulary";
-import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
+import { DEFAULT_DAILY_PROGRESS, normalizeStreak, addPracticeDate } from "./streak";
 
 const STORAGE_KEY = "hiragana-progress";
 export const CURRENT_SCHEMA_VERSION = 2;
@@ -116,13 +116,16 @@ function pickBetterItem(a: ItemProgress, b: ItemProgress): ItemProgress {
 }
 
 function mergeStreak(a: StreakData | undefined, b: StreakData | undefined): StreakData {
-  if (!a) return b ?? DEFAULT_STREAK;
-  if (!b) return a;
-  if (a.lastSuccessDate === b.lastSuccessDate) {
-    return { current: Math.max(a.current, b.current), longest: Math.max(a.longest, b.longest), lastSuccessDate: a.lastSuccessDate };
+  const na = normalizeStreak(a);
+  const nb = normalizeStreak(b);
+  if (!a) return nb;
+  if (!b) return na;
+  const practiceDates = na.practiceDates.reduce(addPracticeDate, nb.practiceDates);
+  if (na.lastSuccessDate === nb.lastSuccessDate) {
+    return { current: Math.max(na.current, nb.current), longest: Math.max(na.longest, nb.longest), lastSuccessDate: na.lastSuccessDate, practiceDates };
   }
-  const newer = a.lastSuccessDate > b.lastSuccessDate ? a : b;
-  return { current: newer.current, longest: Math.max(a.longest, b.longest), lastSuccessDate: newer.lastSuccessDate };
+  const newer = na.lastSuccessDate > nb.lastSuccessDate ? na : nb;
+  return { current: newer.current, longest: Math.max(na.longest, nb.longest), lastSuccessDate: newer.lastSuccessDate, practiceDates };
 }
 
 function mergeDailyProgress(a: DailyProgress | undefined, b: DailyProgress | undefined): DailyProgress {

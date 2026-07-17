@@ -29,6 +29,8 @@ export interface StreakData {
   current: number;
   longest: number;
   lastSuccessDate: string; // "" si nunca se cumplió un día
+  /** Últimos días (ISO, orden ascendente) en que se cumplió la meta diaria — alimenta la fila semanal de la pantalla de racha. */
+  practiceDates: string[];
 }
 
 export interface DailyProgress {

@@ -34,6 +34,7 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
   const sessionIndexRef = useRef(0);
   const missedListRef   = useRef<MissedItem[]>([]);
   const onSessionCompleteRef = useRef<((correct: number, total: number) => void) | null>(null);
+  const justCompletedGoalRef = useRef(false);
 
   const [currentMode, setCurrentMode]   = useState<QuizMode>("recognition");
   const [correctCount, setCorrectCount] = useState(0);
@@ -69,7 +70,9 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
     const idx   = sessionIndexRef.current;
     const queue = sessionQueueRef.current;
     if (idx >= queue.length) {
-      setView("summary");
+      const showStreakCelebration = justCompletedGoalRef.current;
+      justCompletedGoalRef.current = false;
+      setView(showStreakCelebration ? "streakCelebration" : "summary");
       setCurrent(null);
       setFeedback(null);
       const onComplete = onSessionCompleteRef.current;
@@ -195,9 +198,10 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
     const { box, nextDue } = advanceBox(prevP, isCorrect, today);
     const newP: ItemProgress = { box, nextDue, attempts: prevP.attempts + 1, correct: prevP.correct + (isCorrect ? 1 : 0) };
     const newProgress: ProgressItems = { ...progress, [key]: newP };
-    const { streak: nextStreak, daily: nextDaily } = isCorrect
+    const { streak: nextStreak, daily: nextDaily, justCompletedGoal } = isCorrect
       ? recordCorrectAnswer(streak, dailyProgress, today)
-      : { streak, daily: dailyProgress };
+      : { streak, daily: dailyProgress, justCompletedGoal: false };
+    if (justCompletedGoal) justCompletedGoalRef.current = true;
     setProgress(newProgress);
     persist(newProgress, nextStreak, nextDaily);
 
@@ -236,9 +240,10 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
     const { box, nextDue } = advanceBox(prevP, isCorrect, today);
     const newP: ItemProgress = { box, nextDue, attempts: prevP.attempts + 1, correct: prevP.correct + (isCorrect ? 1 : 0) };
     const newProgress: ProgressItems = { ...progress, [key]: newP };
-    const { streak: nextStreak, daily: nextDaily } = isCorrect
+    const { streak: nextStreak, daily: nextDaily, justCompletedGoal } = isCorrect
       ? recordCorrectAnswer(streak, dailyProgress, today)
-      : { streak, daily: dailyProgress };
+      : { streak, daily: dailyProgress, justCompletedGoal: false };
+    if (justCompletedGoal) justCompletedGoalRef.current = true;
     setProgress(newProgress);
     persist(newProgress, nextStreak, nextDaily);
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import type { ProgressData, ProgressItems, StreakData, DailyProgress } from "../types";
 import { loadProgress, saveProgress, parseImportedProgress, CURRENT_SCHEMA_VERSION } from "../storage";
-import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "../streak";
+import { DEFAULT_DAILY_PROGRESS, normalizeStreak } from "../streak";
 import { toISODate } from "../utils";
 
 interface UseProgressParams {
@@ -23,7 +23,7 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
   useEffect(() => {
     const data = loadProgress();
     setProgress(data.items);
-    setStreak(data.streak ?? DEFAULT_STREAK);
+    setStreak(normalizeStreak(data.streak));
     setDailyProgress(data.dailyProgress ?? DEFAULT_DAILY_PROGRESS);
     setShowRomaji(data.settings?.showRomaji ?? false);
     setLoading(false);
@@ -68,7 +68,7 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
     const ok = saveProgress(data);
     setProgress(data.items);
     setShowRomaji(data.settings?.showRomaji ?? showRomaji);
-    setStreak(data.streak ?? DEFAULT_STREAK);
+    setStreak(normalizeStreak(data.streak));
     setDailyProgress(data.dailyProgress ?? DEFAULT_DAILY_PROGRESS);
     setSaveError(!ok);
   }
@@ -76,7 +76,7 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
   function confirmImport() {
     if (!pendingImport) return;
     const items       = pendingImport.items;
-    const newStreak   = pendingImport.streak ?? DEFAULT_STREAK;
+    const newStreak   = normalizeStreak(pendingImport.streak);
     const newDaily    = pendingImport.dailyProgress ?? DEFAULT_DAILY_PROGRESS;
     const newRomaji   = pendingImport.settings?.showRomaji ?? false;
     const ok = saveProgress({ items, streak: newStreak, dailyProgress: newDaily, settings: { showRomaji: newRomaji } });
