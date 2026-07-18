@@ -15,7 +15,7 @@ import { PHRASES } from "./phrases";
 import { KANJI } from "./kanji";
 import { GRAMMAR_LESSONS } from "./grammar";
 import { LISTENING_SENTENCES } from "./listening";
-import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS } from "./streak";
+import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, recordCorrectAnswer } from "./streak";
 import { getAvailablePhonetics } from "./phonetics";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
@@ -298,11 +298,26 @@ export default function HiraganaTrainer() {
     setView("home");
   }
 
-  /** Handler compartido por todos los módulos de juego: fusiona el update y persiste. */
+  /**
+   * Handler compartido por todos los módulos de juego (Vocabulario, Kanji, Frases,
+   * Gramática, Listening, Números, Fechas/Horas, Fonética): fusiona el update, y si
+   * alguno de los ítems mejoró su contador de aciertos, también alimenta la racha
+   * diaria — antes solo el quiz clásico de Hiragana/Katakana (useSession) lo hacía,
+   * así que practicar cualquier otro módulo no marcaba el día ni sumaba a la racha.
+   */
   function onProgressUpdate(updates: ProgressItems) {
     const merged = { ...progress, ...updates };
     setProgress(merged);
-    persist(merged);
+
+    const gotCorrectAnswer = Object.entries(updates).some(
+      ([key, newP]) => newP.correct > (progress[key]?.correct ?? 0)
+    );
+    if (!gotCorrectAnswer) {
+      persist(merged);
+      return;
+    }
+    const { streak: nextStreak, daily: nextDaily } = recordCorrectAnswer(streak, dailyProgress, toISODate());
+    persist(merged, nextStreak, nextDaily);
   }
 
   // ── Derived values ────────────────────────────────────────────────────────
