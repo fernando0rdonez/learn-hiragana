@@ -8,7 +8,7 @@ import {
   entryToRomaji,
   formatEntry,
   buildEntryChipDistractors,
-  randomEntryForBuild,
+  randomEntriesForBuild,
   progressKeyForChip,
 } from "../dateTime";
 import { advanceBox } from "../leitner";
@@ -68,8 +68,8 @@ function roundFromTarget(contentType: ContentType, target: Entry): Round {
   return { target, expected, tiles };
 }
 
-function buildRound(contentType: ContentType, timeLevel: TimeBuildLevel, dateLevel: DateBuildLevel): Round {
-  return roundFromTarget(contentType, randomEntryForBuild(contentType, timeLevel, dateLevel));
+function buildRounds(contentType: ContentType, timeLevel: TimeBuildLevel, dateLevel: DateBuildLevel, count: number): Round[] {
+  return randomEntriesForBuild(contentType, timeLevel, dateLevel, count).map((t) => roundFromTarget(contentType, t));
 }
 
 interface Props {
@@ -116,7 +116,7 @@ export default function DateTimeBuildGame({
   useEffect(() => {
     const built = items && items.length > 0
       ? items.map((t) => roundFromTarget(contentType, t))
-      : Array.from({ length: sessionLimit }, () => buildRound(contentType, level, dateLevel));
+      : buildRounds(contentType, level, dateLevel, sessionLimit);
     setRounds(built);
     setRoundIndex(0);
     if (built.length > 0) initRound(built[0]);
