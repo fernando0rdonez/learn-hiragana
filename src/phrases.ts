@@ -42,6 +42,8 @@ export const PHRASES: Phrase[] = [
   { id: "ittekimasu",          kana: "いってきます",             romaji: "ittekimasu",            meaning: "ya vuelvo / me voy",             context: "Lo dice quien sale, antes de salir de casa.", category: "saludos" },
   { id: "tadaima",             kana: "ただいま",                 romaji: "tadaima",               meaning: "ya volví",                       context: "Al regresar a casa.", category: "saludos" },
   { id: "okaeri",              kana: "おかえりなさい",           romaji: "okaerinasai",           meaning: "bienvenido a casa",              context: "Se dice a quien acaba de volver.", category: "saludos" },
+  { id: "douzo-yoroshiku",     kana: "どうぞよろしく",           romaji: "douzo yoroshiku",       meaning: "mucho gusto",                    context: "Al presentarse, tras decir tu nombre.", category: "saludos" },
+  { id: "kochirakoso",         kana: "こちらこそ",               romaji: "kochirakoso",           meaning: "igualmente / el gusto es mío",   context: "Respuesta cuando la otra persona dice どうぞよろしく primero.", category: "saludos" },
 
   // ── Cortesía ─────────────────────────────────────────────────────────────
   { id: "arigatou",            kana: "ありがとう",               romaji: "arigatou",              meaning: "gracias (informal)",             context: "Con amigos o en situaciones casuales.", category: "cortesia" },

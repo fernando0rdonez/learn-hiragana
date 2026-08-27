@@ -1,5 +1,5 @@
 import type { Session } from "@supabase/supabase-js";
-import type { ProgressData, ProgressItems, StreakData, DailyProgress } from "../../types";
+import type { ProgressData, ProgressItems, StreakData, DailyProgress, ExamAttempt } from "../../types";
 import type { ViewName } from "../../data";
 import HomeView from "../HomeView";
 import SettingsView from "../SettingsView";
@@ -23,6 +23,8 @@ interface Props {
   masteredKanjiTotal: number;
   masteredGrammarTotal: number;
   masteredListeningTotal: number;
+  masteredHonorificsTotal: number;
+  examHistory: ExamAttempt[];
   saveError: boolean;
   resetConfirm: boolean;
   setResetConfirm: (v: boolean) => void;
@@ -55,7 +57,7 @@ interface Props {
 export default function CoreViews({
   view, setView, progress, streak, dailyProgress, today,
   masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal,
-  masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError,
+  masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, examHistory, saveError,
   resetConfirm, setResetConfirm, resetProgress, exportProgress,
   importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
   session, authLoading, otpStage, otpError, pendingEmail, cooldownSeconds,
@@ -76,6 +78,8 @@ export default function CoreViews({
           masteredKanjiTotal={masteredKanjiTotal}
           masteredGrammarTotal={masteredGrammarTotal}
           masteredListeningTotal={masteredListeningTotal}
+          masteredHonorificsTotal={masteredHonorificsTotal}
+          examHistory={examHistory}
           saveError={saveError}
           setView={setView}
         />

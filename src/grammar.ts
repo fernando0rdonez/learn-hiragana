@@ -68,6 +68,23 @@ export const GRAMMAR_LESSONS: GrammarLesson[] = [
     ],
   },
   {
+    id: "copula-pasado-negativo",
+    title: "El estado de ser: pasado y negativo",
+    explanation: "です tiene solo dos tiempos y no se conjuga según la persona. Presente: です (es) / ではありません (no es). Pasado: でした (era) / ではありませんでした (no era). ではありません se abrevia a じゃないです al hablar; ではありませんでした a じゃなかったです.",
+    pattern: "X は Y でした / ではありませんでした",
+    section: "Estructura básica",
+    exercises: [
+      { type: "order", tokens: ["わたし", "は", "がくせい", "でした"], translation: "Yo era estudiante." },
+      { type: "order", tokens: ["かのじょ", "は", "せんせい", "でした"], translation: "Ella era profesora." },
+      { type: "order", tokens: ["かれ", "は", "いしゃ", "では", "ありません"], translation: "Él no es médico." },
+      { type: "order", tokens: ["あなた", "は", "がくせい", "では", "ありません", "でした"], translation: "Tú no eras estudiante." },
+      { type: "particle", sentence: "わたし＿がくせいでした", answer: "は", options: ["は", "が", "を", "に"], translation: "Yo era estudiante." },
+      { type: "particle", sentence: "かのじょ＿せんせいでした", answer: "は", options: ["は", "の", "で", "と"], translation: "Ella era profesora." },
+      { type: "particle", sentence: "かれ＿いしゃではありません", answer: "は", options: ["は", "も", "が", "へ"], translation: "Él no es médico." },
+      { type: "particle", sentence: "あなた＿がくせいではありませんでした", answer: "は", options: ["は", "を", "に", "が"], translation: "Tú no eras estudiante." },
+    ],
+  },
+  {
     id: "pregunta-ka",
     title: "Preguntas con か",
     explanation: "Para convertir una afirmación en pregunta se añade か al final de です/ます, sin cambiar el orden de la frase. あなたはがくせいですか = \"¿Eres estudiante?\".",

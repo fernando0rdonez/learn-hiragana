@@ -326,6 +326,22 @@ export function grammarStatus(items: ProgressItems, lessonId: string): CharStatu
   return "developing";
 }
 
+export type HonorificPracticeMode = "honorific-suffix" | "honorific-family";
+
+export function honorificProgressKey(mode: HonorificPracticeMode, id: string): string {
+  return `${mode}:${id}`;
+}
+
+/** Mismos umbrales que grammarStatus, sobre la clave del ejercicio de honoríficos. */
+export function honorificStatus(items: ProgressItems, mode: HonorificPracticeMode, id: string): CharStatus {
+  const p = items[honorificProgressKey(mode, id)];
+  if (!p || p.attempts === 0) return "untested";
+  const acc = p.correct / p.attempts;
+  if (p.attempts >= 3 && acc >= 0.85) return "mastered";
+  if (acc < 0.5) return "weak";
+  return "developing";
+}
+
 export type ListeningPracticeMode = "listen-sentence" | "dictation";
 
 const LISTENING_MODES: ListeningPracticeMode[] = ["listen-sentence", "dictation"];

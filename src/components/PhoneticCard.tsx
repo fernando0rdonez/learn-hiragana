@@ -8,6 +8,7 @@ interface Props {
   selectedChoice: string | null;
   feedback: { status: "correct" | "wrong" } | null;
   note: string;
+  meaning?: string;
   onSelect: (choice: string) => void;
   onNext: () => void;
   nextBtnRef: React.RefObject<HTMLButtonElement | null>;
@@ -20,22 +21,32 @@ export default function PhoneticCard({
   selectedChoice,
   feedback,
   note,
+  meaning,
   onSelect,
   onNext,
   nextBtnRef,
 }: Props) {
   return (
     <div className="flex flex-col items-center w-full gap-6">
-      <p className="text-xs text-stone-400 uppercase tracking-widest">¿Cómo suena esta palabra?</p>
+      <p className="text-xs text-stone-400 uppercase tracking-widest">
+        {meaning ? "¿Con qué acento se pronuncia?" : "¿Cómo suena esta palabra?"}
+      </p>
 
-      <div className="flex items-center gap-3">
-        <div
-          className="text-5xl font-semibold text-stone-800"
-          style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
-        >
-          {kana}
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div
+            className="text-5xl font-semibold text-stone-800"
+            style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+          >
+            {kana}
+          </div>
+          <AudioButton text={kana} />
         </div>
-        <AudioButton text={kana} />
+        {meaning && (
+          <span className="text-sm font-semibold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700">
+            {meaning}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
