@@ -6,7 +6,7 @@ import { ALL_CHARS } from "../data";
 import { KATAKANA_ALL_CHARS } from "../dataKatakana";
 import { VOCABULARY, VOCAB_CATEGORIES } from "../vocabulary";
 import { KEY_NUMBERS } from "../numbers";
-import { KEY_HOURS, KEY_MINUTE_UNITS } from "../dateTime";
+import { KEY_HOURS, KEY_MINUTE_UNITS, KEY_WEEKDAYS, KEY_MONTHS, KEY_DAYS_OF_MONTH } from "../dateTime";
 import { PHRASES } from "../phrases";
 import { KANJI } from "../kanji";
 import { GRAMMAR_LESSONS } from "../grammar";
@@ -71,7 +71,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
     { id: "vocab", pct: vocabPct },
     { id: "katakana", pct: pct(masteredKataTotal, KATAKANA_ALL_CHARS.length) },
     { id: "numbers", pct: pct(masteredNumberKeys, KEY_NUMBERS.length) },
-    { id: "datetime", pct: pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length) },
+    { id: "datetime", pct: pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length + KEY_WEEKDAYS.length + KEY_MONTHS.length + KEY_DAYS_OF_MONTH.length) },
     { id: "phrases", pct: pct(masteredPhrasesTotal, PHRASES.length) },
     { id: "kanji", pct: pct(masteredKanjiTotal, KANJI.length) },
     { id: "grammar", pct: pct(masteredGrammarTotal, GRAMMAR_LESSONS.length) },
@@ -269,8 +269,8 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             bg="#F1F5F9" fg="#475569"
             icon={<Clock size={18} />}
             title="Fechas y Horas"
-            meta={`${pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length)}%`}
-            pctValue={pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length)}
+            meta={`${pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length + KEY_WEEKDAYS.length + KEY_MONTHS.length + KEY_DAYS_OF_MONTH.length)}%`}
+            pctValue={pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length + KEY_WEEKDAYS.length + KEY_MONTHS.length + KEY_DAYS_OF_MONTH.length)}
             onClick={() => goTo("dateTimeSetup")}
             badgeImg={neediestModuleId === "datetime" ? foxSleepy : undefined}
             badgeAlt="Necesita repaso"

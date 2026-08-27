@@ -11,6 +11,18 @@ import {
   buildTimeChipDistractors,
   randomTimeForLevel,
   TIME_BUILD_LEVELS,
+  KEY_WEEKDAYS,
+  KEY_MONTHS,
+  KEY_DAYS_OF_MONTH,
+  dateToKana,
+  formatDateValue,
+  buildDateOptions,
+  dateKey,
+  DATE_BUILD_LEVELS,
+  randomDateForLevel,
+  comboToKana,
+  formatCombo,
+  randomDateTimeCombo,
 } from "./dateTime";
 
 // ── minuteToKana: ejemplos de la spec ────────────────────────────────────────
@@ -129,5 +141,111 @@ test("randomTimeForLevel: respeta el eje de dificultad de cada nivel", () => {
       if (level.id === "hour") assert.equal(t.minute, 0);
       if (level.id === "half") assert.equal(t.minute, 30);
     }
+  }
+});
+
+// ── Fechas — días de la semana / meses / días del mes (fast-follow #17) ──────
+
+test("KEY_WEEKDAYS: 7 días, sin irregulares", () => {
+  assert.equal(KEY_WEEKDAYS.length, 7);
+  assert.equal(KEY_WEEKDAYS.find((w) => w.value === 1)!.hiragana, "げつようび");
+  assert.equal(KEY_WEEKDAYS.find((w) => w.value === 7)!.hiragana, "にちようび");
+});
+
+test("KEY_MONTHS: 12 meses, 3 irregulares (4, 7, 9)", () => {
+  assert.equal(KEY_MONTHS.length, 12);
+  const irregulares = KEY_MONTHS.filter((m) => m.irregular).map((m) => m.value).sort((a, b) => a - b);
+  assert.deepEqual(irregulares, [4, 7, 9]);
+  assert.equal(KEY_MONTHS.find((m) => m.value === 4)!.hiragana, "しがつ");
+  assert.equal(KEY_MONTHS.find((m) => m.value === 7)!.hiragana, "しちがつ");
+  assert.equal(KEY_MONTHS.find((m) => m.value === 9)!.hiragana, "くがつ");
+});
+
+test("KEY_DAYS_OF_MONTH: 31 días, lecturas de la spec (1,2,4,9,10,11,14,19,20,24,29,30,31)", () => {
+  assert.equal(KEY_DAYS_OF_MONTH.length, 31);
+  const readingFor = (v: number) => KEY_DAYS_OF_MONTH.find((d) => d.value === v)!.hiragana;
+  assert.equal(readingFor(1), "ついたち");
+  assert.equal(readingFor(2), "ふつか");
+  assert.equal(readingFor(4), "よっか");
+  assert.equal(readingFor(9), "ここのか");
+  assert.equal(readingFor(10), "とおか");
+  assert.equal(readingFor(11), "じゅういちにち");
+  assert.equal(readingFor(14), "じゅうよっか");
+  assert.equal(readingFor(19), "じゅうくにち");
+  assert.equal(readingFor(20), "はつか");
+  assert.equal(readingFor(24), "にじゅうよっか");
+  assert.equal(readingFor(29), "にじゅうくにち");
+  assert.equal(readingFor(30), "さんじゅうにち");
+  assert.equal(readingFor(31), "さんじゅういちにち");
+});
+
+// ── dateToKana / formatDateValue — un nivel por eje ──────────────────────────
+
+test("dateToKana/formatDateValue: día de la semana solo", () => {
+  assert.equal(dateToKana({ weekday: 6 }), "どようび");
+  assert.equal(formatDateValue({ weekday: 6 }), "sábado");
+});
+
+test("dateToKana/formatDateValue: mes solo", () => {
+  assert.equal(dateToKana({ month: 9 }), "くがつ");
+  assert.equal(formatDateValue({ month: 9 }), "septiembre");
+});
+
+test("dateToKana/formatDateValue: día del mes solo", () => {
+  assert.equal(dateToKana({ day: 20 }), "はつか");
+  assert.equal(formatDateValue({ day: 20 }), "Día 20");
+});
+
+test("dateToKana/formatDateValue: año solo reutiliza numberToChips + ねん", () => {
+  assert.equal(dateToKana({ year: 1989 }), "せんきゅうひゃくはちじゅうきゅうねん");
+  assert.equal(formatDateValue({ year: 1989 }), "1989");
+});
+
+test("dateToKana/formatDateValue: fecha completa año+mes+día", () => {
+  assert.equal(dateToKana({ year: 2024, month: 3, day: 15 }), "にせんにじゅうよんねんさんがつじゅうごにち");
+  assert.equal(formatDateValue({ year: 2024, month: 3, day: 15 }), "15/03/2024");
+});
+
+// ── buildDateOptions: nunca repite una fecha ─────────────────────────────────
+
+test("buildDateOptions: 4 opciones únicas por nivel, siempre incluye la correcta", () => {
+  for (const level of DATE_BUILD_LEVELS) {
+    for (let i = 0; i < 30; i++) {
+      const correct = randomDateForLevel(level.id);
+      const options = buildDateOptions(correct);
+      assert.equal(options.length, 4);
+      const keys = new Set(options.map(dateKey));
+      assert.equal(keys.size, 4, `opciones duplicadas en nivel ${level.id}`);
+      assert.ok(options.some((o) => dateKey(o) === dateKey(correct)));
+    }
+  }
+});
+
+test("randomDateForLevel: solo puebla los campos del nivel", () => {
+  for (let i = 0; i < 50; i++) {
+    const weekdayOnly = randomDateForLevel("weekday");
+    assert.equal(weekdayOnly.month, undefined);
+    assert.ok(weekdayOnly.weekday! >= 1 && weekdayOnly.weekday! <= 7);
+    assert.equal(randomDateForLevel("month").day, undefined);
+    const full = randomDateForLevel("full");
+    assert.ok(full.year !== undefined && full.month !== undefined && full.day !== undefined);
+    assert.ok(full.day! >= 1 && full.day! <= 28); // capado para no depender del mes
+  }
+});
+
+// ── Combo "Fecha y hora" ──────────────────────────────────────────────────────
+
+test("comboToKana/formatCombo: fecha completa + hora en una sola lectura", () => {
+  const combo = { date: { year: 2024, month: 3, day: 15 }, time: { hour: 7, minute: 0, period: "pm" as const } };
+  assert.equal(comboToKana(combo), "にせんにじゅうよんねんさんがつじゅうごにちごごしちじ");
+  assert.equal(formatCombo(combo), "15/03/2024 7:00 p. m.");
+});
+
+test("randomDateTimeCombo: siempre genera fecha completa + hora válidas", () => {
+  for (let i = 0; i < 30; i++) {
+    const combo = randomDateTimeCombo();
+    assert.ok(combo.date.year !== undefined && combo.date.month !== undefined && combo.date.day !== undefined);
+    assert.ok(combo.time.hour >= 1 && combo.time.hour <= 12);
+    assert.equal(typeof comboToKana(combo), "string");
   }
 });

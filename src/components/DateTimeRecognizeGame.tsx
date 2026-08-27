@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
-import type { TimeValue } from "../dateTime";
+import type { TimeValue, ContentType, DateBuildLevel, Entry } from "../dateTime";
 import {
-  randomTimeValue,
-  buildTimeOptions,
-  timeToChips,
-  timeToKana,
-  timeToRomaji,
-  formatTimeValue,
-  hourProgressKey,
-  minuteProgressKey,
+  randomEntry,
+  buildEntryOptions,
+  entryToChips,
+  entryToKana,
+  entryToRomaji,
+  formatEntry,
+  entryKey,
+  progressKeyForChip,
 } from "../dateTime";
 import { advanceBox } from "../leitner";
 import { playChime, playBuzz } from "../utils/audio";
@@ -35,18 +35,20 @@ type GamePhase = "playing" | "correct" | "wrong" | "done";
 const SLATE      = "#475569";
 const SLATE_DARK = "#334155";
 
-function timeKey(t: TimeValue): string {
-  return `${t.period}-${t.hour}-${t.minute}`;
-}
+const PROMPT_LABEL: Record<ContentType, string> = {
+  hora: "¿Qué hora es?",
+  fecha: "¿Qué fecha es?",
+  fechaHora: "¿Qué fecha y hora es?",
+};
 
 interface Round {
-  correct: TimeValue;
-  options: TimeValue[];
+  correct: Entry;
+  options: Entry[];
 }
 
-function buildRound(): Round {
-  const correct = randomTimeValue();
-  return { correct, options: buildTimeOptions(correct) };
+function buildRound(contentType: ContentType, dateLevel: DateBuildLevel): Round {
+  const correct = randomEntry(contentType, dateLevel);
+  return { correct, options: buildEntryOptions(contentType, correct) };
 }
 
 interface Props {
@@ -54,7 +56,9 @@ interface Props {
   sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
-  /** Reto en curso — pool fijo de horas en vez de generar al azar. */
+  contentType?: ContentType;
+  dateLevel?: DateBuildLevel;
+  /** Reto en curso — pool fijo de horas en vez de generar al azar (solo modo Hora). */
   items?: TimeValue[];
   onComplete?: (results: SessionResult[]) => void;
   onViewCompetitionResult?: () => void;
@@ -65,6 +69,8 @@ export default function DateTimeRecognizeGame({
   sessionLimit = 10,
   onProgressUpdate,
   onBack,
+  contentType = "hora",
+  dateLevel = "full",
   items,
   onComplete,
   onViewCompetitionResult,
@@ -72,7 +78,7 @@ export default function DateTimeRecognizeGame({
   const [rounds, setRounds] = useState<Round[]>([]);
   const [roundIndex, setRoundIndex] = useState(0);
   const [phase, setPhase] = useState<GamePhase>("playing");
-  const [selected, setSelected] = useState<TimeValue | null>(null);
+  const [selected, setSelected] = useState<Entry | null>(null);
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
   const { speak } = useSpeech();
 
@@ -85,8 +91,8 @@ export default function DateTimeRecognizeGame({
 
   useEffect(() => {
     const built = items && items.length > 0
-      ? items.map((t): Round => ({ correct: t, options: buildTimeOptions(t) }))
-      : Array.from({ length: sessionLimit }, buildRound);
+      ? items.map((t): Round => ({ correct: t, options: buildEntryOptions(contentType, t) }))
+      : Array.from({ length: sessionLimit }, () => buildRound(contentType, dateLevel));
     setRounds(built);
     setRoundIndex(0);
     if (built.length > 0) initRound();
@@ -118,10 +124,10 @@ export default function DateTimeRecognizeGame({
 
   function recordResult(round: Round, isCorrect: boolean) {
     const updates: ProgressItems = {};
-    const chips = timeToChips(round.correct.hour, round.correct.minute, round.correct.period);
+    const chips = entryToChips(contentType, round.correct);
     for (const chip of chips) {
       for (const value of chip.credits) {
-        const key = chip.kind === "hour" ? hourProgressKey(value) : minuteProgressKey(value);
+        const key = progressKeyForChip(chip, value);
         const prevP: ItemProgress = updates[key] ?? progress[key] ?? { box: 0, nextDue: today, attempts: 0, correct: 0 };
         const { box, nextDue } = advanceBox(prevP, isCorrect, today);
         updates[key] = {
@@ -134,15 +140,15 @@ export default function DateTimeRecognizeGame({
     }
     onProgressUpdate(updates);
     setSessionResults((prev) => [...prev, {
-      word: { hiragana: timeToKana(round.correct), romaji: timeToRomaji(round.correct), meaning: formatTimeValue(round.correct) },
+      word: { hiragana: entryToKana(contentType, round.correct), romaji: entryToRomaji(contentType, round.correct), meaning: formatEntry(contentType, round.correct) },
       correct: isCorrect,
     }]);
   }
 
-  function handleAnswer(option: TimeValue) {
+  function handleAnswer(option: Entry) {
     if (phase !== "playing" || !currentRound) return;
     setSelected(option);
-    const isCorrect = timeKey(option) === timeKey(currentRound.correct);
+    const isCorrect = entryKey(contentType, option) === entryKey(contentType, currentRound.correct);
     if (isCorrect) {
       playChime();
       fireConfetti();
@@ -152,7 +158,7 @@ export default function DateTimeRecognizeGame({
       setPhase("wrong");
     }
     recordResult(currentRound, isCorrect);
-    speak(timeToKana(currentRound.correct));
+    speak(entryToKana(contentType, currentRound.correct));
   }
 
   function handleContinue() {
@@ -188,22 +194,22 @@ export default function DateTimeRecognizeGame({
 
       {/* Lectura en hiragana */}
       <div className="flex flex-col items-center gap-1">
-        <p className="text-sm" style={{ color: "#8B7FA8" }}>¿Qué hora es?</p>
+        <p className="text-sm" style={{ color: "#8B7FA8" }}>{PROMPT_LABEL[contentType]}</p>
         <p
           className="text-3xl font-bold tracking-tight text-center"
           style={{ fontFamily: "'Noto Sans JP', sans-serif", color: "#1A1A2E" }}
         >
-          {timeToKana(currentRound.correct)}
+          {entryToKana(contentType, currentRound.correct)}
         </p>
       </div>
 
       <img src={foxPose} alt="" className="w-16 h-16 object-contain shrink-0 transition-opacity" />
 
-      {/* 4 opciones de hora */}
+      {/* 4 opciones */}
       <div className="w-full grid grid-cols-2 gap-2.5">
         {currentRound.options.map((opt) => {
-          const isCorrectOpt = timeKey(opt) === timeKey(currentRound.correct);
-          const isSelectedOpt = selected !== null && timeKey(opt) === timeKey(selected);
+          const isCorrectOpt = entryKey(contentType, opt) === entryKey(contentType, currentRound.correct);
+          const isSelectedOpt = selected !== null && entryKey(contentType, opt) === entryKey(contentType, selected);
           let style: React.CSSProperties = { borderColor: "#EEEEEE", backgroundColor: "#FFFFFF", color: "#1A1A2E" };
           if (phase !== "playing") {
             if (isCorrectOpt) style = { borderColor: "#0A6E54", backgroundColor: "#E9F7F1", color: "#0A6E54" };
@@ -211,13 +217,13 @@ export default function DateTimeRecognizeGame({
           }
           return (
             <button
-              key={timeKey(opt)}
+              key={entryKey(contentType, opt)}
               disabled={phase !== "playing"}
               onClick={() => handleAnswer(opt)}
               className="w-full py-4 rounded-2xl border-2 text-lg font-semibold text-center transition-colors disabled:opacity-100"
               style={style}
             >
-              {formatTimeValue(opt)}
+              {formatEntry(contentType, opt)}
             </button>
           );
         })}
@@ -227,9 +233,9 @@ export default function DateTimeRecognizeGame({
       {phase !== "playing" && (
         <AnswerReveal
           status={phase}
-          kana={timeToKana(currentRound.correct)}
-          romaji={timeToRomaji(currentRound.correct)}
-          meaning={formatTimeValue(currentRound.correct)}
+          kana={entryToKana(contentType, currentRound.correct)}
+          romaji={entryToRomaji(contentType, currentRound.correct)}
+          meaning={formatEntry(contentType, currentRound.correct)}
           accent={{ text: SLATE_DARK, bg: "#F1F5F9" }}
           onContinue={handleContinue}
         />

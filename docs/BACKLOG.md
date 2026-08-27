@@ -869,6 +869,30 @@ build pasa.
 > はん se ofrece como alternativa a さんじゅっぷん en el nivel "Y media" de Construir.
 > 13 tests unitarios en `src/dateTime.test.ts`.
 
+> **Hecho (fast-follow Fechas, 2026-08)** — implementado el fast-follow anotado
+> arriba, ampliado también a un cuarto modo "Reloj" (entrada libre) que no existía
+> cuando se escribió la nota original. `src/dateTime.ts` gana `KEY_WEEKDAYS` (7 días,
+> sin irregulares), `KEY_MONTHS` (12 meses/3 irregulares 4·7·9) y `KEY_DAYS_OF_MONTH`
+> (31 días, 13 tabulados a mano como vocabulario puro: 1–10, 14, 20, 24, 29). El año
+> reutiliza `numberToChips`/`numberKeyProgressKey` de #11 directamente (sin clave SRS
+> propia) con `ねん` como vocabulario fijo. Nuevo eje `DateBuildLevel` (día de la
+> semana → mes → día del mes → año → fecha completa) que — a diferencia de
+> `TimeBuildLevel`, que solo gobierna Construir — determina el contenido en los 4
+> modos por igual. Nuevo tipo de contenido combinado "Fecha y hora" (`DateTimeComboValue`)
+> que junta fecha completa (año+mes+día, día capado a 1–28 para no depender del mes) +
+> hora en una sola lectura. Un selector "Tipo" (Hora / Fecha / Fecha y hora) en
+> `DateTimeSetupView` decide el contenido; los 4 componentes de juego existentes
+> (`DateTimeRecognizeGame`/`WriteGame`/`BuildGame`/`ClockInputGame`) se generalizaron
+> con props `contentType`/`dateLevel` y dispatchers genéricos (`randomEntry`,
+> `entryToChips`, `buildEntryOptions`, `progressKeyForChip`, etc.) en vez de duplicar
+> componentes por tipo de contenido — el modo Reloj es el único con UI condicional
+> real (inputs día/mes/año + fila de 7 botones para día de la semana). Claves SRS
+> nuevas `datetime:weekday:{1-7}` / `datetime:month:{1-12}` / `datetime:day:{1-31}`.
+> El tile de progreso de "Fechas y Horas" en `HomeView` amplía su denominador con
+> estas tres tablas. Fuera de alcance: integración con el modo Competencia (queda
+> limitado a Hora, como antes). 21 tests unitarios nuevos en `src/dateTime.test.ts`
+> (34 en total).
+
 ---
 
 ## Plantilla para nuevas specs
