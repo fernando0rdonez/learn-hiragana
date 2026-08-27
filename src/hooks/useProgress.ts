@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { ProgressData, ProgressItems, StreakData, DailyProgress } from "../types";
+import type { ProgressData, ProgressItems, StreakData, DailyProgress, ExamAttempt } from "../types";
 import { loadProgress, saveProgress, parseImportedProgress, CURRENT_SCHEMA_VERSION } from "../storage";
 import { DEFAULT_DAILY_PROGRESS, normalizeStreak } from "../streak";
 import { toISODate } from "../utils";
@@ -16,6 +16,7 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
   const [saveError, setSaveError]   = useState(false);
   const [showRomaji, setShowRomaji] = useState(true);
   const [progress, setProgress]     = useState<ProgressItems>({});
+  const [examHistory, setExamHistory] = useState<ExamAttempt[]>([]);
   const [importError, setImportError]     = useState<string | null>(null);
   const [pendingImport, setPendingImport] = useState<ProgressData | null>(null);
   const [importSuccess, setImportSuccess] = useState(false);
@@ -26,23 +27,38 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
     setStreak(normalizeStreak(data.streak));
     setDailyProgress(data.dailyProgress ?? DEFAULT_DAILY_PROGRESS);
     setShowRomaji(data.settings?.showRomaji ?? false);
+    setExamHistory(data.examHistory ?? []);
     setLoading(false);
   }, [setStreak, setDailyProgress]);
 
-  function persist(newItems: ProgressItems, newStreak: StreakData = streak, newDaily: DailyProgress = dailyProgress) {
-    const ok = saveProgress({ items: newItems, streak: newStreak, dailyProgress: newDaily, settings: { showRomaji } });
+  function persist(
+    newItems: ProgressItems,
+    newStreak: StreakData = streak,
+    newDaily: DailyProgress = dailyProgress,
+    newExamHistory: ExamAttempt[] = examHistory,
+  ) {
+    const ok = saveProgress({ items: newItems, streak: newStreak, dailyProgress: newDaily, settings: { showRomaji }, examHistory: newExamHistory });
     setSaveError(!ok);
     setStreak(newStreak);
     setDailyProgress(newDaily);
+    setExamHistory(newExamHistory);
   }
 
   function updateShowRomaji(val: boolean) {
     setShowRomaji(val);
-    saveProgress({ items: progress, streak, dailyProgress, settings: { showRomaji: val } });
+    saveProgress({ items: progress, streak, dailyProgress, settings: { showRomaji: val }, examHistory });
+  }
+
+  /** Guarda un intento del Examen del curso (Parte B). No toca el SRS ni la racha. */
+  function recordExamAttempt(attempt: ExamAttempt) {
+    const next = [...examHistory, attempt].slice(-50);
+    setExamHistory(next);
+    const ok = saveProgress({ items: progress, streak, dailyProgress, settings: { showRomaji }, examHistory: next });
+    setSaveError(!ok);
   }
 
   function exportProgress() {
-    const data: ProgressData = { items: progress, streak, dailyProgress, settings: { showRomaji }, schemaVersion: CURRENT_SCHEMA_VERSION };
+    const data: ProgressData = { items: progress, streak, dailyProgress, settings: { showRomaji }, examHistory, schemaVersion: CURRENT_SCHEMA_VERSION };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -70,6 +86,7 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
     setShowRomaji(data.settings?.showRomaji ?? showRomaji);
     setStreak(normalizeStreak(data.streak));
     setDailyProgress(data.dailyProgress ?? DEFAULT_DAILY_PROGRESS);
+    setExamHistory(data.examHistory ?? []);
     setSaveError(!ok);
   }
 
@@ -79,11 +96,13 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
     const newStreak   = normalizeStreak(pendingImport.streak);
     const newDaily    = pendingImport.dailyProgress ?? DEFAULT_DAILY_PROGRESS;
     const newRomaji   = pendingImport.settings?.showRomaji ?? false;
-    const ok = saveProgress({ items, streak: newStreak, dailyProgress: newDaily, settings: { showRomaji: newRomaji } });
+    const newExamHistory = pendingImport.examHistory ?? [];
+    const ok = saveProgress({ items, streak: newStreak, dailyProgress: newDaily, settings: { showRomaji: newRomaji }, examHistory: newExamHistory });
     setProgress(items);
     setShowRomaji(newRomaji);
     setStreak(newStreak);
     setDailyProgress(newDaily);
+    setExamHistory(newExamHistory);
     setSaveError(!ok);
     setPendingImport(null);
     setImportSuccess(ok);
@@ -96,6 +115,7 @@ export function useProgress({ streak, dailyProgress, setStreak, setDailyProgress
 
   return {
     loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji,
+    examHistory, recordExamAttempt,
     exportProgress, importError, pendingImport, importSuccess, stageImport, adoptRemoteProgress, confirmImport, cancelImport,
   };
 }

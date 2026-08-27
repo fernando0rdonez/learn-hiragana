@@ -38,11 +38,21 @@ export interface DailyProgress {
   correctToday: number;
 }
 
+/** Un intento del "Examen del curso" (Parte B). Vive fuera del SRS Leitner. */
+export interface ExamAttempt {
+  date: string;        // ISO "YYYY-MM-DD"
+  overallPct: number;  // 0–100
+  passed: boolean;
+  total: number;       // nº de preguntas de ese intento
+  byTopic: Record<string, number>; // topic → % de aciertos (0–100)
+}
+
 export interface ProgressData {
   items: ProgressItems;
   streak?: StreakData;
   dailyProgress?: DailyProgress;
   settings?: { showRomaji: boolean };
+  examHistory?: ExamAttempt[];
   schemaVersion?: number;
 }
 

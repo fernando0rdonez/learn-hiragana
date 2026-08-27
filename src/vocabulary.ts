@@ -138,6 +138,10 @@ export const VOCABULARY: VocabWord[] = [
   { hiragana: "ごしゅじん", romaji: "goshujin", meaning: "esposo (de otro)", imageQuery: "husband",         emojiBackup: "🤵", category: "familia" , generated: true, imagePath: "familia-goshujin" },
   { hiragana: "かない",     romaji: "kanai",    meaning: "mi esposa",      imageQuery: "my wife ring",      emojiBackup: "💍", category: "familia" , generated: true, imagePath: "familia-kanai" },
   { hiragana: "しゅじん",   romaji: "shujin",   meaning: "mi esposo",      imageQuery: "my husband ring",   emojiBackup: "💍", category: "familia" , generated: true, imagePath: "familia-shujin" },
+  { hiragana: "そふ",       romaji: "sofu",     meaning: "mi abuelo",      imageQuery: "grandfather humble", emojiBackup: "👴", category: "familia" },
+  { hiragana: "そぼ",       romaji: "sobo",     meaning: "mi abuela",      imageQuery: "grandmother humble", emojiBackup: "👵", category: "familia" },
+  { hiragana: "むすこ",     romaji: "musuko",   meaning: "mi hijo",        imageQuery: "my son",            emojiBackup: "👦", category: "familia" },
+  { hiragana: "むすめ",     romaji: "musume",   meaning: "mi hija",        imageQuery: "my daughter",       emojiBackup: "👧", category: "familia" },
 
   // --- GENTE ---
   { hiragana: "ひと",       romaji: "hito",     meaning: "persona",        imageQuery: "person standing",   emojiBackup: "🧍", category: "gente" , generated: true, imagePath: "gente-hito" },
@@ -647,6 +651,9 @@ export const VOCABULARY: VocabWord[] = [
   { hiragana: "かのじょ",   romaji: "kanojo",   meaning: "ella",           imageQuery: "woman",             emojiBackup: "👩", category: "pronombres" , generated: true, imagePath: "pronombres-kanojo" },
   { hiragana: "みんな",     romaji: "minna",    meaning: "todos",          imageQuery: "group people",      emojiBackup: "👥", category: "pronombres" , generated: true, imagePath: "pronombres-minna" },
   { hiragana: "わたしたち", romaji: "watashitachi", meaning: "nosotros",   imageQuery: "we us group",       emojiBackup: "👥", category: "pronombres" , generated: true, imagePath: "pronombres-watashitachi" },
+  { hiragana: "あなたたち", romaji: "anatatachi", meaning: "ustedes",      imageQuery: "you plural group",  emojiBackup: "👥", category: "pronombres" },
+  { hiragana: "かれたち",   romaji: "karetachi", meaning: "ellos",         imageQuery: "group of men",      emojiBackup: "👬", category: "pronombres" },
+  { hiragana: "かのじょたち", romaji: "kanojotachi", meaning: "ellas",     imageQuery: "group of women",    emojiBackup: "👭", category: "pronombres" },
   { hiragana: "これ",       romaji: "kore",     meaning: "esto",           imageQuery: "this object here",  emojiBackup: "👇", category: "pronombres" , generated: true, imagePath: "pronombres-kore" },
   { hiragana: "それ",       romaji: "sore",     meaning: "eso",            imageQuery: "that object there", emojiBackup: "👉", category: "pronombres" , generated: true, imagePath: "pronombres-sore" },
   { hiragana: "あれ",       romaji: "are",      meaning: "aquello",        imageQuery: "that over there far", emojiBackup: "🔭", category: "pronombres" , generated: true, imagePath: "pronombres-are" },

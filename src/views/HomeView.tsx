@@ -1,6 +1,7 @@
-import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, GraduationCap, SpellCheck2, Headphones, Trophy, Clock } from "lucide-react";
+import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, GraduationCap, SpellCheck2, Headphones, Trophy, Clock, Handshake, ClipboardCheck, Star } from "lucide-react";
 import { useState } from "react";
-import type { StreakData } from "../types";
+import type { StreakData, ExamAttempt } from "../types";
+import { HONORIFIC_EXERCISES } from "../honorifics";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
 import { KATAKANA_ALL_CHARS } from "../dataKatakana";
@@ -29,6 +30,8 @@ interface Props {
   masteredKanjiTotal: number;
   masteredGrammarTotal: number;
   masteredListeningTotal: number;
+  masteredHonorificsTotal: number;
+  examHistory: ExamAttempt[];
   saveError: boolean;
   setView: (v: ViewName) => void;
 }
@@ -53,7 +56,7 @@ function pct(mastered: number, total: number): number {
   return total > 0 ? Math.round((mastered / total) * 100) : 0;
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, saveError, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, examHistory, saveError, setView }: Props) {
   const [heroModule] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -76,7 +79,9 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
     { id: "kanji", pct: pct(masteredKanjiTotal, KANJI.length) },
     { id: "grammar", pct: pct(masteredGrammarTotal, GRAMMAR_LESSONS.length) },
     { id: "listening", pct: pct(masteredListeningTotal, LISTENING_SENTENCES.length) },
+    { id: "honorifics", pct: pct(masteredHonorificsTotal, HONORIFIC_EXERCISES.length) },
   ];
+  const examBest = examHistory.length > 0 ? Math.max(...examHistory.map((a) => a.overallPct)) : null;
   const neediestModuleId = moduleStats.reduce((min, m) => (m.pct < min.pct ? m : min)).id;
 
   return (
@@ -174,12 +179,17 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
       {/* ── Módulos: grilla compacta ── */}
       <div className="mt-8">
         <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: "#8B7FA8" }}>Tus módulos</div>
+        <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#A9853A" }}>
+          <Star size={11} fill="#B8860B" style={{ color: "#B8860B" }} />
+          entra en el Examen del curso
+        </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2.5">
           <ModuleTile
             bg="#EDE7F9" fg="#7B4FD4"
             icon={<span className="text-lg font-bold" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>あ</span>}
             title="Hiragana"
+            inExam
             meta={`${hiraganaPct}%`}
             pctValue={hiraganaPct}
             onClick={() => goTo("hiraganaSetup", "hiragana")}
@@ -191,6 +201,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             bg="#FFEEEA" fg="#E85D3A"
             icon={<BookOpen size={18} />}
             title="Vocabulario"
+            inExam
             meta={`${vocabPct}%`}
             pctValue={vocabPct}
             onClick={() => goTo("vocabCategory", "vocab")}
@@ -213,6 +224,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             bg="#FFF4E5" fg="#C97F0B"
             icon={<Hash size={18} />}
             title="Números"
+            inExam
             meta={`${pct(masteredNumberKeys, KEY_NUMBERS.length)}%`}
             pctValue={pct(masteredNumberKeys, KEY_NUMBERS.length)}
             onClick={() => goTo("numberSetup")}
@@ -224,6 +236,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             bg="#FCEAF3" fg="#D14B8F"
             icon={<MessageCircle size={18} />}
             title="Frases"
+            inExam
             meta={`${pct(masteredPhrasesTotal, PHRASES.length)}%`}
             pctValue={pct(masteredPhrasesTotal, PHRASES.length)}
             onClick={() => goTo("phraseSetup")}
@@ -246,6 +259,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             bg="#EDEFFB" fg="#4C5FBF"
             icon={<SpellCheck2 size={18} />}
             title="Gramática"
+            inExam
             meta={`${pct(masteredGrammarTotal, GRAMMAR_LESSONS.length)}%`}
             pctValue={pct(masteredGrammarTotal, GRAMMAR_LESSONS.length)}
             onClick={() => goTo("grammarSetup")}
@@ -269,6 +283,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             bg="#F1F5F9" fg="#475569"
             icon={<Clock size={18} />}
             title="Fechas y Horas"
+            inExam
             meta={`${pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length + KEY_WEEKDAYS.length + KEY_MONTHS.length + KEY_DAYS_OF_MONTH.length)}%`}
             pctValue={pct(masteredDateTimeKeys, KEY_HOURS.length + KEY_MINUTE_UNITS.length + KEY_WEEKDAYS.length + KEY_MONTHS.length + KEY_DAYS_OF_MONTH.length)}
             onClick={() => goTo("dateTimeSetup")}
@@ -280,10 +295,39 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             bg="#E3FAF3" fg="#15C0A0"
             icon={<Mic size={18} />}
             title="Fonética"
+            inExam
             meta="Cómo suenan"
             onClick={() => goTo("phoneticSetup")}
           />
+
+          <ModuleTile
+            bg="#E1F5F2" fg="#0E9488"
+            icon={<Handshake size={18} />}
+            title="Trato"
+            inExam
+            meta={`${pct(masteredHonorificsTotal, HONORIFIC_EXERCISES.length)}%`}
+            pctValue={pct(masteredHonorificsTotal, HONORIFIC_EXERCISES.length)}
+            onClick={() => goTo("honorificsSetup")}
+            badgeImg={neediestModuleId === "honorifics" ? foxSleepy : undefined}
+            badgeAlt="Necesita repaso"
+          />
         </div>
+
+        {/* ── Examen del curso ── */}
+        <button
+          onClick={() => setView("examIntro")}
+          className="relative w-full flex items-center gap-3 rounded-2xl pl-4 pr-10 py-3 text-left mt-3"
+          style={{ border: "1.5px dashed #E4D9B8", backgroundColor: "#FBF3DE" }}
+        >
+          <ClipboardCheck size={18} style={{ color: "#8A6508" }} className="shrink-0" />
+          <div className="min-w-0">
+            <div className="text-[13px] font-bold" style={{ color: "#8A6508" }}>Examen del curso</div>
+            <div className="text-[11px] font-semibold" style={{ color: "#A9853A" }}>
+              {examBest !== null ? `Mejor nota: ${examBest}%` : "40 preguntas de todo el temario"}
+            </div>
+          </div>
+          <ChevronRight size={16} className="shrink-0 ml-auto" style={{ color: "#8A6508" }} />
+        </button>
 
         {isSupabaseConfigured && (
           <div className="relative mt-3 mb-4">
@@ -335,9 +379,11 @@ interface ModuleTileProps {
   onClick?: () => void;
   badgeImg?: string;
   badgeAlt?: string;
+  /** true → muestra una estrella: este módulo entra en el Examen del curso. */
+  inExam?: boolean;
 }
 
-function ModuleTile({ bg, fg, icon, title, meta, pctValue, onClick, badgeImg, badgeAlt }: ModuleTileProps) {
+function ModuleTile({ bg, fg, icon, title, meta, pctValue, onClick, badgeImg, badgeAlt, inExam }: ModuleTileProps) {
   return (
     <button
       onClick={onClick}
@@ -354,7 +400,10 @@ function ModuleTile({ bg, fg, icon, title, meta, pctValue, onClick, badgeImg, ba
           {icon}
         </span>
         <div className="min-w-0">
-          <div className="text-[13.5px] font-bold truncate" style={{ color: "#1A1A2E" }}>{title}</div>
+          <div className="flex items-center gap-1 min-w-0">
+            <span className="text-[13.5px] font-bold truncate" style={{ color: "#1A1A2E" }}>{title}</span>
+            {inExam && <Star size={11} className="shrink-0" fill="#B8860B" style={{ color: "#B8860B" }} aria-label="Entra en el Examen del curso" />}
+          </div>
           <div className="text-[11px] font-semibold" style={{ color: "#8B7FA8" }}>{meta}</div>
         </div>
       </div>

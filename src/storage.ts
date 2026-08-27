@@ -4,7 +4,7 @@ import { VOCABULARY } from "./vocabulary";
 import { DEFAULT_DAILY_PROGRESS, normalizeStreak, addPracticeDate } from "./streak";
 
 const STORAGE_KEY = "hiragana-progress";
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 const WORD_KANA = new Set(WORDS.map((w) => w.kana));
 const VOCAB_KANA = new Set(VOCABULARY.map((w) => w.hiragana));
@@ -40,12 +40,13 @@ export function loadProgress(): ProgressData {
           const migrated: ProgressData = {
             ...parsed,
             items: migrateWordToSpellKeys(parsed.items),
+            examHistory: Array.isArray(parsed.examHistory) ? parsed.examHistory : [],
             schemaVersion: CURRENT_SCHEMA_VERSION,
           };
           saveProgress(migrated);
           return migrated;
         }
-        return parsed;
+        return { ...parsed, examHistory: Array.isArray(parsed.examHistory) ? parsed.examHistory : [] };
       }
     }
   } catch {
@@ -93,10 +94,11 @@ export function validateProgressData(parsed: unknown, source: "archivo" | "datos
   if (version > CURRENT_SCHEMA_VERSION) {
     throw new Error(`Este ${source} se guardó con una versión más nueva de la app. Actualiza la app para poder usarlo.`);
   }
+  const examHistory = Array.isArray(data.examHistory) ? data.examHistory : [];
   if (version < CURRENT_SCHEMA_VERSION) {
-    return { ...data, items: migrateWordToSpellKeys(data.items), schemaVersion: CURRENT_SCHEMA_VERSION };
+    return { ...data, items: migrateWordToSpellKeys(data.items), examHistory, schemaVersion: CURRENT_SCHEMA_VERSION };
   }
-  return { ...data, schemaVersion: CURRENT_SCHEMA_VERSION };
+  return { ...data, examHistory, schemaVersion: CURRENT_SCHEMA_VERSION };
 }
 
 export function parseImportedProgress(raw: string): ProgressData {
@@ -153,6 +155,20 @@ export function mergeProgressData(a: ProgressData, b: ProgressData): ProgressDat
     streak: mergeStreak(a.streak, b.streak),
     dailyProgress: mergeDailyProgress(a.dailyProgress, b.dailyProgress),
     settings: a.settings ?? b.settings,
+    examHistory: mergeExamHistory(a.examHistory, b.examHistory),
     schemaVersion: CURRENT_SCHEMA_VERSION,
   };
+}
+
+/** Une los historiales de examen de dos dispositivos: sin duplicados, por fecha. */
+function mergeExamHistory(a: ProgressData["examHistory"], b: ProgressData["examHistory"]): ProgressData["examHistory"] {
+  const seen = new Set<string>();
+  const all = [...(a ?? []), ...(b ?? [])].filter((att) => {
+    const k = `${att.date}|${att.overallPct}|${att.total}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  all.sort((x, y) => x.date.localeCompare(y.date));
+  return all.slice(-50);
 }

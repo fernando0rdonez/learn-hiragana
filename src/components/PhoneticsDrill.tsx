@@ -171,6 +171,7 @@ export default function PhoneticsDrill({
         selectedChoice={selected}
         feedback={feedback}
         note={currentEntry.note}
+        meaning={currentEntry.meaning}
         onSelect={handleSelect}
         onNext={handleNext}
         nextBtnRef={nextBtnRef}

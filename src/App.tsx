@@ -15,12 +15,13 @@ import { PHRASES } from "./phrases";
 import { KANJI } from "./kanji";
 import { GRAMMAR_LESSONS } from "./grammar";
 import { LISTENING_SENTENCES } from "./listening";
+import { HONORIFIC_EXERCISES } from "./honorifics";
 import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, recordCorrectAnswer } from "./streak";
 import { getAvailablePhonetics } from "./phonetics";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
 import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS } from "./dataKatakana";
-import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, vocabStatus, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus, grammarStatus, resolveListeningSession, listeningStatus } from "./utils";
+import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, vocabStatus, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus, grammarStatus, resolveListeningSession, listeningStatus, honorificStatus } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
 import { useSession } from "./hooks/useSession";
@@ -48,6 +49,9 @@ import PhraseModuleViews from "./views/modules/PhraseModuleViews";
 import KanjiModuleViews from "./views/modules/KanjiModuleViews";
 import GrammarModuleViews from "./views/modules/GrammarModuleViews";
 import ListeningModuleViews from "./views/modules/ListeningModuleViews";
+import HonorificsModuleViews from "./views/modules/HonorificsModuleViews";
+import type { HonorificGameMode } from "./honorifics";
+import ExamView from "./views/ExamView";
 import NumberModuleViews from "./views/modules/NumberModuleViews";
 import DateTimeModuleViews from "./views/modules/DateTimeModuleViews";
 import CompetitionModuleViews from "./views/modules/CompetitionModuleViews";
@@ -62,6 +66,7 @@ const STUDY_VIEWS = new Set<ViewName>([
   "kanjiMeaning", "kanjiReading", "kanjiMatch",
   "grammarLesson",
   "listeningComprehension", "listeningDictation",
+  "honorifics",
 ]);
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -70,6 +75,7 @@ export default function HiraganaTrainer() {
   const { streak, setStreak, dailyProgress, setDailyProgress } = useStreak();
   const {
     loading, saveError, progress, setProgress, showRomaji, persist, updateShowRomaji,
+    examHistory, recordExamAttempt,
     exportProgress, importError, pendingImport, importSuccess, stageImport, adoptRemoteProgress, confirmImport, cancelImport,
   } = useProgress({
     streak, dailyProgress, setStreak, setDailyProgress,
@@ -79,7 +85,7 @@ export default function HiraganaTrainer() {
   } = useAuth();
   const { pushNow, syncing } = useProgressSync({
     session,
-    snapshot: { items: progress, streak, dailyProgress, settings: { showRomaji }, schemaVersion: CURRENT_SCHEMA_VERSION },
+    snapshot: { items: progress, streak, dailyProgress, settings: { showRomaji }, examHistory, schemaVersion: CURRENT_SCHEMA_VERSION },
     onRemoteProgress: adoptRemoteProgress,
   });
   const {
@@ -126,6 +132,8 @@ export default function HiraganaTrainer() {
   const [kanjiSessionLength, setKanjiSessionLength] = useState<VocabSessionLength>(10);
   const [selectedGrammarLessonId, setSelectedGrammarLessonId] = useState<string | null>(null);
   const [listeningSessionLength, setListeningSessionLength] = useState<VocabSessionLength>(20);
+  const [honorificMode, setHonorificMode] = useState<HonorificGameMode>("both");
+  const [honorificSessionLength, setHonorificSessionLength] = useState<VocabSessionLength>(20);
   const [selectedNumberGroups, setSelectedNumberGroups] = useState<Set<string>>(
     () => new Set(KEY_NUMBER_GROUPS.map((g) => g.id))
   );
@@ -378,6 +386,8 @@ export default function HiraganaTrainer() {
   const { pool: listeningSessionPool, limit: listeningSessionLimit } = resolveListeningSession(LISTENING_SENTENCES, listeningSessionLength, progress);
   const masteredListeningTotal = LISTENING_SENTENCES.filter((s) => listeningStatus(progress, s.id) === "mastered").length;
 
+  const masteredHonorificsTotal = HONORIFIC_EXERCISES.filter((e) => honorificStatus(progress, e.mode, e.id) === "mastered").length;
+
   const numberKeysPool = KEY_NUMBER_GROUPS
     .filter((g) => selectedNumberGroups.has(g.id))
     .flatMap((g) => g.numbers);
@@ -423,6 +433,8 @@ export default function HiraganaTrainer() {
             masteredKanjiTotal={masteredKanjiTotal}
             masteredGrammarTotal={masteredGrammarTotal}
             masteredListeningTotal={masteredListeningTotal}
+            masteredHonorificsTotal={masteredHonorificsTotal}
+            examHistory={examHistory}
             saveError={saveError}
             resetConfirm={resetConfirm}
             setResetConfirm={setResetConfirm}
@@ -632,6 +644,29 @@ export default function HiraganaTrainer() {
             setListeningSessionLength={setListeningSessionLength}
             listeningSessionPool={listeningSessionPool}
             listeningSessionLimit={listeningSessionLimit}
+          />
+        )}
+
+        {/* ── Trato y Honoríficos ── */}
+        {(view === "honorificsSetup" || view === "honorifics") && (
+          <HonorificsModuleViews
+            view={view}
+            setView={setView}
+            progress={progress}
+            onProgressUpdate={onProgressUpdate}
+            honorificMode={honorificMode}
+            setHonorificMode={setHonorificMode}
+            honorificSessionLength={honorificSessionLength}
+            setHonorificSessionLength={setHonorificSessionLength}
+          />
+        )}
+
+        {/* ── Examen del curso (no toca el SRS) ── */}
+        {(view === "examIntro" || view === "examRunning" || view === "examReport") && (
+          <ExamView
+            setView={setView}
+            examHistory={examHistory}
+            recordExamAttempt={recordExamAttempt}
           />
         )}
 
