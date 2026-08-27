@@ -1,5 +1,5 @@
 import type { ProgressItems } from "../../types";
-import type { TimeBuildLevel } from "../../dateTime";
+import type { TimeBuildLevel, ContentType, DateBuildLevel } from "../../dateTime";
 import type { ViewName } from "../../data";
 import DateTimeSetupView from "../DateTimeSetupView";
 import DateTimeRecognizeGame from "../../components/DateTimeRecognizeGame";
@@ -12,20 +12,31 @@ interface Props {
   setView: (v: ViewName) => void;
   progress: ProgressItems;
   onProgressUpdate: (updates: ProgressItems) => void;
+  dateTimeContentType: ContentType;
+  setDateTimeContentType: (c: ContentType) => void;
   dateTimeBuildLevel: TimeBuildLevel;
   setDateTimeBuildLevel: (l: TimeBuildLevel) => void;
+  dateTimeDateLevel: DateBuildLevel;
+  setDateTimeDateLevel: (l: DateBuildLevel) => void;
 }
 
 export default function DateTimeModuleViews({
-  view, setView, progress, onProgressUpdate, dateTimeBuildLevel, setDateTimeBuildLevel,
+  view, setView, progress, onProgressUpdate,
+  dateTimeContentType, setDateTimeContentType,
+  dateTimeBuildLevel, setDateTimeBuildLevel,
+  dateTimeDateLevel, setDateTimeDateLevel,
 }: Props) {
   return (
     <>
       {view === "dateTimeSetup" && (
         <DateTimeSetupView
           progress={progress}
+          contentType={dateTimeContentType}
+          setContentType={setDateTimeContentType}
           buildLevel={dateTimeBuildLevel}
           setBuildLevel={setDateTimeBuildLevel}
+          dateLevel={dateTimeDateLevel}
+          setDateLevel={setDateTimeDateLevel}
           setView={setView}
         />
       )}
@@ -36,6 +47,8 @@ export default function DateTimeModuleViews({
           sessionLimit={10}
           onProgressUpdate={onProgressUpdate}
           onBack={() => setView("dateTimeSetup")}
+          contentType={dateTimeContentType}
+          dateLevel={dateTimeDateLevel}
         />
       )}
 
@@ -45,6 +58,8 @@ export default function DateTimeModuleViews({
           sessionLimit={10}
           onProgressUpdate={onProgressUpdate}
           onBack={() => setView("dateTimeSetup")}
+          contentType={dateTimeContentType}
+          dateLevel={dateTimeDateLevel}
         />
       )}
 
@@ -55,6 +70,8 @@ export default function DateTimeModuleViews({
           sessionLimit={10}
           onProgressUpdate={onProgressUpdate}
           onBack={() => setView("dateTimeSetup")}
+          contentType={dateTimeContentType}
+          dateLevel={dateTimeDateLevel}
         />
       )}
 
@@ -64,6 +81,8 @@ export default function DateTimeModuleViews({
           sessionLimit={10}
           onProgressUpdate={onProgressUpdate}
           onBack={() => setView("dateTimeSetup")}
+          contentType={dateTimeContentType}
+          dateLevel={dateTimeDateLevel}
         />
       )}
     </>

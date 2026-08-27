@@ -1,16 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
-import type { TimeBuildLevel, TimeChip, RandomTime } from "../dateTime";
+import type { TimeBuildLevel, DateTimeChip, ContentType, DateBuildLevel, Entry } from "../dateTime";
 import {
-  timeToChips,
-  timeToKana,
-  timeToRomaji,
-  formatTimeValue,
-  buildTimeChipDistractors,
-  randomTimeForLevel,
-  hourProgressKey,
-  minuteProgressKey,
+  entryToChips,
+  entryToKana,
+  entryToRomaji,
+  formatEntry,
+  buildEntryChipDistractors,
+  randomEntryForBuild,
+  progressKeyForChip,
 } from "../dateTime";
 import { advanceBox } from "../leitner";
 import { playChime, playBuzz } from "../utils/audio";
@@ -32,19 +31,25 @@ function toISODate(d: Date = new Date()): string {
 
 type GamePhase = "playing" | "correct" | "wrong" | "done";
 
-interface TileChip extends TimeChip {
+interface TileChip extends DateTimeChip {
   id: number;
   used: boolean;
 }
 
 interface Round {
-  target: RandomTime;
-  expected: TimeChip[];
+  target: Entry;
+  expected: DateTimeChip[];
   tiles: TileChip[];
 }
 
 const SLATE      = "#475569";
 const SLATE_DARK = "#334155";
+
+const PROMPT_LABEL: Record<ContentType, string> = {
+  hora: "Forma la hora en hiragana",
+  fecha: "Forma la fecha en hiragana",
+  fechaHora: "Forma la fecha y hora en hiragana",
+};
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -55,16 +60,16 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function roundFromTarget(target: RandomTime): Round {
-  const expected = timeToChips(target.hour, target.minute, target.period, target.useHan);
+function roundFromTarget(contentType: ContentType, target: Entry): Round {
+  const expected = entryToChips(contentType, target);
   const distractorCount = Math.min(3, Math.max(2, 5 - expected.length));
-  const tiles = shuffle([...expected, ...buildTimeChipDistractors(expected, distractorCount)])
+  const tiles = shuffle([...expected, ...buildEntryChipDistractors(contentType, expected, distractorCount)])
     .map((chip, id): TileChip => ({ ...chip, id, used: false }));
   return { target, expected, tiles };
 }
 
-function buildRound(level: TimeBuildLevel): Round {
-  return roundFromTarget(randomTimeForLevel(level));
+function buildRound(contentType: ContentType, timeLevel: TimeBuildLevel, dateLevel: DateBuildLevel): Round {
+  return roundFromTarget(contentType, randomEntryForBuild(contentType, timeLevel, dateLevel));
 }
 
 interface Props {
@@ -73,8 +78,10 @@ interface Props {
   sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
-  /** Reto en curso — pool fijo de horas en vez de generar al azar. */
-  items?: RandomTime[];
+  contentType?: ContentType;
+  dateLevel?: DateBuildLevel;
+  /** Reto en curso — pool fijo de horas en vez de generar al azar (solo modo Hora). */
+  items?: Entry[];
   onComplete?: (results: SessionResult[]) => void;
   onViewCompetitionResult?: () => void;
 }
@@ -85,6 +92,8 @@ export default function DateTimeBuildGame({
   sessionLimit = 10,
   onProgressUpdate,
   onBack,
+  contentType = "hora",
+  dateLevel = "full",
   items,
   onComplete,
   onViewCompetitionResult,
@@ -106,8 +115,8 @@ export default function DateTimeBuildGame({
 
   useEffect(() => {
     const built = items && items.length > 0
-      ? items.map(roundFromTarget)
-      : Array.from({ length: sessionLimit }, () => buildRound(level));
+      ? items.map((t) => roundFromTarget(contentType, t))
+      : Array.from({ length: sessionLimit }, () => buildRound(contentType, level, dateLevel));
     setRounds(built);
     setRoundIndex(0);
     if (built.length > 0) initRound(built[0]);
@@ -142,7 +151,7 @@ export default function DateTimeBuildGame({
     const updates: ProgressItems = {};
     for (const chip of round.expected) {
       for (const value of chip.credits) {
-        const key = chip.kind === "hour" ? hourProgressKey(value) : minuteProgressKey(value);
+        const key = progressKeyForChip(chip, value);
         const prevP: ItemProgress = updates[key] ?? progress[key] ?? { box: 0, nextDue: today, attempts: 0, correct: 0 };
         const { box, nextDue } = advanceBox(prevP, isCorrect, today);
         updates[key] = {
@@ -156,9 +165,9 @@ export default function DateTimeBuildGame({
     onProgressUpdate(updates);
     setSessionResults((prev) => [...prev, {
       word: {
-        hiragana: timeToKana(round.target, round.target.useHan),
-        romaji: timeToRomaji(round.target, round.target.useHan),
-        meaning: formatTimeValue(round.target),
+        hiragana: entryToKana(contentType, round.target),
+        romaji: entryToRomaji(contentType, round.target),
+        meaning: formatEntry(contentType, round.target),
       },
       correct: isCorrect,
     }]);
@@ -178,7 +187,7 @@ export default function DateTimeBuildGame({
         playBuzz();
         setPhase("wrong");
       }
-      speak(timeToKana(round.target, round.target.useHan));
+      speak(entryToKana(contentType, round.target));
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [roundIndex, rounds, progress]
@@ -233,14 +242,14 @@ export default function DateTimeBuildGame({
         />
       </div>
 
-      {/* Hora objetivo */}
+      {/* Objetivo */}
       <div className="flex flex-col items-center gap-1">
-        <p className="text-sm" style={{ color: "#8B7FA8" }}>Forma la hora en hiragana</p>
+        <p className="text-sm" style={{ color: "#8B7FA8" }}>{PROMPT_LABEL[contentType]}</p>
         <p
           className="text-4xl font-bold tracking-tight"
           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: "#1A1A2E" }}
         >
-          {formatTimeValue(currentRound.target)}
+          {formatEntry(contentType, currentRound.target)}
         </p>
       </div>
 
@@ -294,9 +303,9 @@ export default function DateTimeBuildGame({
       {phase !== "playing" && (
         <AnswerReveal
           status={phase}
-          kana={timeToKana(currentRound.target, currentRound.target.useHan)}
-          romaji={timeToRomaji(currentRound.target, currentRound.target.useHan)}
-          meaning={formatTimeValue(currentRound.target)}
+          kana={entryToKana(contentType, currentRound.target)}
+          romaji={entryToRomaji(contentType, currentRound.target)}
+          meaning={formatEntry(contentType, currentRound.target)}
           accent={{ text: SLATE_DARK, bg: "#F1F5F9" }}
           onContinue={handleContinue}
         />

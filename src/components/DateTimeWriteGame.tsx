@@ -1,15 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
-import type { TimeValue } from "../dateTime";
+import type { TimeValue, ContentType, DateBuildLevel, Entry } from "../dateTime";
 import {
-  randomTimeValue,
-  timeToChips,
-  timeToKana,
-  timeToRomaji,
-  formatTimeValue,
-  hourProgressKey,
-  minuteProgressKey,
+  randomEntry,
+  entryToChips,
+  entryToKana,
+  entryToRomaji,
+  formatEntry,
+  progressKeyForChip,
 } from "../dateTime";
 import { advanceBox } from "../leitner";
 import { playChime, playBuzz } from "../utils/audio";
@@ -38,6 +37,12 @@ type GamePhase = "playing" | "correct" | "wrong" | "done";
 const SLATE      = "#475569";
 const SLATE_DARK = "#334155";
 
+const PROMPT_LABEL: Record<ContentType, string> = {
+  hora: "Escribe la hora en hiragana",
+  fecha: "Escribe la fecha en hiragana",
+  fechaHora: "Escribe la fecha y hora en hiragana",
+};
+
 /** Colorea cada kana de la lectura correcta según si lo tecleado coincide en esa posición. */
 function ReadingDiff({ expected, given }: { expected: string; given: string }) {
   const exp = Array.from(expected);
@@ -58,7 +63,9 @@ interface Props {
   sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
-  /** Reto en curso — pool fijo de horas en vez de generar al azar. */
+  contentType?: ContentType;
+  dateLevel?: DateBuildLevel;
+  /** Reto en curso — pool fijo de horas en vez de generar al azar (solo modo Hora). */
   items?: TimeValue[];
   onComplete?: (results: SessionResult[]) => void;
   onViewCompetitionResult?: () => void;
@@ -69,11 +76,13 @@ export default function DateTimeWriteGame({
   sessionLimit = 10,
   onProgressUpdate,
   onBack,
+  contentType = "hora",
+  dateLevel = "full",
   items,
   onComplete,
   onViewCompetitionResult,
 }: Props) {
-  const [queue, setQueue] = useState<TimeValue[]>([]);
+  const [queue, setQueue] = useState<Entry[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
   const [phase, setPhase] = useState<GamePhase>("playing");
   const [input, setInput] = useState("");
@@ -88,7 +97,7 @@ export default function DateTimeWriteGame({
     foxNeutralImg;
 
   useEffect(() => {
-    const built = items && items.length > 0 ? items : Array.from({ length: sessionLimit }, randomTimeValue);
+    const built = items && items.length > 0 ? items : Array.from({ length: sessionLimit }, () => randomEntry(contentType, dateLevel));
     setQueue(built);
     setQueueIndex(0);
     if (built.length > 0) initRound();
@@ -119,12 +128,12 @@ export default function DateTimeWriteGame({
     initRound();
   }
 
-  function recordResult(t: TimeValue, isCorrect: boolean) {
+  function recordResult(t: Entry, isCorrect: boolean) {
     const updates: ProgressItems = {};
-    const chips = timeToChips(t.hour, t.minute, t.period);
+    const chips = entryToChips(contentType, t);
     for (const chip of chips) {
       for (const value of chip.credits) {
-        const key = chip.kind === "hour" ? hourProgressKey(value) : minuteProgressKey(value);
+        const key = progressKeyForChip(chip, value);
         const prevP: ItemProgress = updates[key] ?? progress[key] ?? { box: 0, nextDue: today, attempts: 0, correct: 0 };
         const { box, nextDue } = advanceBox(prevP, isCorrect, today);
         updates[key] = {
@@ -137,7 +146,7 @@ export default function DateTimeWriteGame({
     }
     onProgressUpdate(updates);
     setSessionResults((prev) => [...prev, {
-      word: { hiragana: timeToKana(t), romaji: timeToRomaji(t), meaning: formatTimeValue(t) },
+      word: { hiragana: entryToKana(contentType, t), romaji: entryToRomaji(contentType, t), meaning: formatEntry(contentType, t) },
       correct: isCorrect,
     }]);
   }
@@ -145,7 +154,7 @@ export default function DateTimeWriteGame({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (phase !== "playing" || !currentTime || input.trim() === "") return;
-    const isCorrect = normalizeReading(input) === normalizeReading(timeToKana(currentTime));
+    const isCorrect = normalizeReading(input) === normalizeReading(entryToKana(contentType, currentTime));
     if (isCorrect) {
       playChime();
       fireConfetti();
@@ -186,12 +195,12 @@ export default function DateTimeWriteGame({
 
       {/* Prompt visual — sin audio */}
       <div className="flex flex-col items-center gap-1 mt-2">
-        <p className="text-sm" style={{ color: "#8B7FA8" }}>Escribe la hora en hiragana</p>
+        <p className="text-sm" style={{ color: "#8B7FA8" }}>{PROMPT_LABEL[contentType]}</p>
         <p
           className="text-4xl font-bold tracking-tight"
           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: "#1A1A2E" }}
         >
-          {formatTimeValue(currentTime)}
+          {formatEntry(contentType, currentTime)}
         </p>
       </div>
 
@@ -230,15 +239,15 @@ export default function DateTimeWriteGame({
       {phase !== "playing" && (
         <AnswerReveal
           status={phase}
-          kana={timeToKana(currentTime)}
-          romaji={timeToRomaji(currentTime)}
-          meaning={formatTimeValue(currentTime)}
+          kana={entryToKana(contentType, currentTime)}
+          romaji={entryToRomaji(contentType, currentTime)}
+          meaning={formatEntry(contentType, currentTime)}
           accent={{ text: SLATE_DARK, bg: "#F1F5F9" }}
           extra={
             phase === "wrong" ? (
               <div className="mt-3">
                 <p className="text-xs mb-1" style={{ opacity: 0.75 }}>Tu respuesta:</p>
-                <ReadingDiff expected={timeToKana(currentTime)} given={input} />
+                <ReadingDiff expected={entryToKana(contentType, currentTime)} given={input} />
               </div>
             ) : undefined
           }

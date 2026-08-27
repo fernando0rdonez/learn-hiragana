@@ -1,9 +1,12 @@
 import { useRef, useState } from "react";
-import { ArrowLeft, Play, Eye, PenLine, Blocks, Clock } from "lucide-react";
+import { ArrowLeft, Play, Eye, PenLine, Blocks, Clock, Calendar, CalendarClock } from "lucide-react";
 import type { ViewName } from "../data";
 import type { ProgressItems, CharStatus } from "../types";
-import type { TimeBuildLevel } from "../dateTime";
-import { KEY_HOURS, KEY_MINUTE_UNITS, TIME_BUILD_LEVELS, hourKeyStatus, minuteKeyStatus } from "../dateTime";
+import type { TimeBuildLevel, ContentType, DateBuildLevel } from "../dateTime";
+import {
+  KEY_HOURS, KEY_MINUTE_UNITS, TIME_BUILD_LEVELS, hourKeyStatus, minuteKeyStatus,
+  KEY_WEEKDAYS, KEY_MONTHS, KEY_DAYS_OF_MONTH, DATE_BUILD_LEVELS, weekdayKeyStatus, monthKeyStatus, dayKeyStatus,
+} from "../dateTime";
 import FloatingStartButton from "../components/FloatingStartButton";
 
 // ── Design tokens (gris pizarra es el color del módulo Fechas y Horas) ──────
@@ -26,12 +29,22 @@ export type DateTimeGameMode = "recognize" | "write" | "build" | "clock";
 
 interface Props {
   progress: ProgressItems;
+  contentType: ContentType;
+  setContentType: (c: ContentType) => void;
   buildLevel: TimeBuildLevel;
   setBuildLevel: (l: TimeBuildLevel) => void;
+  dateLevel: DateBuildLevel;
+  setDateLevel: (l: DateBuildLevel) => void;
   setView: (v: ViewName) => void;
 }
 
-export default function DateTimeSetupView({ progress, buildLevel, setBuildLevel, setView }: Props) {
+const CONTENT_TYPES: { id: ContentType; label: string; icon: typeof Clock }[] = [
+  { id: "hora", label: "Hora", icon: Clock },
+  { id: "fecha", label: "Fecha", icon: Calendar },
+  { id: "fechaHora", label: "Fecha y hora", icon: CalendarClock },
+];
+
+export default function DateTimeSetupView({ progress, contentType, setContentType, buildLevel, setBuildLevel, dateLevel, setDateLevel, setView }: Props) {
   const [gameMode, setGameMode] = useState<DateTimeGameMode>("recognize");
   const startButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -58,8 +71,25 @@ export default function DateTimeSetupView({ progress, buildLevel, setBuildLevel,
         Fechas y Horas
       </h2>
       <p className="text-sm mt-1" style={{ color: TEXT_SECOND }}>
-        Aprende a decir y reconocer la hora en japonés — horas, minutos y am/pm.
+        Aprende a decir y reconocer la hora y la fecha en japonés.
       </p>
+
+      {/* ── Tipo de contenido ── */}
+      <div className="mt-6">
+        <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Tipo</span>
+        <div className="grid grid-cols-3 gap-2 mt-2">
+          {CONTENT_TYPES.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setContentType(id)}
+              className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl border-2 text-xs font-medium transition-colors"
+              style={modeButtonStyle(contentType === id)}
+            >
+              <Icon size={14} /> {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ── Modo ── */}
       <div className="mt-6">
@@ -96,8 +126,8 @@ export default function DateTimeSetupView({ progress, buildLevel, setBuildLevel,
         </div>
       </div>
 
-      {/* ── Construir: nivel de dificultad ── */}
-      {gameMode === "build" && (
+      {/* ── Nivel de dificultad — Hora solo en Construir; Fecha en los 4 modos ── */}
+      {contentType === "hora" && gameMode === "build" && (
         <div className="mt-6">
           <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Dificultad</span>
           <div className="grid grid-cols-2 gap-2 mt-2">
@@ -115,68 +145,148 @@ export default function DateTimeSetupView({ progress, buildLevel, setBuildLevel,
         </div>
       )}
 
+      {contentType === "fecha" && (
+        <div className="mt-6">
+          <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Dificultad</span>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {DATE_BUILD_LEVELS.map((level) => (
+              <button
+                key={level.id}
+                onClick={() => setDateLevel(level.id)}
+                className="py-3 rounded-xl border-2 text-sm font-medium transition-colors"
+                style={modeButtonStyle(dateLevel === level.id)}
+              >
+                {level.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {gameMode === "recognize" && (
         <p className="text-sm mt-6 rounded-xl p-4" style={{ backgroundColor: SLATE_LIGHT, color: SLATE_DARK }}>
-          Verás una lectura en hiragana y elegirás la hora correcta entre 4 opciones parecidas.
+          Verás una lectura en hiragana y elegirás la opción correcta entre 4 parecidas.
         </p>
       )}
 
       {gameMode === "write" && (
         <p className="text-sm mt-6 rounded-xl p-4" style={{ backgroundColor: SLATE_LIGHT, color: SLATE_DARK }}>
-          Verás una hora y escribirás su lectura completa en hiragana.
+          Verás el dato y escribirás su lectura completa en hiragana.
+        </p>
+      )}
+
+      {gameMode === "build" && (
+        <p className="text-sm mt-6 rounded-xl p-4" style={{ backgroundColor: SLATE_LIGHT, color: SLATE_DARK }}>
+          Verás el dato y ordenarás las fichas en hiragana para formarlo.
         </p>
       )}
 
       {gameMode === "clock" && (
         <p className="text-sm mt-6 rounded-xl p-4" style={{ backgroundColor: SLATE_LIGHT, color: SLATE_DARK }}>
-          Verás una lectura en hiragana y colocarás la hora exacta con hora, minutos y am/pm — sin opciones para elegir.
+          Verás una lectura en hiragana y escribirás el dato exacto tú mismo — sin opciones para elegir.
         </p>
       )}
 
       {/* ── Tabla de estudio ── */}
-      <div className="mt-6">
-        <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>
-          Horas <span className="normal-case font-normal">(★ = pronunciación irregular)</span>
-        </span>
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {KEY_HOURS.map((h) => {
-            const status = hourKeyStatus(progress, h.value);
-            const style = STATUS_STYLES[status];
-            return (
-              <span
-                key={h.value}
-                className="flex flex-col items-center px-2.5 py-1.5 rounded-lg border-2 min-w-16"
-                style={h.irregular ? { ...style, borderColor: SLATE } : style}
-              >
-                <span className="text-[11px] font-semibold">{h.irregular ? "★ " : ""}{h.value}</span>
-                <span className="text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{h.hiragana}</span>
-              </span>
-            );
-          })}
-        </div>
-      </div>
+      {contentType === "hora" && (
+        <>
+          <div className="mt-6">
+            <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>
+              Horas <span className="normal-case font-normal">(★ = pronunciación irregular)</span>
+            </span>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {KEY_HOURS.map((h) => {
+                const status = hourKeyStatus(progress, h.value);
+                const style = STATUS_STYLES[status];
+                return (
+                  <span
+                    key={h.value}
+                    className="flex flex-col items-center px-2.5 py-1.5 rounded-lg border-2 min-w-16"
+                    style={h.irregular ? { ...style, borderColor: SLATE } : style}
+                  >
+                    <span className="text-[11px] font-semibold">{h.irregular ? "★ " : ""}{h.value}</span>
+                    <span className="text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{h.hiragana}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
 
-      <div className="mt-5">
-        <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>
-          Minutos <span className="normal-case font-normal">(★ = pronunciación irregular)</span>
-        </span>
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {KEY_MINUTE_UNITS.map((m) => {
-            const status = minuteKeyStatus(progress, m.value);
-            const style = STATUS_STYLES[status];
-            return (
-              <span
-                key={m.value}
-                className="flex flex-col items-center px-2.5 py-1.5 rounded-lg border-2 min-w-16"
-                style={m.irregular ? { ...style, borderColor: SLATE } : style}
-              >
-                <span className="text-[11px] font-semibold">{m.irregular ? "★ " : ""}{m.value}</span>
-                <span className="text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{m.hiragana}</span>
-              </span>
-            );
-          })}
-        </div>
-      </div>
+          <div className="mt-5">
+            <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>
+              Minutos <span className="normal-case font-normal">(★ = pronunciación irregular)</span>
+            </span>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {KEY_MINUTE_UNITS.map((m) => {
+                const status = minuteKeyStatus(progress, m.value);
+                const style = STATUS_STYLES[status];
+                return (
+                  <span
+                    key={m.value}
+                    className="flex flex-col items-center px-2.5 py-1.5 rounded-lg border-2 min-w-16"
+                    style={m.irregular ? { ...style, borderColor: SLATE } : style}
+                  >
+                    <span className="text-[11px] font-semibold">{m.irregular ? "★ " : ""}{m.value}</span>
+                    <span className="text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{m.hiragana}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
+      {(contentType === "fecha" || contentType === "fechaHora") && (
+        <>
+          <div className="mt-6">
+            <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Días de la semana</span>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {KEY_WEEKDAYS.map((w) => {
+                const style = STATUS_STYLES[weekdayKeyStatus(progress, w.value)];
+                return (
+                  <span key={w.value} className="flex flex-col items-center px-2.5 py-1.5 rounded-lg border-2 min-w-16" style={style}>
+                    <span className="text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{w.hiragana}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>
+              Meses <span className="normal-case font-normal">(★ = pronunciación irregular)</span>
+            </span>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {KEY_MONTHS.map((m) => {
+                const style = STATUS_STYLES[monthKeyStatus(progress, m.value)];
+                return (
+                  <span key={m.value} className="flex flex-col items-center px-2.5 py-1.5 rounded-lg border-2 min-w-16" style={m.irregular ? { ...style, borderColor: SLATE } : style}>
+                    <span className="text-[11px] font-semibold">{m.irregular ? "★ " : ""}{m.value}</span>
+                    <span className="text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{m.hiragana}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>
+              Días del mes <span className="normal-case font-normal">(★ = pronunciación irregular)</span>
+            </span>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {KEY_DAYS_OF_MONTH.map((d) => {
+                const style = STATUS_STYLES[dayKeyStatus(progress, d.value)];
+                return (
+                  <span key={d.value} className="flex flex-col items-center px-2.5 py-1.5 rounded-lg border-2 min-w-16" style={d.irregular ? { ...style, borderColor: SLATE } : style}>
+                    <span className="text-[11px] font-semibold">{d.irregular ? "★ " : ""}{d.value}</span>
+                    <span className="text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>{d.hiragana}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       <button
         ref={startButtonRef}

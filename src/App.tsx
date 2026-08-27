@@ -32,8 +32,11 @@ import { CURRENT_SCHEMA_VERSION } from "./storage";
 import { type NumberKeysLength } from "./views/NumberSetupView";
 import type { BuildLevel } from "./numbers";
 import { KEY_NUMBERS, KEY_NUMBER_GROUPS, BUILD_LEVELS, numberKeyStatus } from "./numbers";
-import type { TimeBuildLevel } from "./dateTime";
-import { KEY_HOURS, KEY_MINUTE_UNITS, hourKeyStatus, minuteKeyStatus } from "./dateTime";
+import type { TimeBuildLevel, ContentType, DateBuildLevel } from "./dateTime";
+import {
+  KEY_HOURS, KEY_MINUTE_UNITS, hourKeyStatus, minuteKeyStatus,
+  KEY_WEEKDAYS, KEY_MONTHS, KEY_DAYS_OF_MONTH, weekdayKeyStatus, monthKeyStatus, dayKeyStatus,
+} from "./dateTime";
 import HiraganaSetupView from "./views/HiraganaSetupView";
 import KatakanaSetupView from "./views/KatakanaSetupView";
 import QuizView from "./views/QuizView";
@@ -129,6 +132,8 @@ export default function HiraganaTrainer() {
   const [numberKeysLength, setNumberKeysLength] = useState<NumberKeysLength>(10);
   const [numberBuildLevel, setNumberBuildLevel] = useState<BuildLevel>("2cifras");
   const [dateTimeBuildLevel, setDateTimeBuildLevel] = useState<TimeBuildLevel>("hour");
+  const [dateTimeContentType, setDateTimeContentType] = useState<ContentType>("hora");
+  const [dateTimeDateLevel, setDateTimeDateLevel] = useState<DateBuildLevel>("weekday");
 
   const {
     previewRows, pendingStartRef,
@@ -382,7 +387,10 @@ export default function HiraganaTrainer() {
 
   const masteredDateTimeKeys =
     KEY_HOURS.filter((h) => hourKeyStatus(progress, h.value) === "mastered").length +
-    KEY_MINUTE_UNITS.filter((m) => minuteKeyStatus(progress, m.value) === "mastered").length;
+    KEY_MINUTE_UNITS.filter((m) => minuteKeyStatus(progress, m.value) === "mastered").length +
+    KEY_WEEKDAYS.filter((w) => weekdayKeyStatus(progress, w.value) === "mastered").length +
+    KEY_MONTHS.filter((m) => monthKeyStatus(progress, m.value) === "mastered").length +
+    KEY_DAYS_OF_MONTH.filter((d) => dayKeyStatus(progress, d.value) === "mastered").length;
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-stone-50 text-stone-400">Cargando progreso…</div>;
@@ -653,8 +661,12 @@ export default function HiraganaTrainer() {
             setView={setView}
             progress={progress}
             onProgressUpdate={onProgressUpdate}
+            dateTimeContentType={dateTimeContentType}
+            setDateTimeContentType={setDateTimeContentType}
             dateTimeBuildLevel={dateTimeBuildLevel}
             setDateTimeBuildLevel={setDateTimeBuildLevel}
+            dateTimeDateLevel={dateTimeDateLevel}
+            setDateTimeDateLevel={setDateTimeDateLevel}
           />
         )}
 
