@@ -237,7 +237,7 @@ export function minuteKeyStatus(progress: ProgressItems, value: number): CharSta
 
 const IRREGULAR_HOURS = [4, 7, 9];
 const IRREGULAR_MINUTES = [1, 3, 4, 6, 8, 10];
-const IRREGULAR_BIAS = 0.5; // probabilidad de forzar una forma irregular
+const IRREGULAR_BIAS = 0.3; // probabilidad de forzar una forma irregular
 
 function randomInt(min: number, max: number): number {
   return min + Math.floor(Math.random() * (max - min + 1));
@@ -304,20 +304,24 @@ export interface RandomTime extends TimeValue {
   useHan: boolean;
 }
 
+function randomPeriod(): TimePeriod {
+  return Math.random() < 0.5 ? "am" : "pm";
+}
+
 export function randomTimeForLevel(level: TimeBuildLevel): RandomTime {
   const hour = randomHour();
   switch (level) {
     case "hour":
-      return { hour, minute: 0, period: "pm", useHan: false };
+      return { hour, minute: 0, period: randomPeriod(), useHan: false };
     case "half":
-      return { hour, minute: 30, period: "pm", useHan: Math.random() < 0.5 };
+      return { hour, minute: 30, period: randomPeriod(), useHan: Math.random() < 0.5 };
     case "minute":
-      return { hour, minute: randomMinute(), period: "pm", useHan: false };
+      return { hour, minute: randomMinute(), period: randomPeriod(), useHan: false };
     case "ampm":
       return {
         hour,
         minute: Math.random() < 0.25 ? 0 : randomMinute(),
-        period: Math.random() < 0.5 ? "am" : "pm",
+        period: randomPeriod(),
         useHan: Math.random() < 0.3,
       };
   }
@@ -931,6 +935,35 @@ export function randomEntryForBuild(contentType: ContentType, timeLevel: TimeBui
     case "fechaHora": return randomDateTimeCombo();
     default:          return randomTimeForLevel(timeLevel);
   }
+}
+
+/**
+ * `count` entradas para una sesión de Construir, evitando en lo posible repetir
+ * la misma entrada dentro de la serie (el espacio de "En punto" es de solo ~24
+ * combinaciones, así que sin esto la misma hora salía 2–3 veces por sesión).
+ * Si el espacio es más pequeño que `count`, rellena permitiendo repeticiones.
+ */
+export function randomEntriesForBuild(
+  contentType: ContentType,
+  timeLevel: TimeBuildLevel,
+  dateLevel: DateBuildLevel,
+  count: number,
+): Entry[] {
+  const used = new Set<string>();
+  const entries: Entry[] = [];
+  let guard = 0;
+  while (entries.length < count && guard < count * 40) {
+    guard++;
+    const entry = randomEntryForBuild(contentType, timeLevel, dateLevel);
+    const key = entryKey(contentType, entry);
+    if (used.has(key)) continue;
+    used.add(key);
+    entries.push(entry);
+  }
+  while (entries.length < count) {
+    entries.push(randomEntryForBuild(contentType, timeLevel, dateLevel));
+  }
+  return entries;
 }
 
 export function entryToChips(contentType: ContentType, entry: Entry): DateTimeChip[] {

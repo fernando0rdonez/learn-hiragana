@@ -23,6 +23,8 @@ import {
   comboToKana,
   formatCombo,
   randomDateTimeCombo,
+  randomEntriesForBuild,
+  entryKey,
 } from "./dateTime";
 
 // ── minuteToKana: ejemplos de la spec ────────────────────────────────────────
@@ -140,6 +142,25 @@ test("randomTimeForLevel: respeta el eje de dificultad de cada nivel", () => {
       assert.equal(typeof timeToKana(t, t.useHan), "string"); // nunca lanza
       if (level.id === "hour") assert.equal(t.minute, 0);
       if (level.id === "half") assert.equal(t.minute, 30);
+    }
+  }
+});
+
+test("randomTimeForLevel: todos los niveles generan am y pm (no solo pm)", () => {
+  for (const level of TIME_BUILD_LEVELS) {
+    const periods = new Set<string>();
+    for (let i = 0; i < 200; i++) periods.add(randomTimeForLevel(level.id).period);
+    assert.deepEqual([...periods].sort(), ["am", "pm"], `nivel ${level.id} solo produce un period`);
+  }
+});
+
+test("randomEntriesForBuild: sin repetir entradas dentro de una serie de 10 (hora)", () => {
+  for (const level of TIME_BUILD_LEVELS) {
+    for (let i = 0; i < 20; i++) {
+      const entries = randomEntriesForBuild("hora", level.id, "full", 10);
+      assert.equal(entries.length, 10);
+      const keys = new Set(entries.map((e) => entryKey("hora", e)));
+      assert.equal(keys.size, 10, `nivel ${level.id}: entradas repetidas en la serie`);
     }
   }
 });
