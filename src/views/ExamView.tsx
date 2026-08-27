@@ -175,6 +175,14 @@ export default function ExamView({ setView, examHistory, recordExamAttempt }: Pr
           <p className="text-xs mt-1.5" style={{ color: "#A9853A" }}>Katakana, Kanji y Listening no entran.</p>
         </div>
 
+        <div className="mt-3 rounded-2xl p-4 flex gap-2.5" style={{ backgroundColor: "#FDEDEA", border: "1px solid #F1C7BC" }}>
+          <span aria-hidden className="text-base leading-none">⌨️</span>
+          <p className="text-sm leading-relaxed" style={{ color: "#8A3B27" }}>
+            Necesitas un <b>teclado de japonés</b> instalado en tu dispositivo para escribir en
+            hiragana. Sin él no podrás responder las preguntas de escritura.
+          </p>
+        </div>
+
         {best !== null && (
           <p className="mt-4 text-sm font-semibold text-center" style={{ color: GOLD_DARK }}>
             Tu mejor nota: {best}% · {examHistory.length} intento{examHistory.length === 1 ? "" : "s"}
