@@ -148,7 +148,6 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
         setPhase("correct");
         recordResult(ex, true);
         speak(fullSentence(ex));
-        setTimeout(() => advanceToNext(), 1500);
       } else {
         playBuzz();
         const newFail = currentFail + 1;
@@ -355,11 +354,10 @@ function OrderDrill({ ex, chips, slots, phase, animClass, foxPose, onChipTap, on
         onTapSlot={onSlotTap}
       />
 
-      {phase === "correct" && <p className="text-[#0A6E54] font-semibold text-sm">✅ ¡Correcto!</p>}
       {phase === "wrong" && <p className="text-[#C03A1E] font-semibold text-sm">❌ Inténtalo de nuevo</p>}
-      {phase === "reveal" && (
+      {(phase === "correct" || phase === "reveal") && (
         <AnswerReveal
-          status="wrong"
+          status={phase === "correct" ? "correct" : "wrong"}
           kana={ex.tokens.join("")}
           meaning={ex.translation}
           onContinue={onContinue}
