@@ -92,7 +92,7 @@ export default function DateTimeRecognizeGame({
   useEffect(() => {
     const built = items && items.length > 0
       ? items.map((t): Round => ({ correct: t, options: buildEntryOptions(contentType, t) }))
-      : Array.from({ length: sessionLimit }, () => buildRound(contentType, dateLevel));
+      : Array.from({ length: Math.max(1, sessionLimit) }, () => buildRound(contentType, dateLevel));
     setRounds(built);
     setRoundIndex(0);
     if (built.length > 0) initRound();
