@@ -116,7 +116,7 @@ export default function DateTimeBuildGame({
   useEffect(() => {
     const built = items && items.length > 0
       ? items.map((t) => roundFromTarget(contentType, t))
-      : buildRounds(contentType, level, dateLevel, sessionLimit);
+      : buildRounds(contentType, level, dateLevel, Math.max(1, sessionLimit));
     setRounds(built);
     setRoundIndex(0);
     if (built.length > 0) initRound(built[0]);

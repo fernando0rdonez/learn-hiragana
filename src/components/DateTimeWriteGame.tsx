@@ -97,7 +97,7 @@ export default function DateTimeWriteGame({
     foxNeutralImg;
 
   useEffect(() => {
-    const built = items && items.length > 0 ? items : Array.from({ length: sessionLimit }, () => randomEntry(contentType, dateLevel));
+    const built = items && items.length > 0 ? items : Array.from({ length: Math.max(1, sessionLimit) }, () => randomEntry(contentType, dateLevel));
     setQueue(built);
     setQueueIndex(0);
     if (built.length > 0) initRound();
