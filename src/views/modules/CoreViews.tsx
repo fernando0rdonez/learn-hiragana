@@ -24,6 +24,7 @@ interface Props {
   masteredGrammarTotal: number;
   masteredListeningTotal: number;
   masteredHonorificsTotal: number;
+  masteredKosoadoTotal: number;
   examHistory: ExamAttempt[];
   saveError: boolean;
   resetConfirm: boolean;
@@ -57,7 +58,7 @@ interface Props {
 export default function CoreViews({
   view, setView, progress, streak, dailyProgress, today,
   masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal,
-  masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, examHistory, saveError,
+  masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, masteredKosoadoTotal, examHistory, saveError,
   resetConfirm, setResetConfirm, resetProgress, exportProgress,
   importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
   session, authLoading, otpStage, otpError, pendingEmail, cooldownSeconds,
@@ -79,6 +80,7 @@ export default function CoreViews({
           masteredGrammarTotal={masteredGrammarTotal}
           masteredListeningTotal={masteredListeningTotal}
           masteredHonorificsTotal={masteredHonorificsTotal}
+          masteredKosoadoTotal={masteredKosoadoTotal}
           examHistory={examHistory}
           saveError={saveError}
           setView={setView}

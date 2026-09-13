@@ -342,6 +342,22 @@ export function honorificStatus(items: ProgressItems, mode: HonorificPracticeMod
   return "developing";
 }
 
+export type KosoadoPracticeMode = "kosoado-re" | "kosoado-no";
+
+export function kosoadoProgressKey(mode: KosoadoPracticeMode, id: string): string {
+  return `${mode}:${id}`;
+}
+
+/** Mismos umbrales que honorificStatus/grammarStatus, sobre la clave del ejercicio de kosoado. */
+export function kosoadoStatus(items: ProgressItems, mode: KosoadoPracticeMode, id: string): CharStatus {
+  const p = items[kosoadoProgressKey(mode, id)];
+  if (!p || p.attempts === 0) return "untested";
+  const acc = p.correct / p.attempts;
+  if (p.attempts >= 3 && acc >= 0.85) return "mastered";
+  if (acc < 0.5) return "weak";
+  return "developing";
+}
+
 export type ListeningPracticeMode = "listen-sentence" | "dictation";
 
 const LISTENING_MODES: ListeningPracticeMode[] = ["listen-sentence", "dictation"];
