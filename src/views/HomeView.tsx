@@ -1,7 +1,8 @@
-import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, GraduationCap, SpellCheck2, Headphones, Trophy, Clock, Handshake, ClipboardCheck, Star } from "lucide-react";
+import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, MessageCircleQuestion, GraduationCap, SpellCheck2, Headphones, Trophy, Clock, Handshake, ClipboardCheck, Star } from "lucide-react";
 import { useState } from "react";
 import type { StreakData, ExamAttempt } from "../types";
 import { HONORIFIC_EXERCISES } from "../honorifics";
+import { KOSOADO_EXERCISES } from "../kosoado";
 import type { ViewName } from "../data";
 import { ALL_CHARS } from "../data";
 import { KATAKANA_ALL_CHARS } from "../dataKatakana";
@@ -31,6 +32,7 @@ interface Props {
   masteredGrammarTotal: number;
   masteredListeningTotal: number;
   masteredHonorificsTotal: number;
+  masteredKosoadoTotal: number;
   examHistory: ExamAttempt[];
   saveError: boolean;
   setView: (v: ViewName) => void;
@@ -56,7 +58,7 @@ function pct(mastered: number, total: number): number {
   return total > 0 ? Math.round((mastered / total) * 100) : 0;
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, examHistory, saveError, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, masteredKosoadoTotal, examHistory, saveError, setView }: Props) {
   const [heroModule] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -80,6 +82,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
     { id: "grammar", pct: pct(masteredGrammarTotal, GRAMMAR_LESSONS.length) },
     { id: "listening", pct: pct(masteredListeningTotal, LISTENING_SENTENCES.length) },
     { id: "honorifics", pct: pct(masteredHonorificsTotal, HONORIFIC_EXERCISES.length) },
+    { id: "kosoado", pct: pct(masteredKosoadoTotal, KOSOADO_EXERCISES.length) },
   ];
   const examBest = examHistory.length > 0 ? Math.max(...examHistory.map((a) => a.overallPct)) : null;
   const neediestModuleId = moduleStats.reduce((min, m) => (m.pct < min.pct ? m : min)).id;
@@ -309,6 +312,17 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
             pctValue={pct(masteredHonorificsTotal, HONORIFIC_EXERCISES.length)}
             onClick={() => goTo("honorificsSetup")}
             badgeImg={neediestModuleId === "honorifics" ? foxSleepy : undefined}
+            badgeAlt="Necesita repaso"
+          />
+
+          <ModuleTile
+            bg="#F1EAFB" fg="#7C4FE0"
+            icon={<MessageCircleQuestion size={18} />}
+            title="Kosoado"
+            meta={`${pct(masteredKosoadoTotal, KOSOADO_EXERCISES.length)}%`}
+            pctValue={pct(masteredKosoadoTotal, KOSOADO_EXERCISES.length)}
+            onClick={() => goTo("kosoadoSetup")}
+            badgeImg={neediestModuleId === "kosoado" ? foxSleepy : undefined}
             badgeAlt="Necesita repaso"
           />
         </div>
