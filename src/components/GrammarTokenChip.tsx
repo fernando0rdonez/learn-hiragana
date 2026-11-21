@@ -1,3 +1,5 @@
+import { particleColor } from "../particleTrain";
+
 interface Props {
   token: string;
   used: boolean;
@@ -7,7 +9,9 @@ interface Props {
 // Como KanaChip, pero de ancho variable: los tokens de gramática son
 // partículas de un carácter (は, を...) y palabras/conjugaciones enteras
 // (べんきょうします), así que no caben en la casilla cuadrada fija de KanaChip.
+// Las partículas llevan el color fijo del tren de partículas (src/particleTrain.ts).
 export default function GrammarTokenChip({ token, used, onClick }: Props) {
+  const color = particleColor(token);
   return (
     <button
       disabled={used}
@@ -18,7 +22,10 @@ export default function GrammarTokenChip({ token, used, onClick }: Props) {
             ? "opacity-25 cursor-not-allowed border-stone-200 bg-stone-50 text-stone-400"
             : "border-[#DBDFF5] bg-white text-stone-800 hover:border-[#4C5FBF] hover:bg-[#EDEFFB] active:scale-95"
         }`}
-      style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+      style={{
+        fontFamily: "'Noto Sans JP', sans-serif",
+        ...(color && !used ? { color: color.fg, backgroundColor: color.bg, borderColor: color.bg, fontWeight: 700 } : {}),
+      }}
     >
       {token}
     </button>

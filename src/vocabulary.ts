@@ -327,6 +327,7 @@ export const VOCABULARY: VocabWord[] = [
   { hiragana: "えんぴつ",   romaji: "enpitsu",  meaning: "lápiz",          imageQuery: "pencil",            emojiBackup: "✏️", category: "objetos" , generated: true, imagePath: "objetos-enpitsu" },
   { hiragana: "しんぶん",   romaji: "shinbun",  meaning: "periódico",      imageQuery: "newspaper",         emojiBackup: "📰", category: "objetos" , generated: true, imagePath: "objetos-shinbun" },
   { hiragana: "ざっし",     romaji: "zasshi",   meaning: "revista",        imageQuery: "magazine",          emojiBackup: "🗞️", category: "objetos" , generated: true, imagePath: "objetos-zasshi" },
+  { hiragana: "まんが",     romaji: "manga",    meaning: "manga / cómic",  imageQuery: "manga comic book",  emojiBackup: "📚", category: "objetos" },
   { hiragana: "てがみ",     romaji: "tegami",   meaning: "carta",          imageQuery: "letter envelope",   emojiBackup: "✉️", category: "objetos" , generated: true, imagePath: "objetos-tegami" },
   { hiragana: "はがき",     romaji: "hagaki",   meaning: "postal",         imageQuery: "postcard",          emojiBackup: "💌", category: "objetos" , generated: true, imagePath: "objetos-hagaki" },
   { hiragana: "きって",     romaji: "kitte",    meaning: "sello (postal)", imageQuery: "postage stamp",     emojiBackup: "🏷️", category: "objetos" , generated: true, imagePath: "objetos-kitte" },
