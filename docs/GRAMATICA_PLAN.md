@@ -89,8 +89,11 @@ Cada oración se escribe **una vez** con fichas separadas por espacios
   «X は TIEMPO…» (palabras de tiempo sin partícula) y se declaran a mano con `orders` en la
   oración (ej. «いぬ と ねこ» ⇄ «ねこ と いぬ»).
 - `parts` (en `particle`): la frase en fichas, para mostrarla con separación y colores.
-- Una sesión toma 12 oraciones distintas al azar y alterna ordenar/hueco (`buildSession`
-  en `GrammarLessonGame.tsx`). Tras el primer fallo al ordenar se muestra el tren compacto.
+- Una sesión toma 12 oraciones distintas al azar (`buildSession` en `GrammarLessonGame.tsx`).
+  Antes de empezar, el usuario elige el **tipo de juego** (`GAME_MODES`): «Mezclado» (alterna
+  ordenar/hueco), «Solo ordenar» o «Solo huecos»; la elección se recuerda en `localStorage`.
+  **Cada juego nuevo de las fases 2–3 debe agregarse a `GAME_MODES`** (y entrar en «Mezclado»).
+  Tras el primer fallo al ordenar se muestra el tren compacto.
 - Los tests (`src/grammar.test.ts`) verifican que cada hueco existe, que las opciones
   son 4, únicas, incluyen la respuesta y nunca una alternativa válida.
 

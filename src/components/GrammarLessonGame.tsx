@@ -48,11 +48,39 @@ function shuffle<T>(arr: T[]): T[] {
 /** Ejercicios por sesión: cada lección tiene más oraciones de las que entran en una sesión. */
 const SESSION_SIZE = 12;
 
+/** Tipo de juego elegido al empezar la lección (las fases 2-3 de docs/GRAMATICA_PLAN.md añadirán más). */
+type GrammarGameMode = "mix" | "order" | "particle";
+
+const GAME_MODES: { id: GrammarGameMode; label: string; hint: string }[] = [
+  { id: "mix",      label: "Mezclado",     hint: "Ordenar y completar, al azar" },
+  { id: "order",    label: "Solo ordenar", hint: "Arma la frase con fichas" },
+  { id: "particle", label: "Solo huecos",  hint: "Elige la partícula o la forma" },
+];
+
+const MODE_STORAGE_KEY = "grammar-game-mode";
+
+function loadMode(): GrammarGameMode {
+  try {
+    const v = localStorage.getItem(MODE_STORAGE_KEY);
+    return v === "order" || v === "particle" || v === "mix" ? v : "mix";
+  } catch {
+    return "mix";
+  }
+}
+
+function saveMode(mode: GrammarGameMode) {
+  try { localStorage.setItem(MODE_STORAGE_KEY, mode); } catch { /* sin almacenamiento: no pasa nada */ }
+}
+
 /**
- * Elige hasta SESSION_SIZE oraciones distintas al azar y alterna el tipo de
- * ejercicio (ordenar / hueco), para que una misma oración no salga dos veces.
+ * Elige hasta SESSION_SIZE oraciones distintas al azar. En "mix" alterna el tipo
+ * de ejercicio (ordenar / hueco) para que una misma oración no salga dos veces;
+ * en los otros modos usa solo ese tipo.
  */
-function buildSession(all: GrammarExercise[]): GrammarExercise[] {
+function buildSession(all: GrammarExercise[], mode: GrammarGameMode): GrammarExercise[] {
+  if (mode !== "mix") {
+    return shuffle(all.filter((ex) => ex.type === mode)).slice(0, SESSION_SIZE);
+  }
   const bySid = new Map<number, GrammarExercise[]>();
   all.forEach((ex, i) => {
     const sid = ex.sid ?? -1 - i;
@@ -85,7 +113,8 @@ interface Props {
 
 export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, onBack }: Props) {
   const [phase, setPhase] = useState<Phase>("explain");
-  const [exercises] = useState<GrammarExercise[]>(() => buildSession(lesson.exercises));
+  const [mode, setMode] = useState<GrammarGameMode>(loadMode);
+  const [exercises, setExercises] = useState<GrammarExercise[]>([]);
   const [index, setIndex] = useState(0);
 
   // "order" state
@@ -124,10 +153,17 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
     setPhase("playing");
   }
 
+  function chooseMode(m: GrammarGameMode) {
+    setMode(m);
+    saveMode(m);
+  }
+
   function startLesson() {
-    if (exercises.length === 0) { setPhase("done"); return; }
+    const session = buildSession(lesson.exercises, mode);
+    setExercises(session);
+    if (session.length === 0) { setPhase("done"); return; }
     setIndex(0);
-    initExercise(exercises[0]);
+    initExercise(session[0]);
   }
 
   function advanceToNext() {
@@ -295,12 +331,36 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
             <ParticleTrain currentLessonId={lesson.id} showMnemonic />
           </div>
         )}
+        <div>
+          <div className="text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: "#8B7FA8" }}>Tipo de juego</div>
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tipo de juego">
+            {GAME_MODES.map((m) => {
+              const selected = m.id === mode;
+              return (
+                <button
+                  key={m.id}
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => chooseMode(m.id)}
+                  className="rounded-2xl border-2 px-2 py-2.5 text-center transition-colors"
+                  style={{
+                    borderColor: selected ? INDIGO : "#EEEEEE",
+                    backgroundColor: selected ? "#EDEFFB" : "#FFFFFF",
+                  }}
+                >
+                  <div className="text-sm font-semibold" style={{ color: selected ? INDIGO_DARK : "#1A1A2E" }}>{m.label}</div>
+                  <div className="text-[11px] mt-0.5 leading-tight" style={{ color: "#8B7FA8" }}>{m.hint}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <button
           onClick={startLesson}
           className="w-full py-3.5 rounded-2xl text-white font-semibold"
           style={{ backgroundColor: INDIGO }}
         >
-          Comenzar ({exercises.length} ejercicios)
+          Comenzar ({Math.min(SESSION_SIZE, lesson.sentences.length)} ejercicios)
         </button>
       </div>
     );
