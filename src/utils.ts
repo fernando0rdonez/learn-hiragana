@@ -301,9 +301,14 @@ export function resolveKanjiSession(
   return { pool: items, limit: Math.min(length, items.length) };
 }
 
-export type GrammarPracticeMode = "grammar-order" | "grammar-particle" | "grammar-build";
+export type GrammarPracticeMode =
+  | "grammar-order" | "grammar-particle" | "grammar-build"
+  | "grammar-dictation" | "grammar-extra" | "grammar-spot" | "grammar-qa";
 
-const GRAMMAR_MODES: GrammarPracticeMode[] = ["grammar-order", "grammar-particle", "grammar-build"];
+const GRAMMAR_MODES: GrammarPracticeMode[] = [
+  "grammar-order", "grammar-particle", "grammar-build",
+  "grammar-dictation", "grammar-extra", "grammar-spot", "grammar-qa",
+];
 
 export function grammarProgressKey(mode: GrammarPracticeMode, lessonId: string): string {
   return `${mode}:${lessonId}`;
