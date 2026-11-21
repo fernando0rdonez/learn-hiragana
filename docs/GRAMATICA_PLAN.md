@@ -14,8 +14,8 @@ Fase N». Al terminar una fase, marca su casilla en *Estado* y anota la rama/PR.
 |---|---|---|---|
 | 1 | Lecciones en orden del libro, contenido del curso 2, tren de partículas | ✅ hecha | #76 (integrado) |
 | 2 | Ejercicio «Armar sílaba por sílaba» (fichas, sin teclado japonés) | ✅ hecha | #77 (integrado) |
-| 3 | Pregunta→respuesta, Encuentra el error, Ordenar con palabras extra, Dictado | ✅ hecha (sin PR aún) | `feat/gramatica-fase3` |
-| 4 | Lectura de repaso (texto corto + preguntas) | ⏳ pendiente | — |
+| 3 | Pregunta→respuesta, Encuentra el error, Ordenar con palabras extra, Dictado | ✅ hecha | #78 (integrado) |
+| 4 | Lectura de repaso (texto corto + preguntas) | ✅ hecha (PR abierto) | `feat/gramatica-lectura` |
 
 ---
 
@@ -173,6 +173,17 @@ Todos se generan desde las oraciones existentes; añadir el modo de progreso cor
   (reutilizar `SyllableBuildDrill` sin mostrar el español hasta el final).
 
 ## Fase 4 — Lectura de repaso
+
+> **Implementado.** Lección `lectura-repaso-2` al final del Curso 2, con **3 textos propios**
+> (`READINGS` en `grammar.ts`: el día de María, la semana de Ken, la habitación de Yui), de
+> 7 líneas y 5 preguntas cada uno (la última, en japonés). Cada pregunta trae `why`: qué
+> partícula del texto da la respuesta.
+> - Modo «Lectura» (`ReadingDrill.tsx`): solo aparece en esa lección y es su modo por defecto.
+>   Se elige un texto al azar; el texto queda a la vista con partículas a color, «Escuchar
+>   todo», tocar una línea para oírla y «Ver traducción» (se mantiene entre preguntas).
+> - Las líneas de los textos son las `sentences` de la lección, así que también se practican
+>   con los demás juegos (Mezclado, Sílabas, Dictado…).
+> - Progreso: modo `grammar-reading`.
 
 - Texto corto propio (NO el del PDF) sobre una persona (nombre, trabajo, horario
   から〜まで, dónde vive に, con quién と, qué hace を), 5–7 oraciones en hiragana.

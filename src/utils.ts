@@ -303,11 +303,11 @@ export function resolveKanjiSession(
 
 export type GrammarPracticeMode =
   | "grammar-order" | "grammar-particle" | "grammar-build"
-  | "grammar-dictation" | "grammar-extra" | "grammar-spot" | "grammar-qa";
+  | "grammar-dictation" | "grammar-extra" | "grammar-spot" | "grammar-qa" | "grammar-reading";
 
 const GRAMMAR_MODES: GrammarPracticeMode[] = [
   "grammar-order", "grammar-particle", "grammar-build",
-  "grammar-dictation", "grammar-extra", "grammar-spot", "grammar-qa",
+  "grammar-dictation", "grammar-extra", "grammar-spot", "grammar-qa", "grammar-reading",
 ];
 
 export function grammarProgressKey(mode: GrammarPracticeMode, lessonId: string): string {
