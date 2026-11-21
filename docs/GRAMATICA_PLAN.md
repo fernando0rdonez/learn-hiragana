@@ -13,7 +13,7 @@ Fase N». Al terminar una fase, marca su casilla en *Estado* y anota la rama/PR.
 | Fase | Descripción | Estado | Rama / PR |
 |---|---|---|---|
 | 1 | Lecciones en orden del libro, contenido del curso 2, tren de partículas | ✅ hecha (sin PR aún) | `feat/gramatica-por-libro` |
-| 2 | Ejercicio «Armar sílaba por sílaba» (fichas, sin teclado japonés) | ⏳ pendiente | — |
+| 2 | Ejercicio «Armar sílaba por sílaba» (fichas, sin teclado japonés) | ✅ hecha (sin PR aún) | `feat/gramatica-silabas` (sale de `feat/gramatica-por-libro`) |
 | 3 | Pregunta→respuesta, Encuentra el error, Ordenar con palabras extra, Dictado | ⏳ pendiente | — |
 | 4 | Lectura de repaso (texto corto + preguntas) | ⏳ pendiente | — |
 
@@ -102,6 +102,18 @@ Para agregar oraciones: añadir líneas `s("…", "…")` a la lección y correr
 ---
 
 ## Fase 2 — «Armar sílaba por sílaba»
+
+> **Implementado** en `src/grammarBuild.ts` (lógica pura + `src/grammarBuild.test.ts`) y
+> `src/components/SyllableBuildDrill.tsx`; integrado como tipo de juego «Sílabas» (y dentro de
+> «Mezclado») en `GrammarLessonGame.tsx`, con selector de nivel y el interruptor de audio en Fácil
+> (preferencias en `localStorage`: `grammar-build-level`, `grammar-build-tile-audio`).
+> Decisiones tomadas al implementar:
+> - Las trampas de ortografía わ (por は), お (por を) y え (por へ) salen primero y pueden
+>   repetir una sílaba ya presente (わたし は… con una わ de más es justo la trampa).
+> - Nunca salen como extra las partículas alternativas válidas (`alt`, ej. に con へ) ni el
+>   cambio は⇄が, para no permitir otra oración válida que se marcaría como error.
+> - Usar la pista hace que el ejercicio no cuente como acierto (Leitner es binario).
+> - Fallo 1: las sílabas mal puestas se marcan en rojo y vuelven al banco; fallo 2: se revela.
 
 **Objetivo:** formar la oración tocando fichas de sílabas (sin teclado japonés).
 
