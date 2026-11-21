@@ -1,401 +1,772 @@
-// Módulo Gramática (BACKLOG #6): ordenar frases y partículas huecas. Todo el
-// vocabulario de contenido (sustantivos, verbos, adjetivos) usado en las
-// frases de ejemplo existe en src/vocabulary.ts (anclaje i+1, METODOLOGIA
-// §2.4) — las formas conjugadas (たべます, たかくない...) son la misma
-// palabra ya conocida, solo con la flexión que enseña la lección. は・が・
-// を・に・で・へ・と・も・の, です y sus formas son elementos gramaticales,
-// no vocabulario, así que no requieren entrada propia en vocabulary.ts.
+// Módulo Gramática (BACKLOG #6, ampliado en docs/GRAMATICA_PLAN.md).
+//
+// Las lecciones siguen el orden de los libros del curso (Japonés Básico I y II);
+// las que no están en los libros van al final como "Extra". Las oraciones son
+// PROPIAS (no copiadas del PDF): el libro solo define los temas y su orden.
+//
+// Cada oración se escribe una sola vez, con sus fichas separadas por espacios,
+// y `buildLesson` genera a partir de ella los ejercicios:
+//   - "order":    ordenar las fichas.
+//   - "particle": completar un hueco (partícula o forma gramatical).
+//
+// Vocabulario (anclaje i+1, METODOLOGIA §2.4): las palabras de contenido existen
+// en src/vocabulary.ts (las formas conjugadas —たべます, たかくない…— son la misma
+// palabra con la flexión que enseña la lección). Se permiten además nombres
+// propios de personas (たなかさん, マリアさん…) y de lugares (にほん, とうきょう…),
+// y las horas/fechas del módulo Fechas y Horas (しちじ, げつようび…).
+
+// ── Tipos de ejercicio (los consumen el juego, listening y el examen) ─────────
 
 export interface GrammarOrderExercise {
   type: "order";
   tokens: string[];       // orden correcto; la UI los baraja para el usuario
   translation: string;    // significado en español, mostrado como pista
+  accept?: string[][];    // otros órdenes igual de válidos (ej. きのう わたしは… = わたしは きのう…)
+  sid?: number;           // índice de la oración de origen dentro de la lección
 }
 
 export interface GrammarParticleExercise {
   type: "particle";
   sentence: string;       // frase con un hueco marcado por "＿"
-  answer: string;         // partícula correcta
+  parts?: string[];       // la misma frase en fichas (una de ellas es "＿"), para mostrarla separada
+  answer: string;         // respuesta correcta
   options: string[];      // incluye `answer`
   translation: string;
+  kind?: "particle" | "form"; // partícula (は, を…) o forma gramatical (たべません, この…)
+  alt?: string[];         // otras respuestas también válidas (nunca se ofrecen como opción)
+  sid?: number;
 }
 
 export type GrammarExercise = GrammarOrderExercise | GrammarParticleExercise;
 
+export interface GrammarSentence {
+  jp: string;             // fichas separadas por espacios
+  es: string;             // traducción (con contexto entre paréntesis si hace falta)
+  blank?: string;         // ficha a vaciar en el ejercicio de hueco (por defecto: la 1.ª de `focus`)
+  options?: string[];     // opciones explícitas del hueco (incluyen la respuesta)
+  alt?: string[];         // respuestas alternativas válidas para el hueco
+  orders?: string[];      // otros órdenes válidos de las mismas fichas (ej. "ねこ と いぬ が います")
+}
+
+export type GrammarBook = "Japonés Básico I" | "Japonés Básico II" | "Extra";
+
 export interface GrammarLesson {
   id: string;
   title: string;
-  explanation: string;   // 2-4 líneas, en español
+  explanation: string;    // 2-5 líneas, en español
   pattern: string;
-  section: string;       // agrupación visual en GrammarSetupView (no forma parte del progreso)
+  section: GrammarBook;   // libro al que pertenece (agrupación en GrammarSetupView)
+  tip?: string;           // truco para recordar
+  train?: boolean;        // mostrar el tren de partículas en la explicación
+  focus: string[];        // fichas que se practican en el ejercicio de hueco
+  pool?: string[];        // partículas distractoras, por prioridad (la 1.ª siempre aparece)
+  adjective?: "i";        // activa el conjunto de formas de adjetivo い
+  sentences: GrammarSentence[];
   exercises: GrammarExercise[];
 }
 
-export const GRAMMAR_LESSONS: GrammarLesson[] = [
-  // ── Estructura básica ──────────────────────────────────────────────────────
+type LessonDef = Omit<GrammarLesson, "exercises">;
+
+// ── Conjuntos de opciones automáticos ────────────────────────────────────────
+
+export const PARTICLES = ["は", "が", "を", "に", "へ", "で", "と", "も", "の", "か", "から", "まで"];
+
+const FIXED_SETS: string[][] = [
+  ["これ", "それ", "あれ", "どれ"],
+  ["この", "その", "あの", "どの"],
+  ["なん", "だれ", "どこ", "いつ"],
+  ["あります", "います", "ありません", "いません"],
+  ["ありました", "いました", "ありませんでした", "いませんでした"],
+  ["うえ", "した", "なか", "まえ", "うしろ"],
+  ["です", "でした", "ではありません", "ではありませんでした"],
+  ["です", "でした", "じゃないです", "じゃなかったです"],
+];
+
+function rotate<T>(arr: T[], n: number): T[] {
+  if (arr.length === 0) return arr;
+  const k = n % arr.length;
+  return [...arr.slice(k), ...arr.slice(0, k)];
+}
+
+/** Conjugaciones ます del mismo verbo: たべません → [たべます, たべません, たべました, たべませんでした]. */
+function masuSet(word: string): string[] | null {
+  for (const suf of ["ませんでした", "ません", "ました", "ます"]) {
+    if (word.endsWith(suf) && word.length > suf.length) {
+      const stem = word.slice(0, -suf.length);
+      return [stem + "ます", stem + "ません", stem + "ました", stem + "ませんでした"];
+    }
+  }
+  return null;
+}
+
+/** Querer hacer: たべたい → [たべたい, たべます, たべました, たべません]. */
+function taiSet(word: string): string[] | null {
+  if (!word.endsWith("たい") || word.length <= 2) return null;
+  const stem = word.slice(0, -2);
+  return [stem + "たい", stem + "ます", stem + "ました", stem + "ません"];
+}
+
+/** Adjetivo い: さむくない → [さむい, さむくない, さむかった, さむくなかった]. */
+function iAdjSet(word: string): string[] | null {
+  for (const suf of ["くなかった", "かった", "くない", "い"]) {
+    if (word.endsWith(suf) && word.length > suf.length) {
+      const stem = word.slice(0, -suf.length);
+      return [stem + "い", stem + "くない", stem + "かった", stem + "くなかった"];
+    }
+  }
+  return null;
+}
+
+function formSetFor(answer: string, lesson: LessonDef): string[] | null {
+  // Cópula: です está en el conjunto formal y en el coloquial; las lecciones con
+  // じゃない usan el coloquial (adjetivos な), el resto el formal.
+  const casualFirst = lesson.id === "adjetivos-na";
+  const sets = casualFirst ? [...FIXED_SETS].reverse() : FIXED_SETS;
+  for (const set of sets) if (set.includes(answer)) return set;
+  if (lesson.adjective === "i") return iAdjSet(answer);
+  return masuSet(answer) ?? taiSet(answer);
+}
+
+function pickOptions(answer: string, set: string[], exclude: string[], seed: number): string[] {
+  const rest = set.filter((o) => o !== answer && !exclude.includes(o));
+  return [answer, ...rotate(rest, seed).slice(0, 3)];
+}
+
+function optionsFor(answer: string, s: GrammarSentence, lesson: LessonDef, seed: number): string[] {
+  if (s.options) return s.options;
+  const alt = s.alt ?? [];
+  const set = formSetFor(answer, lesson);
+  if (set) return pickOptions(answer, set, alt, seed);
+  // Partículas: la primera del pool es el contraste clave y siempre aparece.
+  const pool = (lesson.pool ?? ["を", "に", "で", "へ"]).filter((p) => p !== answer && !alt.includes(p));
+  const [first, ...others] = pool;
+  return [answer, first, ...rotate(others, seed).slice(0, 2)].filter((o) => o !== undefined);
+}
+
+// Palabras de tiempo que van sin partícula y pueden ir antes o después del tema.
+const BARE_TIME_WORDS = new Set([
+  "きょう", "きのう", "あした", "いま", "けさ", "ゆうべ", "おととい", "まいにち", "まいあさ", "まいばん",
+  "せんしゅう", "らいしゅう", "こんしゅう",
+]);
+
+/** Órdenes alternativos válidos: los explícitos de la oración + «TIEMPO X は…» ⇄ «X は TIEMPO…». */
+function alternativeOrders(tokens: string[], s: GrammarSentence): string[][] {
+  const alts = (s.orders ?? []).map((o) => o.split(" ").filter(Boolean));
+  if (tokens[1] === "は" && BARE_TIME_WORDS.has(tokens[2])) {
+    alts.push([tokens[2], tokens[0], tokens[1], ...tokens.slice(3)]);
+  }
+  return alts;
+}
+
+function buildLesson(def: LessonDef): GrammarLesson {
+  const exercises: GrammarExercise[] = [];
+  def.sentences.forEach((s, sid) => {
+    const tokens = s.jp.split(" ").filter(Boolean);
+    const accept = alternativeOrders(tokens, s);
+    exercises.push({ type: "order", tokens, translation: s.es, ...(accept.length ? { accept } : {}), sid });
+
+    const blankIdx = s.blank !== undefined
+      ? tokens.indexOf(s.blank)
+      : tokens.findIndex((t) => def.focus.includes(t));
+    if (blankIdx === -1) return;
+    const answer = tokens[blankIdx];
+    const parts = tokens.map((t, i) => (i === blankIdx ? "＿" : t));
+    exercises.push({
+      type: "particle",
+      sentence: parts.join(""),
+      parts,
+      answer,
+      options: optionsFor(answer, s, def, sid),
+      translation: s.es,
+      kind: PARTICLES.includes(answer) ? "particle" : "form",
+      ...(s.alt ? { alt: s.alt } : {}),
+      sid,
+    });
+  });
+  return { ...def, exercises };
+}
+
+const s = (jp: string, es: string, extra: Partial<GrammarSentence> = {}): GrammarSentence => ({ jp, es, ...extra });
+
+// ── Lecciones ────────────────────────────────────────────────────────────────
+
+const LESSON_DEFS: LessonDef[] = [
+  // ══ Japonés Básico I ══════════════════════════════════════════════════════
   {
     id: "estructura-desu",
     title: "La oración básica: X は Y です",
-    explanation: "「X は Y です」es la estructura más básica del japonés: dice que X es Y. は marca el tema de la oración (se escribe con la letra ha, pero se lee \"wa\") y です es la cópula, como \"ser/estar\" en presente.",
+    explanation: "「X は Y です」dice que X es Y. は marca el TEMA: aquello de lo que vas a hablar («con respecto a X…»). Como partícula se escribe は pero se lee \"wa\". です es el estado de ser en presente y no cambia con la persona: sirve para yo, tú, él, nosotros…",
     pattern: "X は Y です",
-    section: "Estructura básica",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "がくせい", "です"], translation: "Yo soy estudiante." },
-      { type: "order", tokens: ["あなた", "は", "せんせい", "です"], translation: "Tú eres profesor/a." },
-      { type: "order", tokens: ["かれ", "は", "いしゃ", "です"], translation: "Él es médico." },
-      { type: "order", tokens: ["かのじょ", "は", "かいしゃいん", "です"], translation: "Ella es empleada de empresa." },
-      { type: "particle", sentence: "わたし＿がくせいです", answer: "は", options: ["は", "が", "を", "に"], translation: "Yo soy estudiante." },
-      { type: "particle", sentence: "あなた＿せんせいです", answer: "は", options: ["は", "を", "で", "と"], translation: "Tú eres profesor/a." },
-      { type: "particle", sentence: "かれ＿いしゃです", answer: "は", options: ["は", "の", "へ", "も"], translation: "Él es médico." },
-      { type: "particle", sentence: "かのじょ＿かいしゃいんです", answer: "は", options: ["は", "が", "に", "と"], translation: "Ella es empleada de empresa." },
+    section: "Japonés Básico I",
+    tip: "Piensa en は como «con respecto a…». わたしは… = «con respecto a mí…».",
+    focus: ["は"],
+    pool: ["を", "に", "で", "へ"],
+    sentences: [
+      s("わたし は がくせい です", "Yo soy estudiante."),
+      s("たなかさん は せんせい です", "El Sr. Tanaka es profesor."),
+      s("かれ は いしゃ です", "Él es médico."),
+      s("かのじょ は かいしゃいん です", "Ella es empleada de empresa."),
+      s("わたしたち は ともだち です", "Nosotros somos amigos."),
+      s("ちち は ぎんこういん です", "Mi padre es empleado de banco."),
+      s("はは は せんせい です", "Mi madre es profesora."),
+      s("マリアさん は がいこくじん です", "María es extranjera."),
+      s("きょう は にちようび です", "Hoy es domingo."),
+      s("あした は やすみ です", "Mañana es día libre."),
+      s("カルロスさん は りゅうがくせい です", "Carlos es estudiante de intercambio."),
+      s("あに は おまわりさん です", "Mi hermano mayor es policía."),
+      s("かれたち は がくせい です", "Ellos son estudiantes."),
+      s("いま は ごご さんじ です", "Ahora son las tres de la tarde."),
     ],
   },
   {
     id: "negacion-janai",
-    title: "Negar con です: 〜じゃないです",
-    explanation: "Para negar \"X は Y です\" se cambia です por じゃないです (informal) o ではありません (formal). Ambas significan \"X no es Y\"; じゃないです es la más usada al hablar.",
-    pattern: "X は Y じゃないです",
-    section: "Estructura básica",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "せんせい", "じゃない", "です"], translation: "Yo no soy profesor/a." },
-      { type: "order", tokens: ["かれ", "は", "がくせい", "じゃない", "です"], translation: "Él no es estudiante." },
-      { type: "order", tokens: ["あなた", "は", "いしゃ", "じゃない", "です"], translation: "Tú no eres médico." },
-      { type: "order", tokens: ["かのじょ", "は", "がいこくじん", "じゃない", "です"], translation: "Ella no es extranjera." },
-      { type: "particle", sentence: "わたし＿せんせいじゃないです", answer: "は", options: ["は", "が", "を", "へ"], translation: "Yo no soy profesor/a." },
-      { type: "particle", sentence: "かれ＿がくせいじゃないです", answer: "は", options: ["は", "も", "の", "で"], translation: "Él no es estudiante." },
-      { type: "particle", sentence: "あなた＿いしゃじゃないです", answer: "は", options: ["は", "が", "と", "に"], translation: "Tú no eres médico." },
-      { type: "particle", sentence: "かのじょ＿がいこくじんじゃないです", answer: "は", options: ["は", "を", "で", "も"], translation: "Ella no es extranjera." },
+    title: "Negar: ではありません / じゃないです",
+    explanation: "Para decir que X NO es Y se cambia です por ではありません (formal, escrito) o じゃないです (más común al hablar). Las dos significan lo mismo. Ojo: es una sola pieza al final de la oración, igual que です.",
+    pattern: "X は Y ではありません / じゃないです",
+    section: "Japonés Básico I",
+    tip: "では → じゃ: じゃないです es ではありません «comprimido» para hablar.",
+    focus: ["ではありません", "じゃないです", "です"],
+    sentences: [
+      s("わたし は せんせい ではありません", "Yo no soy profesor/a."),
+      s("かれ は がくせい じゃないです", "Él no es estudiante."),
+      s("たなかさん は いしゃ ではありません", "El Sr. Tanaka no es médico."),
+      s("かのじょ は がいこくじん じゃないです", "Ella no es extranjera."),
+      s("きょう は やすみ ではありません", "Hoy no es día libre."),
+      s("あした は げつようび じゃないです", "Mañana no es lunes."),
+      s("マリアさん は かいしゃいん ではありません", "María no es empleada de empresa."),
+      s("ちち は ぎんこういん じゃないです", "Mi padre no es empleado de banco."),
+      s("わたしたち は きょうだい ではありません", "Nosotros no somos hermanos."),
+      s("カルロスさん は せんせい です", "Carlos sí es profesor."),
+      s("あに は がくせい です", "Mi hermano mayor sí es estudiante."),
+      s("いま は よる じゃないです", "Ahora no es de noche."),
     ],
   },
   {
     id: "copula-pasado-negativo",
-    title: "El estado de ser: pasado y negativo",
-    explanation: "です tiene solo dos tiempos y no se conjuga según la persona. Presente: です (es) / ではありません (no es). Pasado: でした (era) / ではありませんでした (no era). ではありません se abrevia a じゃないです al hablar; ではありませんでした a じゃなかったです.",
+    title: "Pasado: でした / ではありませんでした",
+    explanation: "です solo tiene dos tiempos: presente y pasado. Pasado afirmativo: でした (era/fue). Pasado negativo: ではありませんでした (no era/no fue); al hablar se dice じゃなかったです. Igual que です, no cambia según la persona.",
     pattern: "X は Y でした / ではありませんでした",
-    section: "Estructura básica",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "がくせい", "でした"], translation: "Yo era estudiante." },
-      { type: "order", tokens: ["かのじょ", "は", "せんせい", "でした"], translation: "Ella era profesora." },
-      { type: "order", tokens: ["かれ", "は", "いしゃ", "では", "ありません"], translation: "Él no es médico." },
-      { type: "order", tokens: ["あなた", "は", "がくせい", "では", "ありません", "でした"], translation: "Tú no eras estudiante." },
-      { type: "particle", sentence: "わたし＿がくせいでした", answer: "は", options: ["は", "が", "を", "に"], translation: "Yo era estudiante." },
-      { type: "particle", sentence: "かのじょ＿せんせいでした", answer: "は", options: ["は", "の", "で", "と"], translation: "Ella era profesora." },
-      { type: "particle", sentence: "かれ＿いしゃではありません", answer: "は", options: ["は", "も", "が", "へ"], translation: "Él no es médico." },
-      { type: "particle", sentence: "あなた＿がくせいではありませんでした", answer: "は", options: ["は", "を", "に", "が"], translation: "Tú no eras estudiante." },
-    ],
-  },
-  {
-    id: "pregunta-ka",
-    title: "Preguntas con か",
-    explanation: "Para convertir una afirmación en pregunta se añade か al final de です/ます, sin cambiar el orden de la frase. あなたはがくせいですか = \"¿Eres estudiante?\".",
-    pattern: "X は Y ですか",
-    section: "Estructura básica",
-    exercises: [
-      { type: "order", tokens: ["あなた", "は", "がくせい", "です", "か"], translation: "¿Eres estudiante?" },
-      { type: "order", tokens: ["かれ", "は", "せんせい", "です", "か"], translation: "¿Él es profesor?" },
-      { type: "order", tokens: ["これ", "は", "ほん", "です", "か"], translation: "¿Esto es un libro?" },
-      { type: "order", tokens: ["それ", "は", "かばん", "です", "か"], translation: "¿Eso es un bolso?" },
-      { type: "particle", sentence: "あなた＿がくせいですか", answer: "は", options: ["は", "が", "を", "に"], translation: "¿Eres estudiante?" },
-      { type: "particle", sentence: "かれ＿せんせいですか", answer: "は", options: ["は", "の", "で", "と"], translation: "¿Él es profesor?" },
-      { type: "particle", sentence: "これ＿ほんですか", answer: "は", options: ["は", "が", "へ", "も"], translation: "¿Esto es un libro?" },
-      { type: "particle", sentence: "それ＿かばんですか", answer: "は", options: ["は", "を", "に", "が"], translation: "¿Eso es un bolso?" },
-    ],
-  },
-
-  // ── Partículas ─────────────────────────────────────────────────────────────
-  {
-    id: "particula-ga",
-    title: "Partícula が: sujeto y gustos",
-    explanation: "が marca el sujeto gramatical, sobre todo con verbos de existencia (あります/います) y con expresiones de gusto como すきです/きらいです. A diferencia de は, が no contrasta con otros temas: solo señala qué provoca la sensación.",
-    pattern: "X は Y が すきです",
-    section: "Partículas",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "コーヒー", "が", "すき", "です"], translation: "Me gusta el café." },
-      { type: "order", tokens: ["わたし", "は", "ねこ", "が", "すき", "です"], translation: "Me gustan los gatos." },
-      { type: "order", tokens: ["かのじょ", "は", "えいが", "が", "すき", "です"], translation: "A ella le gustan las películas." },
-      { type: "order", tokens: ["わたし", "は", "おんがく", "が", "だいすき", "です"], translation: "Me encanta la música." },
-      { type: "particle", sentence: "わたしはコーヒー＿すきです", answer: "が", options: ["が", "は", "を", "に"], translation: "Me gusta el café." },
-      { type: "particle", sentence: "わたしはねこ＿すきです", answer: "が", options: ["が", "を", "で", "も"], translation: "Me gustan los gatos." },
-      { type: "particle", sentence: "かのじょはえいが＿すきです", answer: "が", options: ["が", "の", "へ", "と"], translation: "A ella le gustan las películas." },
-      { type: "particle", sentence: "わたしはおんがく＿だいすきです", answer: "が", options: ["が", "は", "に", "を"], translation: "Me encanta la música." },
-    ],
-  },
-  {
-    id: "particula-wo",
-    title: "Partícula を: el objeto directo",
-    explanation: "を marca el objeto directo de un verbo de acción: la cosa que recibe la acción. Se escribe con el carácter を pero se pronuncia igual que お. Ejemplo: パンをたべます = \"como pan\".",
-    pattern: "X を Verbo",
-    section: "Partículas",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "パン", "を", "たべます"], translation: "Yo como pan." },
-      { type: "order", tokens: ["わたし", "は", "みず", "を", "のみます"], translation: "Yo bebo agua." },
-      { type: "order", tokens: ["かれ", "は", "ほん", "を", "よみます"], translation: "Él lee un libro." },
-      { type: "order", tokens: ["がくせい", "は", "にほんご", "を", "べんきょうします"], translation: "El estudiante estudia japonés." },
-      { type: "particle", sentence: "わたしはパン＿たべます", answer: "を", options: ["を", "が", "に", "へ"], translation: "Yo como pan." },
-      { type: "particle", sentence: "わたしはみず＿のみます", answer: "を", options: ["を", "は", "で", "と"], translation: "Yo bebo agua." },
-      { type: "particle", sentence: "かれはほん＿よみます", answer: "を", options: ["を", "の", "も", "が"], translation: "Él lee un libro." },
-      { type: "particle", sentence: "がくせいはにほんご＿べんきょうします", answer: "を", options: ["を", "に", "へ", "が"], translation: "El estudiante estudia japonés." },
-    ],
-  },
-  {
-    id: "particula-ni",
-    title: "Partícula に: tiempo y destino",
-    explanation: "に marca un punto en el tiempo o el destino de un movimiento: がっこうにいきます = \"voy a la escuela\". Es una de las partículas con más usos del japonés.",
-    pattern: "X に Verbo",
-    section: "Partículas",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "がっこう", "に", "いきます"], translation: "Voy a la escuela." },
-      { type: "order", tokens: ["かれ", "は", "かいしゃ", "に", "いきます"], translation: "Él va a la empresa." },
-      { type: "order", tokens: ["せんせい", "は", "きょうしつ", "に", "はいります"], translation: "El profesor entra al aula." },
-      { type: "order", tokens: ["わたし", "は", "うち", "に", "かえります"], translation: "Yo regreso a casa." },
-      { type: "particle", sentence: "わたしはがっこう＿いきます", answer: "に", options: ["に", "で", "を", "と"], translation: "Voy a la escuela." },
-      { type: "particle", sentence: "かれはかいしゃ＿いきます", answer: "に", options: ["に", "が", "は", "と"], translation: "Él va a la empresa." },
-      { type: "particle", sentence: "せんせいはきょうしつ＿はいります", answer: "に", options: ["に", "を", "の", "も"], translation: "El profesor entra al aula." },
-      { type: "particle", sentence: "わたしはうち＿かえります", answer: "に", options: ["に", "で", "が", "と"], translation: "Yo regreso a casa." },
-    ],
-  },
-  {
-    id: "particula-de",
-    title: "Partícula で: lugar de acción y medio",
-    explanation: "で marca el lugar donde ocurre una acción (としょかんでべんきょうします = \"estudio en la biblioteca\") o el medio con el que se hace algo. No se usa para el destino, sino para dónde o cómo pasa la acción.",
-    pattern: "X で Verbo",
-    section: "Partículas",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "としょかん", "で", "べんきょうします"], translation: "Estudio en la biblioteca." },
-      { type: "order", tokens: ["がくせい", "は", "きょうしつ", "で", "はなします"], translation: "El estudiante habla en el aula." },
-      { type: "order", tokens: ["かれ", "は", "こうえん", "で", "あそびます"], translation: "Él juega en el parque." },
-      { type: "order", tokens: ["わたしたち", "は", "レストラン", "で", "たべます"], translation: "Nosotros comemos en el restaurante." },
-      { type: "particle", sentence: "わたしはとしょかん＿べんきょうします", answer: "で", options: ["で", "に", "を", "へ"], translation: "Estudio en la biblioteca." },
-      { type: "particle", sentence: "がくせいはきょうしつ＿はなします", answer: "で", options: ["で", "が", "の", "と"], translation: "El estudiante habla en el aula." },
-      { type: "particle", sentence: "かれはこうえん＿あそびます", answer: "で", options: ["で", "に", "は", "も"], translation: "Él juega en el parque." },
-      { type: "particle", sentence: "わたしたちはレストラン＿たべます", answer: "で", options: ["で", "を", "へ", "に"], translation: "Nosotros comemos en el restaurante." },
-    ],
-  },
-  {
-    id: "particula-he",
-    title: "Partícula へ: dirección",
-    explanation: "へ (se pronuncia \"e\", no \"he\") marca la dirección hacia la que alguien se mueve. Con verbos como いく/くる/かえる, へ y に son intercambiables la mayoría de las veces.",
-    pattern: "X へ Verbo",
-    section: "Partículas",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "がっこう", "へ", "いきます"], translation: "Voy hacia la escuela." },
-      { type: "order", tokens: ["かのじょ", "は", "えき", "へ", "あるきます"], translation: "Ella camina hacia la estación." },
-      { type: "order", tokens: ["わたしたち", "は", "やま", "へ", "いきます"], translation: "Nosotros vamos hacia la montaña." },
-      { type: "order", tokens: ["かれ", "は", "うち", "へ", "かえります"], translation: "Él regresa hacia casa." },
-      { type: "particle", sentence: "わたしはがっこう＿いきます", answer: "へ", options: ["へ", "を", "が", "の"], translation: "Voy hacia la escuela." },
-      { type: "particle", sentence: "かのじょはえき＿あるきます", answer: "へ", options: ["へ", "で", "と", "は"], translation: "Ella camina hacia la estación." },
-      { type: "particle", sentence: "わたしたちはやま＿いきます", answer: "へ", options: ["へ", "と", "を", "の"], translation: "Nosotros vamos hacia la montaña." },
-      { type: "particle", sentence: "かれはうち＿かえります", answer: "へ", options: ["へ", "が", "で", "も"], translation: "Él regresa hacia casa." },
-    ],
-  },
-  {
-    id: "particula-to",
-    title: "Partícula と: compañía y enumeración",
-    explanation: "と une sustantivos como \"y\" (ほんとざっし = \"el libro y la revista\") o indica con quién se hace algo: せんせいとはなします = \"hablo con el profesor\".",
-    pattern: "X と Y",
-    section: "Partículas",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "せんせい", "と", "はなします"], translation: "Hablo con el profesor." },
-      { type: "order", tokens: ["かれ", "は", "がくせい", "と", "あそびます"], translation: "Él juega con el estudiante." },
-      { type: "order", tokens: ["ほん", "と", "ざっし", "が", "あります"], translation: "Hay un libro y una revista." },
-      { type: "order", tokens: ["いぬ", "と", "ねこ", "が", "すき", "です"], translation: "Me gustan los perros y los gatos." },
-      { type: "particle", sentence: "わたしはせんせい＿はなします", answer: "と", options: ["と", "は", "を", "に"], translation: "Hablo con el profesor." },
-      { type: "particle", sentence: "かれはがくせい＿あそびます", answer: "と", options: ["と", "が", "で", "も"], translation: "Él juega con el estudiante." },
-      { type: "particle", sentence: "ほん＿ざっしがあります", answer: "と", options: ["と", "の", "へ", "を"], translation: "Hay un libro y una revista." },
-      { type: "particle", sentence: "いぬ＿ねこがすきです", answer: "と", options: ["と", "は", "に", "が"], translation: "Me gustan los perros y los gatos." },
-    ],
-  },
-  {
-    id: "particula-mo",
-    title: "Partícula も: también",
-    explanation: "も reemplaza a は o が cuando queremos decir \"también\": わたしはがくせいです。かれもがくせいです = \"Yo soy estudiante. Él también es estudiante.\"",
-    pattern: "X も Y です",
-    section: "Partículas",
-    exercises: [
-      { type: "order", tokens: ["かれ", "も", "がくせい", "です"], translation: "Él también es estudiante." },
-      { type: "order", tokens: ["かのじょ", "も", "にほんご", "を", "べんきょうします"], translation: "Ella también estudia japonés." },
-      { type: "order", tokens: ["わたし", "も", "コーヒー", "が", "すき", "です"], translation: "A mí también me gusta el café." },
-      { type: "order", tokens: ["あなた", "も", "がっこう", "に", "いきます"], translation: "Tú también vas a la escuela." },
-      { type: "particle", sentence: "かれ＿がくせいです", answer: "も", options: ["も", "は", "が", "を"], translation: "Él también es estudiante." },
-      { type: "particle", sentence: "かのじょ＿にほんごをべんきょうします", answer: "も", options: ["も", "が", "に", "で"], translation: "Ella también estudia japonés." },
-      { type: "particle", sentence: "わたし＿コーヒーがすきです", answer: "も", options: ["も", "は", "と", "の"], translation: "A mí también me gusta el café." },
-      { type: "particle", sentence: "あなた＿がっこうにいきます", answer: "も", options: ["も", "へ", "を", "が"], translation: "Tú también vas a la escuela." },
+    section: "Japonés Básico I",
+    tip: "Para el pasado se le «pega» でした: です → でした, ではありません → ではありませんでした.",
+    focus: ["でした", "ではありませんでした", "じゃなかったです"],
+    sentences: [
+      s("わたし は がくせい でした", "Yo era estudiante."),
+      s("そふ は いしゃ でした", "Mi abuelo era médico."),
+      s("きのう は にちようび でした", "Ayer fue domingo."),
+      s("おととい は やすみ ではありませんでした", "Anteayer no fue día libre."),
+      s("かれ は せんせい ではありませんでした", "Él no era profesor."),
+      s("はは は かいしゃいん でした", "Mi madre era empleada de empresa."),
+      s("かのじょ は りゅうがくせい ではありませんでした", "Ella no era estudiante de intercambio."),
+      s("たなかさん は ぎんこういん でした", "El Sr. Tanaka era empleado de banco."),
+      s("せんしゅう は なつやすみ でした", "La semana pasada eran las vacaciones de verano."),
+      s("わたしたち は ともだち ではありませんでした", "Nosotros no éramos amigos."),
+      s("そぼ は せんせい ではありませんでした", "Mi abuela no era profesora."),
+      s("きのう は すいようび ではありませんでした", "Ayer no fue miércoles."),
+      s("かれ は がくせい じゃなかったです", "Él no era estudiante (coloquial)."),
+      s("きのう は どようび じゃなかったです", "Ayer no fue sábado (coloquial)."),
     ],
   },
   {
     id: "particula-no",
-    title: "Partícula の: posesión y modificación",
-    explanation: "の une dos sustantivos, normalmente para indicar posesión (\"de\"): わたしのほん = \"mi libro\". También puede unir un sustantivo modificador con otro: にほんごのせんせい = \"profesor de japonés\".",
-    pattern: "X の Y",
-    section: "Partículas",
-    exercises: [
-      { type: "order", tokens: ["これ", "は", "わたし", "の", "ほん", "です"], translation: "Esto es mi libro." },
-      { type: "order", tokens: ["それ", "は", "かれ", "の", "かばん", "です"], translation: "Eso es su bolso (de él)." },
-      { type: "order", tokens: ["かのじょ", "は", "にほんご", "の", "せんせい", "です"], translation: "Ella es profesora de japonés." },
-      { type: "order", tokens: ["あれ", "は", "がっこう", "の", "としょかん", "です"], translation: "Aquello es la biblioteca de la escuela." },
-      { type: "particle", sentence: "これはわたし＿ほんです", answer: "の", options: ["の", "は", "が", "に"], translation: "Esto es mi libro." },
-      { type: "particle", sentence: "それはかれ＿かばんです", answer: "の", options: ["の", "を", "と", "も"], translation: "Eso es su bolso (de él)." },
-      { type: "particle", sentence: "かのじょはにほんご＿せんせいです", answer: "の", options: ["の", "で", "へ", "が"], translation: "Ella es profesora de japonés." },
-      { type: "particle", sentence: "あれはがっこう＿としょかんです", answer: "の", options: ["の", "に", "と", "は"], translation: "Aquello es la biblioteca de la escuela." },
+    title: "Partícula の: posesión (B の A)",
+    explanation: "の une dos sustantivos y marca pertenencia, como nuestro «de», pero al revés: primero va el poseedor y luego lo poseído. «El libro DE Ana» → アナさん の ほん. También sirve para decir de qué tipo es algo: にほんご の せんせい = profesor de japonés.",
+    pattern: "B の A  (= A de B)",
+    section: "Japonés Básico I",
+    tip: "Léelo de derecha a izquierda: わたし の ともだち → amigo ← de ← yo.",
+    focus: ["の"],
+    pool: ["を", "に", "で", "へ"],
+    sentences: [
+      s("わたし の なまえ は マリア です", "Mi nombre es María."),
+      s("たなかさん は わたし の せんせい です", "El Sr. Tanaka es mi profesor."),
+      s("かれ は わたし の ともだち です", "Él es mi amigo."),
+      s("やまださん は だいがく の せんせい です", "La Sra. Yamada es profesora de la universidad."),
+      s("かのじょ は にほんご の がくせい です", "Ella es estudiante de japonés."),
+      s("かのじょ は わたし の いもうと です", "Ella es mi hermana menor."),
+      s("カルロスさん は ともだち の おにいさん です", "Carlos es el hermano mayor de mi amigo."),
+      s("わたし の ちち は いしゃ です", "Mi padre es médico."),
+      s("せんせい の なまえ は たなか です", "El nombre del profesor es Tanaka."),
+      s("かれ は にほん の がくせい です", "Él es un estudiante de Japón."),
+      s("わたし の たんじょうび は きょう です", "Mi cumpleaños es hoy."),
+      s("ともだち の おかあさん は せんせい です", "La mamá de mi amigo es profesora."),
+      s("あね の ともだち は りゅうがくせい です", "La amiga de mi hermana mayor es estudiante de intercambio."),
+    ],
+  },
+  {
+    id: "pregunta-ka",
+    title: "Preguntas con か (なん・だれ・どこ・いつ)",
+    explanation: "Para preguntar basta con poner か al final, sin cambiar el orden: あなたは がくせいですか = ¿Eres estudiante? Las palabras de pregunta van justo donde iría la respuesta: なん (qué), だれ (quién), どこ (dónde), いつ (cuándo).",
+    pattern: "X は Y ですか · X は なん/だれ/どこ/いつ ですか",
+    section: "Japonés Básico I",
+    tip: "La palabra de pregunta ocupa el lugar de la respuesta: これは ほんです → これは なんですか.",
+    focus: ["なん", "だれ", "どこ", "いつ", "か"],
+    pool: ["を", "に", "は", "で"],
+    sentences: [
+      s("あなた は がくせい です か", "¿Eres estudiante?"),
+      s("たなかさん は せんせい です か", "¿El Sr. Tanaka es profesor?"),
+      s("かのじょ は いしゃ です か", "¿Ella es médica?"),
+      s("あなた の なまえ は なん です か", "¿Cómo te llamas? (¿Cuál es tu nombre?)"),
+      s("かれ は だれ です か", "¿Quién es él?"),
+      s("たんじょうび は いつ です か", "¿Cuándo es tu cumpleaños?"),
+      s("トイレ は どこ です か", "¿Dónde está el baño?"),
+      s("えき は どこ です か", "¿Dónde está la estación?"),
+      s("やすみ は いつ です か", "¿Cuándo son las vacaciones?"),
+      s("せんせい は だれ です か", "¿Quién es el profesor?"),
+      s("きょう は なんようび です か", "¿Qué día de la semana es hoy?"),
+      s("マリアさん は がいこくじん です か", "¿María es extranjera?"),
+      s("いま は なんじ です か", "¿Qué hora es ahora?"),
+      s("あなた の ともだち は だれ です か", "¿Quién es tu amigo?"),
     ],
   },
 
-  // ── Verbos ます ────────────────────────────────────────────────────────────
+  // ══ Japonés Básico II ═════════════════════════════════════════════════════
+  {
+    id: "demostrativos-kosoare",
+    title: "Kosoado: これ・この, それ・その, あれ・あの",
+    explanation: "こ = cerca de mí, そ = cerca de ti, あ = lejos de los dos, ど = pregunta. Las formas en -れ (これ, それ, あれ, どれ) van SOLAS, como pronombre: これは ほんです. Las formas en -の (この, その, あの, どの) SIEMPRE van pegadas a un sustantivo: この ほんは わたしのです.",
+    pattern: "これ は X です · この X は Y です",
+    section: "Japonés Básico II",
+    tip: "-れ va solo; -の necesita un sustantivo detrás (この + ほん).",
+    focus: ["これ", "それ", "あれ", "どれ", "この", "その", "あの", "どの"],
+    sentences: [
+      s("これ は わたし の ほん です", "Esto es mi libro."),
+      s("それ は なん です か", "¿Qué es eso?"),
+      s("あれ は がっこう です", "Aquello es una escuela."),
+      s("どれ が あなた の かさ です か", "¿Cuál es tu paraguas?"),
+      s("この かばん は わたし の です", "Este bolso es mío."),
+      s("その じてんしゃ は ともだち の です", "Esa bicicleta es de mi amigo."),
+      s("あの ひと は せんせい です", "Aquella persona es el profesor."),
+      s("どの ひと が たなかさん です か", "¿Cuál de esas personas es el Sr. Tanaka?"),
+      s("これ は ねこ の ごはん です", "Esto es la comida del gato."),
+      s("それ は わたし の えんぴつ でした", "Eso era mi lápiz."),
+      s("この くるま は ちち の です", "Este coche es de mi padre."),
+      s("あの いえ は そぼ の いえ です", "Aquella casa es la casa de mi abuela."),
+      s("その ほん は せんせい の ではありません", "Ese libro no es del profesor."),
+      s("あれ は なん です か", "¿Qué es aquello?"),
+    ],
+  },
   {
     id: "verbos-masu",
     title: "Verbos en ます: presente afirmativo",
-    explanation: "La forma ます es la forma educada de los verbos en presente/futuro afirmativo, usada en la mayoría de conversaciones formales y con desconocidos. Ejemplo: たべる → たべます.",
-    pattern: "Verbo-ます",
-    section: "Verbos ます",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "まいにち", "にほんご", "を", "べんきょうします"], translation: "Estudio japonés todos los días." },
-      { type: "order", tokens: ["わたし", "は", "まいにち", "みず", "を", "のみます"], translation: "Bebo agua todos los días." },
-      { type: "order", tokens: ["かれ", "は", "ほん", "を", "かいます"], translation: "Él compra un libro." },
-      { type: "order", tokens: ["わたしたち", "は", "おんがく", "を", "ききます"], translation: "Nosotros escuchamos música." },
-      { type: "particle", sentence: "わたしはまいにちにほんご＿べんきょうします", answer: "を", options: ["を", "が", "に", "へ"], translation: "Estudio japonés todos los días." },
-      { type: "particle", sentence: "わたしはまいにちみず＿のみます", answer: "を", options: ["を", "は", "で", "と"], translation: "Bebo agua todos los días." },
-      { type: "particle", sentence: "かれはほん＿かいます", answer: "を", options: ["を", "の", "も", "が"], translation: "Él compra un libro." },
-      { type: "particle", sentence: "わたしたちはおんがく＿ききます", answer: "を", options: ["を", "に", "へ", "が"], translation: "Nosotros escuchamos música." },
+    explanation: "En japonés solo hay dos tiempos: presente y pasado. El futuro se entiende por el contexto (あした = mañana). La forma ます sirve igual para todas las personas y el verbo SIEMPRE va al final de la oración: わたしは パンを たべます = Yo como pan / comeré pan.",
+    pattern: "X は Verbo-ます",
+    section: "Japonés Básico II",
+    tip: "ます (sí, ahora) · ません (no) · ました (sí, antes) · ませんでした (no, antes).",
+    focus: [],
+    sentences: [
+      s("わたし は まいにち にほんご を べんきょうします", "Estudio japonés todos los días.", { blank: "べんきょうします" }),
+      s("ちち は まいにち はたらきます", "Mi padre trabaja todos los días.", { blank: "はたらきます" }),
+      s("わたし は パン を たべます", "Yo como pan.", { blank: "たべます" }),
+      s("かのじょ は おちゃ を のみます", "Ella bebe té.", { blank: "のみます" }),
+      s("がくせい は ほん を よみます", "El estudiante lee un libro.", { blank: "よみます" }),
+      s("わたし は てがみ を かきます", "Escribo una carta.", { blank: "かきます" }),
+      s("わたし は あした やすみます", "Mañana descanso.", { blank: "やすみます" }),
+      s("こども は まいにち あそびます", "Los niños juegan todos los días.", { blank: "あそびます" }),
+      s("わたし は にほんご が わかります", "Entiendo japonés.", { blank: "わかります" }),
+      s("わたし は まいばん おんがく を ききます", "Escucho música todas las noches.", { blank: "ききます" }),
+      s("はは は まいあさ コーヒー を のみます", "Mi madre bebe café cada mañana.", { blank: "のみます" }),
+      s("たなかさん は えいご を はなします", "El Sr. Tanaka habla inglés.", { blank: "はなします" }),
     ],
   },
   {
     id: "verbos-masen",
     title: "Verbos en ません: presente negativo",
-    explanation: "Para negar un verbo en ます, se cambia la terminación por ません. たべます → たべません (\"no como\").",
-    pattern: "Verbo-ません",
-    section: "Verbos ます",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "にく", "を", "たべません"], translation: "Yo no como carne." },
-      { type: "order", tokens: ["かれ", "は", "コーヒー", "を", "のみません"], translation: "Él no bebe café." },
-      { type: "order", tokens: ["がくせい", "は", "がっこう", "に", "いきません"], translation: "El estudiante no va a la escuela." },
-      { type: "order", tokens: ["かのじょ", "は", "えいが", "を", "みません"], translation: "Ella no ve la película." },
-      { type: "particle", sentence: "わたしはにく＿たべません", answer: "を", options: ["を", "は", "が", "に"], translation: "Yo no como carne." },
-      { type: "particle", sentence: "かれはコーヒー＿のみません", answer: "を", options: ["を", "も", "で", "と"], translation: "Él no bebe café." },
-      { type: "particle", sentence: "がくせいはがっこう＿いきません", answer: "に", options: ["に", "を", "が", "の"], translation: "El estudiante no va a la escuela." },
-      { type: "particle", sentence: "かのじょはえいが＿みません", answer: "を", options: ["を", "へ", "が", "も"], translation: "Ella no ve la película." },
+    explanation: "Para negar en presente se cambia ます por ません: たべます → たべません (no como). Como el futuro no tiene forma propia, ません también puede significar «no lo haré».",
+    pattern: "X は Verbo-ません",
+    section: "Japonés Básico II",
+    tip: "ます → ません: solo cambia la última sílaba.",
+    focus: [],
+    sentences: [
+      s("わたし は にく を たべません", "No como carne.", { blank: "たべません" }),
+      s("かれ は おさけ を のみません", "Él no bebe alcohol.", { blank: "のみません" }),
+      s("はは は テレビ を みません", "Mi madre no ve la televisión.", { blank: "みません" }),
+      s("にちようび は はたらきません", "Los domingos no trabajo.", { blank: "はたらきません" }),
+      s("かのじょ は コーヒー を のみません", "Ella no bebe café.", { blank: "のみません" }),
+      s("がくせい は しんぶん を よみません", "El estudiante no lee el periódico.", { blank: "よみません" }),
+      s("わたし は えいご が わかりません", "No entiendo inglés.", { blank: "わかりません" }),
+      s("こども は やさい を たべません", "El niño no come verduras.", { blank: "たべません" }),
+      s("ちち は ラジオ を ききません", "Mi padre no escucha la radio.", { blank: "ききません" }),
+      s("あした は やすみません", "Mañana no descanso.", { blank: "やすみません" }),
+      s("かれ は にほんご を はなしません", "Él no habla japonés.", { blank: "はなしません" }),
+      s("わたし は てがみ を かきません", "No escribo cartas.", { blank: "かきません" }),
     ],
   },
   {
     id: "verbos-mashita",
     title: "Verbos en ました: pasado afirmativo",
-    explanation: "Para hablar de acciones ya terminadas, ます se cambia por ました. たべます → たべました (\"comí\").",
-    pattern: "Verbo-ました",
-    section: "Verbos ます",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "きのう", "パン", "を", "たべました"], translation: "Ayer comí pan." },
-      { type: "order", tokens: ["かれ", "は", "きのう", "がっこう", "に", "いきました"], translation: "Ayer él fue a la escuela." },
-      { type: "order", tokens: ["わたしたち", "は", "こうえん", "で", "あそびました"], translation: "Nosotros jugamos en el parque." },
-      { type: "order", tokens: ["かのじょ", "は", "ほん", "を", "かいました"], translation: "Ella compró un libro." },
-      { type: "particle", sentence: "わたしはきのうパン＿たべました", answer: "を", options: ["を", "は", "に", "で"], translation: "Ayer comí pan." },
-      { type: "particle", sentence: "かれはきのうがっこう＿いきました", answer: "に", options: ["に", "を", "が", "も"], translation: "Ayer él fue a la escuela." },
-      { type: "particle", sentence: "わたしたちはこうえん＿あそびました", answer: "で", options: ["で", "に", "へ", "の"], translation: "Nosotros jugamos en el parque." },
-      { type: "particle", sentence: "かのじょはほん＿かいました", answer: "を", options: ["を", "と", "が", "へ"], translation: "Ella compró un libro." },
+    explanation: "Para el pasado se cambia ます por ました: たべます → たべました (comí). Suele acompañarse de palabras de tiempo pasado como きのう (ayer), けさ (esta mañana) o ゆうべ (anoche), que NO llevan partícula.",
+    pattern: "X は Verbo-ました",
+    section: "Japonés Básico II",
+    tip: "ます → ました: la «た» final suena a pasado.",
+    focus: [],
+    sentences: [
+      s("わたし は きのう すし を たべました", "Ayer comí sushi.", { blank: "たべました" }),
+      s("かのじょ は きのう えいが を みました", "Ella vio una película ayer.", { blank: "みました" }),
+      s("わたし は けさ コーヒー を のみました", "Esta mañana bebí café.", { blank: "のみました" }),
+      s("ちち は きのう はたらきました", "Mi padre trabajó ayer.", { blank: "はたらきました" }),
+      s("わたし は ゆうべ しゅくだい を しました", "Anoche hice la tarea.", { blank: "しました" }),
+      s("かれ は せんしゅう てがみ を かきました", "Él escribió una carta la semana pasada.", { blank: "かきました" }),
+      s("がくせい は きのう にほんご を べんきょうしました", "Los estudiantes estudiaron japonés ayer.", { blank: "べんきょうしました" }),
+      s("わたし は おととい ほん を よみました", "Anteayer leí un libro.", { blank: "よみました" }),
+      s("こども は きのう たくさん あそびました", "Ayer los niños jugaron mucho.", { blank: "あそびました" }),
+      s("わたし は せんせい の はなし が わかりました", "Entendí lo que explicó el profesor.", { blank: "わかりました" }),
+      s("はは は けさ おんがく を ききました", "Mi madre escuchó música esta mañana.", { blank: "ききました" }),
+      s("わたし は きのう やすみました", "Ayer descansé.", { blank: "やすみました" }),
     ],
   },
   {
     id: "verbos-masendeshita",
     title: "Verbos en ませんでした: pasado negativo",
-    explanation: "Para negar una acción pasada, se usa ませんでした. のみます → のみませんでした (\"no bebí\").",
-    pattern: "Verbo-ませんでした",
-    section: "Verbos ます",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "きのう", "みず", "を", "のみませんでした"], translation: "Ayer no bebí agua." },
-      { type: "order", tokens: ["かれ", "は", "きのう", "がっこう", "に", "いきませんでした"], translation: "Ayer él no fue a la escuela." },
-      { type: "order", tokens: ["がくせい", "は", "きのう", "べんきょうしませんでした"], translation: "Ayer el estudiante no estudió." },
-      { type: "order", tokens: ["かのじょ", "は", "えいが", "を", "みませんでした"], translation: "Ella no vio la película." },
-      { type: "particle", sentence: "わたしはきのうみず＿のみませんでした", answer: "を", options: ["を", "は", "が", "に"], translation: "Ayer no bebí agua." },
-      { type: "particle", sentence: "かれはきのうがっこう＿いきませんでした", answer: "に", options: ["に", "を", "が", "の"], translation: "Ayer él no fue a la escuela." },
-      { type: "particle", sentence: "わたしたちはこうえん＿あそびませんでした", answer: "で", options: ["で", "に", "の", "も"], translation: "Nosotros no jugamos en el parque." },
-      { type: "particle", sentence: "かのじょはえいが＿みませんでした", answer: "を", options: ["を", "が", "と", "へ"], translation: "Ella no vio la película." },
-    ],
-  },
-
-  // ── Adjetivos ──────────────────────────────────────────────────────────────
-  {
-    id: "adjetivos-i",
-    title: "Adjetivos い: afirmativo y negativo",
-    explanation: "Los adjetivos terminados en い (たかい, やすい, おおきい...) van directamente antes de です. Para negar, se quita い y se añade くないです: たかい → たかくないです.",
-    pattern: "X は adj-い です / adj-くないです",
-    section: "Adjetivos",
-    exercises: [
-      { type: "order", tokens: ["これ", "は", "たかい", "です"], translation: "Esto es caro." },
-      { type: "order", tokens: ["それ", "は", "たかくない", "です"], translation: "Eso no es caro." },
-      { type: "order", tokens: ["わたし", "の", "うち", "は", "ちいさい", "です"], translation: "Mi casa es pequeña." },
-      { type: "order", tokens: ["きょう", "は", "あたたかい", "です"], translation: "Hoy está templado." },
-      { type: "particle", sentence: "これ＿たかいです", answer: "は", options: ["は", "が", "の", "を"], translation: "Esto es caro." },
-      { type: "particle", sentence: "それ＿たかくないです", answer: "は", options: ["は", "も", "で", "と"], translation: "Eso no es caro." },
-      { type: "particle", sentence: "わたし＿うちはちいさいです", answer: "の", options: ["の", "は", "が", "に"], translation: "Mi casa es pequeña." },
-      { type: "particle", sentence: "きょう＿あたたかいです", answer: "は", options: ["は", "を", "へ", "が"], translation: "Hoy está templado." },
+    explanation: "Para decir que algo NO pasó, se añade でした a la forma ません: たべません → たべませんでした (no comí). Es la forma más larga de las cuatro.",
+    pattern: "X は Verbo-ませんでした",
+    section: "Japonés Básico II",
+    tip: "ません + でした = ませんでした («no» + «pasado»).",
+    focus: [],
+    sentences: [
+      s("わたし は きのう べんきょうしませんでした", "Ayer no estudié.", { blank: "べんきょうしませんでした" }),
+      s("かれ は けさ あさごはん を たべませんでした", "Él no desayunó esta mañana.", { blank: "たべませんでした" }),
+      s("かのじょ は ゆうべ テレビ を みませんでした", "Ella no vio la televisión anoche.", { blank: "みませんでした" }),
+      s("ちち は せんしゅう はたらきませんでした", "Mi padre no trabajó la semana pasada.", { blank: "はたらきませんでした" }),
+      s("わたし は その えいが が わかりませんでした", "No entendí esa película.", { blank: "わかりませんでした" }),
+      s("がくせい は しゅくだい を しませんでした", "Los estudiantes no hicieron la tarea.", { blank: "しませんでした" }),
+      s("わたし は きのう コーヒー を のみませんでした", "Ayer no bebí café.", { blank: "のみませんでした" }),
+      s("かれ は てがみ を かきませんでした", "Él no escribió la carta.", { blank: "かきませんでした" }),
+      s("こども は きのう あそびませんでした", "Ayer el niño no jugó.", { blank: "あそびませんでした" }),
+      s("わたし は ゆうべ ねませんでした", "Anoche no dormí.", { blank: "ねませんでした" }),
+      s("はは は しんぶん を よみませんでした", "Mi madre no leyó el periódico.", { blank: "よみませんでした" }),
+      s("たなかさん は きのう やすみませんでした", "El Sr. Tanaka no descansó ayer.", { blank: "やすみませんでした" }),
     ],
   },
   {
-    id: "adjetivos-na",
-    title: "Adjetivos な: afirmativo y negativo",
-    explanation: "Los adjetivos な (げんき, しずか, にぎやか, すき...) necesitan な antes de un sustantivo, pero antes de です van solos: しずかです. Para negar: しずかじゃないです.",
-    pattern: "X は adj-な です / adj-じゃないです",
-    section: "Adjetivos",
-    exercises: [
-      { type: "order", tokens: ["としょかん", "は", "しずか", "です"], translation: "La biblioteca es tranquila." },
-      { type: "order", tokens: ["こうえん", "は", "にぎやか", "です"], translation: "El parque es bullicioso." },
-      { type: "order", tokens: ["としょかん", "は", "にぎやか", "じゃない", "です"], translation: "La biblioteca no es bulliciosa." },
-      { type: "order", tokens: ["かれ", "は", "げんき", "です"], translation: "Él está lleno de energía." },
-      { type: "particle", sentence: "としょかん＿しずかです", answer: "は", options: ["は", "が", "の", "を"], translation: "La biblioteca es tranquila." },
-      { type: "particle", sentence: "こうえん＿にぎやかです", answer: "は", options: ["は", "も", "で", "と"], translation: "El parque es bullicioso." },
-      { type: "particle", sentence: "としょかん＿にぎやかじゃないです", answer: "は", options: ["は", "を", "に", "が"], translation: "La biblioteca no es bulliciosa." },
-      { type: "particle", sentence: "かれ＿げんきです", answer: "は", options: ["は", "へ", "の", "も"], translation: "Él está lleno de energía." },
+    id: "particula-ni",
+    title: "Partícula に: tiempo específico",
+    explanation: "に marca un momento concreto: una hora, un día de la semana, un mes (しちじに, どようびに, しがつに). Pero きょう, きのう, あした, いま o まいにち NUNCA llevan に. Para preguntar se usa なん + tiempo + に: なんじに おきますか = ¿A qué hora te levantas?",
+    pattern: "(tema) は (tiempo) に Verbo",
+    section: "Japonés Básico II",
+    tip: "Si puedes poner un número o un nombre de día, lleva に. Si es «hoy / ayer / mañana», va sin nada.",
+    train: true,
+    focus: ["に"],
+    pool: ["で", "を", "へ", "が"],
+    sentences: [
+      s("わたし は しちじ に おきます", "Me levanto a las siete."),
+      s("かれ は じゅういちじ に ねます", "Él se acuesta a las once."),
+      s("がくせい は にちようび に べんきょうします", "El estudiante estudia los domingos."),
+      s("わたし は ごご さんじ に コーヒー を のみます", "Bebo café a las tres de la tarde."),
+      s("かのじょ は どようび に はたらきます", "Ella trabaja los sábados."),
+      s("なんじ に おきました か", "¿A qué hora te levantaste?"),
+      s("わたし は ろくじ に おきました", "Me levanté a las seis."),
+      s("ちち は はちじ に ばんごはん を たべます", "Mi padre cena a las ocho."),
+      s("なんようび に やすみます か", "¿Qué día descansas?"),
+      s("わたし は きのう くじ に ねました", "Ayer me acosté a las nueve."),
+      s("こども は げつようび に がっこう へ いきます", "El niño va a la escuela el lunes."),
+      s("あした じゅうじ に べんきょうします", "Mañana estudio a las diez."),
+      s("わたし は しがつ に にほん へ いきます", "En abril voy a Japón."),
+      s("たんじょうび に ケーキ を たべます", "En mi cumpleaños como pastel."),
     ],
   },
-
-  // ── Otros ──────────────────────────────────────────────────────────────────
   {
-    id: "demostrativos-kosoare",
-    title: "Demostrativos これ・それ・あれ",
-    explanation: "これ (esto, cerca de mí), それ (eso, cerca de ti) y あれ (aquello, lejos de ambos) señalan objetos según la distancia respecto a quien habla y quien escucha.",
-    pattern: "これ/それ/あれ は Y です",
-    section: "Otros",
-    exercises: [
-      { type: "order", tokens: ["これ", "は", "ほん", "です"], translation: "Esto es un libro." },
-      { type: "order", tokens: ["それ", "は", "かばん", "です", "か"], translation: "¿Eso es un bolso?" },
-      { type: "order", tokens: ["あれ", "は", "がっこう", "です"], translation: "Aquello es una escuela." },
-      { type: "order", tokens: ["これ", "は", "わたし", "の", "でんわ", "です"], translation: "Esto es mi teléfono." },
-      { type: "particle", sentence: "これ＿ほんです", answer: "は", options: ["は", "が", "の", "を"], translation: "Esto es un libro." },
-      { type: "particle", sentence: "それ＿かばんですか", answer: "は", options: ["は", "も", "へ", "と"], translation: "¿Eso es un bolso?" },
-      { type: "particle", sentence: "あれ＿がっこうです", answer: "は", options: ["は", "を", "で", "が"], translation: "Aquello es una escuela." },
-      { type: "particle", sentence: "これ＿わたしのでんわです", answer: "は", options: ["は", "の", "に", "も"], translation: "Esto es mi teléfono." },
+    id: "kara-made",
+    title: "から〜まで: desde… hasta…",
+    explanation: "に marca UN momento; から (desde) y まで (hasta) marcan un RANGO de tiempo o de espacio. Se usan juntas o por separado: くじから ごじまで = de nueve a cinco. Para preguntar: なんじから なんじまで ですか.",
+    pattern: "(inicio) から (fin) まで Verbo",
+    section: "Japonés Básico II",
+    tip: "から = «desde» (sale), まで = «hasta» (llega). Siempre en ese orden.",
+    train: true,
+    focus: ["から", "まで"],
+    pool: ["から", "まで", "に", "を", "で"],
+    sentences: [
+      s("わたし は くじ から ごじ まで はたらきます", "Trabajo de nueve a cinco."),
+      s("がっこう は げつようび から きんようび まで です", "La escuela es de lunes a viernes."),
+      s("かれ は ごご いちじ から さんじ まで べんきょうしました", "Él estudió de una a tres de la tarde.", { blank: "まで" }),
+      s("やすみ は しちがつ から はちがつ まで です", "Las vacaciones son de julio a agosto."),
+      s("ぎんこう は なんじ から なんじ まで です か", "¿De qué hora a qué hora abre el banco?"),
+      s("わたし は うち から えき まで あるきます", "Camino de mi casa a la estación.", { blank: "まで" }),
+      s("としょかん は じゅうじ まで です", "La biblioteca está abierta hasta las diez."),
+      s("じゅぎょう は はちじはん から です", "La clase empieza a las ocho y media."),
+      s("かのじょ は あさ から よる まで はたらきます", "Ella trabaja de la mañana a la noche.", { blank: "まで" }),
+      s("わたし は きのう よじ から ろくじ まで テレビ を みました", "Ayer vi la tele de cuatro a seis."),
+      s("わたし は がっこう から うち まで あるきました", "Caminé de la escuela a casa."),
+      s("なつやすみ は いつ から いつ まで です か", "¿Desde cuándo hasta cuándo son las vacaciones de verano?", { blank: "まで" }),
+    ],
+  },
+  {
+    id: "particula-to",
+    title: "Partícula と: «y» y «con» (だれと)",
+    explanation: "と tiene dos usos: une sustantivos como «y» (パンと たまご = pan y huevo) o marca con quién haces algo (ともだちと = con un amigo). Para preguntar se usa だれと: だれと いきますか = ¿Con quién vas? En el tren va después del tiempo: (tema)は (tiempo)に (compañía)と + verbo.",
+    pattern: "(tema) は (tiempo) に (compañía) と Verbo",
+    section: "Japonés Básico II",
+    tip: "わたしと ちちは = «mi papá y yo» (los dos son el tema). わたしは ちちと = «yo, con mi papá».",
+    train: true,
+    focus: ["と"],
+    pool: ["を", "へ", "が"],
+    sentences: [
+      s("わたし は ともだち と えいが を みます", "Veo una película con mi amigo."),
+      s("かれ は どようび に かのじょ と あそびます", "Él sale con ella el sábado."),
+      s("わたし は ちち と はたらきます", "Trabajo con mi papá."),
+      s("わたし と あね は がくせい です", "Mi hermana mayor y yo somos estudiantes.", { options: ["と", "を", "へ", "で"], orders: ["あね と わたし は がくせい です"] }),
+      s("パン と たまご を たべます", "Como pan y huevo.", { options: ["と", "へ", "を", "まで"], orders: ["たまご と パン を たべます"] }),
+      s("だれ と きました か", "¿Con quién viniste?", { options: ["と", "を", "へ", "で"] }),
+      s("かぞく と きました", "Vine con mi familia.", { options: ["と", "を", "へ", "の"] }),
+      s("マリアさん は にちようび に おかあさん と かいもの を します", "María va de compras con su mamá el domingo."),
+      s("いぬ と ねこ が います", "Hay un perro y un gato.", { options: ["と", "を", "へ", "で"], orders: ["ねこ と いぬ が います"] }),
+      s("わたし は きのう せんせい と はなしました", "Ayer hablé con el profesor."),
+      s("かれ は だれ と ばんごはん を たべます か", "¿Con quién cena él?"),
+      s("こども は ともだち と あそびます", "El niño juega con sus amigos."),
+      s("ほん と ノート を かいました", "Compré un libro y un cuaderno.", { options: ["と", "へ", "を", "が"], orders: ["ノート と ほん を かいました"] }),
+      s("わたし は らいしゅう りょうしん と りょこう を します", "La próxima semana viajo con mis padres."),
+    ],
+  },
+  {
+    id: "particula-de",
+    title: "Partícula で: el medio (なにで)",
+    explanation: "で marca el MEDIO con el que se hace algo: «en» bus, «con» palillos, «por» teléfono. Para preguntar se usa なにで: なにで きましたか = ¿En qué viniste? En el tren va después de la compañía: (tema)は (tiempo)に (compañía)と (medio)で + verbo.",
+    pattern: "(tema) は … (medio) で Verbo",
+    section: "Japonés Básico II",
+    tip: "で = «a través de / gracias a / mediante».",
+    train: true,
+    focus: ["で"],
+    pool: ["を", "に", "へ"],
+    sentences: [
+      s("わたし は バス で がっこう へ いきます", "Voy a la escuela en autobús."),
+      s("かれ は じてんしゃ で きました", "Él vino en bicicleta."),
+      s("わたし は はし で すし を たべます", "Como sushi con palillos."),
+      s("がくせい は えんぴつ で かきます", "Los estudiantes escriben con lápiz."),
+      s("なに で きました か", "¿En qué viniste?", { options: ["で", "へ", "の", "まで"] }),
+      s("わたし は でんしゃ で きました", "Vine en tren."),
+      s("ちち は くるま で かいしゃ へ いきます", "Mi padre va a la oficina en coche."),
+      s("かのじょ は ひこうき で にほん へ いきました", "Ella fue a Japón en avión."),
+      s("わたし は でんわ で はは と はなしました", "Hablé con mi madre por teléfono."),
+      s("せんせい は ペン で なまえ を かきました", "El profesor escribió el nombre con bolígrafo."),
+      s("かれ は なに で しごと へ いきます か", "¿En qué va él al trabajo?"),
+      s("わたし は タクシー で えき へ いきました", "Fui a la estación en taxi."),
+      s("わたしたち は ふね で くに へ かえりました", "Regresamos a nuestro país en barco."),
+      s("こども は スプーン で カレー を たべます", "El niño come curry con cuchara."),
+    ],
+  },
+  {
+    id: "particula-he",
+    title: "Partícula へ: dirección (どこへ)",
+    explanation: "へ marca hacia dónde te mueves. Como partícula se lee \"e\". Solo aparece con verbos de movimiento (いきます, きます, かえります). En su lugar también puede ir に (destino final); en la práctica significan lo mismo. Para preguntar: どこへ いきますか = ¿A dónde vas?",
+    pattern: "(tema) は … (destino) へ Verbo de movimiento",
+    section: "Japonés Básico II",
+    tip: "Si ves へ, busca un verbo de movimiento al final.",
+    train: true,
+    focus: ["へ"],
+    pool: ["で", "を", "と", "の"],
+    sentences: [
+      s("わたし は がっこう へ いきます", "Voy a la escuela.", { alt: ["に"] }),
+      s("かれ は うち へ かえります", "Él regresa a casa.", { alt: ["に"] }),
+      s("かのじょ は らいしゅう にほん へ いきます", "Ella va a Japón la próxima semana.", { alt: ["に"] }),
+      s("ともだち は きのう わたし の うち へ きました", "Mi amigo vino a mi casa ayer.", { alt: ["に"] }),
+      s("どこ へ いきます か", "¿A dónde vas?", { alt: ["に"] }),
+      s("わたし は ぎんこう へ いきます", "Voy al banco.", { alt: ["に"] }),
+      s("ちち は しちじ に うち へ かえります", "Mi papá vuelve a casa a las siete.", { alt: ["に"] }),
+      s("わたしたち は なつやすみ に うみ へ いきます", "En las vacaciones de verano vamos al mar.", { alt: ["に"] }),
+      s("がくせい は としょかん へ いきました", "Los estudiantes fueron a la biblioteca.", { alt: ["に"] }),
+      s("かれ は どこ へ いきました か", "¿A dónde fue él?", { alt: ["に"] }),
+      s("マリアさん は くに へ かえりました", "María regresó a su país.", { alt: ["に"] }),
+      s("わたし は あした ともだち と えいがかん へ いきます", "Mañana voy al cine con mi amigo.", { alt: ["に"] }),
+    ],
+  },
+  {
+    id: "lugar-ni-he-de",
+    title: "El lugar: に, へ o で según el verbo",
+    explanation: "El lugar lleva una partícula distinta según el tipo de verbo: EXISTENCIA (すんでいます, います, あります) → に: «estoy EN»; MOVIMIENTO (いきます, きます, かえります) → へ (o に): «me muevo HACIA»; ACCIÓN (はたらきます, べんきょうします, たべます…) → で: «hago algo EN». Por eso también cambia la pregunta: どこに / どこへ / どこで.",
+    pattern: "(lugar) に existir · (lugar) へ moverse · (lugar) で hacer",
+    section: "Japonés Básico II",
+    tip: "Pregúntate: ¿el verbo ESTÁ, VA o HACE? → に · へ · で.",
+    train: true,
+    focus: ["に", "へ", "で"],
+    pool: ["に", "へ", "で", "を", "と"],
+    sentences: [
+      s("わたし は とうきょう に すんでいます", "Vivo en Tokio."),
+      s("かぞく は きょうと に すんでいます", "Mi familia vive en Kioto."),
+      s("ねこ は へや に います", "El gato está en la habitación."),
+      s("かれ は いま えき に います", "Él está ahora en la estación."),
+      s("どこ に すんでいます か", "¿Dónde vives?"),
+      s("わたし は おおさか へ いきます", "Voy a Osaka.", { alt: ["に"] }),
+      s("あした どこ へ いきます か", "¿A dónde vas mañana?", { alt: ["に"] }),
+      s("かれ は きのう ゆうびんきょく へ いきました", "Él fue a correos ayer.", { alt: ["に"] }),
+      s("せんせい は がっこう へ きます", "El profesor viene a la escuela.", { alt: ["に"] }),
+      s("わたし は としょかん で べんきょうします", "Estudio en la biblioteca."),
+      s("ちち は ぎんこう で はたらきます", "Mi padre trabaja en un banco."),
+      s("わたしたち は きっさてん で コーヒー を のみました", "Tomamos café en la cafetería."),
+      s("どこ で ひるごはん を たべます か", "¿Dónde almuerzas?"),
+      s("かのじょ は デパート で ぼうし を かいました", "Ella compró un sombrero en los grandes almacenes."),
+      s("こども は こうえん で あそびます", "Los niños juegan en el parque."),
+    ],
+  },
+  {
+    id: "particula-wo",
+    title: "Partícula を: el objeto directo (なにを)",
+    explanation: "を marca el objeto sobre el que recae la acción: パンを たべます = como pan. En español no se traduce, pero en japonés siempre va detrás del objeto. Se escribe を y se lee \"o\". Para preguntar: なにを かいましたか = ¿Qué compraste? Es la última parada del tren antes del verbo de acción.",
+    pattern: "(tema) は (tiempo) に (comp) と (lugar) で (objeto) を Verbo",
+    section: "Japonés Básico II",
+    tip: "Pregunta «¿qué + verbo?»: lo que responde lleva を.",
+    train: true,
+    focus: ["を"],
+    pool: ["に", "が", "へ"],
+    sentences: [
+      s("わたし は まいあさ パン を たべます", "Como pan cada mañana."),
+      s("かれ は としょかん で ほん を よみます", "Él lee libros en la biblioteca."),
+      s("かのじょ は ぎゅうにゅう を のみません", "Ella no bebe leche."),
+      s("わたし は きのう ともだち と えいが を みました", "Ayer vi una película con mi amigo."),
+      s("なに を かいました か", "¿Qué compraste?"),
+      s("わたし は スーパー で やさい を かいました", "Compré verduras en el supermercado."),
+      s("がくせい は きょうしつ で にほんご を べんきょうします", "Los estudiantes estudian japonés en el aula."),
+      s("ちち は まいばん ニュース を みます", "Mi padre ve las noticias cada noche."),
+      s("かれ は ゆうべ おんがく を ききました", "Él escuchó música anoche."),
+      s("あの みせ は まんが を うっています", "Aquella tienda vende manga."),
+      s("わたし は ひるごはん に すし を たべました", "Almorcé sushi."),
+      s("かのじょ は なに を のみます か", "¿Qué bebe ella?"),
+      s("わたし は にちようび に へや の そうじ を します", "Los domingos limpio mi habitación."),
+      s("こども は こうえん で しゃしん を とりました", "El niño sacó fotos en el parque."),
+    ],
+  },
+  {
+    id: "particula-ga",
+    title: "Partícula が vs は",
+    explanation: "は presenta un TEMA ya conocido y anuncia información nueva sobre él («con respecto a mí… soy María»). が señala QUIÉN o QUÉ cumple algo cuando eso es lo desconocido («¿quién es María?» → «María soy YO»). Por eso las palabras de pregunta como sujeto (だれ, なに, どれ) siempre van con が, y su respuesta también.",
+    pattern: "だれ が …か → X が … · X は …",
+    section: "Japonés Básico II",
+    tip: "は → la información nueva va DESPUÉS. が → la información nueva es lo que va ANTES.",
+    focus: ["は", "が"],
+    pool: ["は", "が", "を", "に"],
+    sentences: [
+      s("だれ が きました か", "¿Quién vino?"),
+      s("たなかさん が きました", "(—¿Quién vino?) Vino el Sr. Tanaka."),
+      s("わたし は マリア です", "(Al presentarte) Yo soy María."),
+      s("わたし が マリア です", "(—¿Quién es María?) María soy yo."),
+      s("どれ が あなた の かばん です か", "¿Cuál es tu bolso?"),
+      s("これ が わたし の かばん です", "(—¿Cuál es tu bolso?) Este es mi bolso."),
+      s("なに が すき です か", "¿Qué te gusta?"),
+      s("だれ が この ケーキ を たべました か", "¿Quién se comió este pastel?"),
+      s("おとうと が たべました", "(—¿Quién se comió el pastel?) Se lo comió mi hermano menor."),
+      s("きょう は あめ です", "(—¿Qué tal el clima hoy?) Hoy llueve."),
+      s("わたし は きのう えいが を みました", "(Le cuentas a un amigo) Ayer vi una película."),
+      s("だれ が せんせい です か", "¿Quién es el profesor?"),
+      s("あの ひと が せんせい です", "(—¿Quién es el profesor?) Aquella persona es el profesor."),
+      s("かれ は いしゃ です", "(Hablándote de él) Él es médico."),
     ],
   },
   {
     id: "existencia-arimasu-imasu",
-    title: "Existencia: あります y います",
-    explanation: "Para decir que algo \"hay/existe\" se usa あります con cosas y います con personas o animales. El lugar donde está se marca con に: つくえにほんがあります = \"hay un libro en el escritorio\".",
-    pattern: "(lugar) に X が あります/います",
-    section: "Otros",
-    exercises: [
-      { type: "order", tokens: ["つくえ", "に", "ほん", "が", "あります"], translation: "Hay un libro en el escritorio." },
-      { type: "order", tokens: ["こうえん", "に", "いぬ", "が", "います"], translation: "Hay un perro en el parque." },
-      { type: "order", tokens: ["がっこう", "に", "がくせい", "が", "います"], translation: "Hay estudiantes en la escuela." },
-      { type: "order", tokens: ["いえ", "に", "ねこ", "が", "います"], translation: "Hay un gato en la casa." },
-      { type: "particle", sentence: "つくえ＿ほんがあります", answer: "に", options: ["に", "は", "を", "へ"], translation: "Hay un libro en el escritorio." },
-      { type: "particle", sentence: "こうえんにいぬ＿います", answer: "が", options: ["が", "は", "を", "の"], translation: "Hay un perro en el parque." },
-      { type: "particle", sentence: "がっこうにがくせい＿います", answer: "が", options: ["が", "で", "と", "も"], translation: "Hay estudiantes en la escuela." },
-      { type: "particle", sentence: "いえ＿ねこがいます", answer: "に", options: ["に", "へ", "を", "が"], translation: "Hay un gato en la casa." },
+    title: "Hay / está: あります・います + posiciones",
+    explanation: "あります se usa con cosas y plantas; います con personas y animales. Dos patrones: «(lugar) に X が あります» = HAY un X en el lugar (X es nuevo, «un»); «X は (lugar) に あります» = el X ESTÁ en el lugar (X es conocido, «el»). Posiciones: Y の うえ (encima), した (debajo), なか (dentro), まえ (delante), うしろ (detrás).",
+    pattern: "(lugar) に X が あります · X は (lugar) に います",
+    section: "Japonés Básico II",
+    tip: "¿Se mueve solo? → います. ¿No? → あります. La posición va así: つくえ の うえ に (en lo de arriba del escritorio).",
+    focus: ["あります", "います", "ありません", "いません", "ありました", "いました"],
+    pool: ["に", "で", "を", "へ"],
+    sentences: [
+      s("つくえ の うえ に ほん が あります", "Hay un libro encima del escritorio."),
+      s("こうえん に いぬ が います", "Hay un perro en el parque."),
+      s("かばん の なか に さいふ が あります", "Hay una cartera dentro del bolso.", { blank: "なか" }),
+      s("いす の した に ねこ が います", "Hay un gato debajo de la silla.", { blank: "した" }),
+      s("がっこう の まえ に バス が あります", "Hay un autobús delante de la escuela.", { blank: "まえ" }),
+      s("いえ の うしろ に き が あります", "Hay un árbol detrás de la casa.", { blank: "うしろ" }),
+      s("かぎ は つくえ の うえ に あります", "La llave está encima del escritorio.", { blank: "に" }),
+      s("せんせい は きょうしつ に います", "El profesor está en el aula."),
+      s("わたし は おかね が ありません", "No tengo dinero."),
+      s("へや に だれ が います か", "¿Quién está en la habitación?", { blank: "が" }),
+      s("れいぞうこ の なか に なに が あります か", "¿Qué hay dentro del refrigerador?", { blank: "なか" }),
+      s("えき の まえ に ぎんこう が あります", "Hay un banco delante de la estación.", { blank: "に" }),
+      s("にわ に とり が います", "Hay un pájaro en el jardín."),
+      s("ねこ は テーブル の した に いません", "El gato no está debajo de la mesa."),
+      s("あそこ に かさ が ありました", "Allí había un paraguas."),
+    ],
+  },
+
+  // ══ Extra (no está en los libros) ═════════════════════════════════════════
+  {
+    id: "particula-mo",
+    title: "Partícula も: también",
+    explanation: "も significa «también» y ocupa el lugar de は o が: わたしも がくせいです = Yo también soy estudiante. Cuando reemplaza a を suele ir sola: パンも たべます.",
+    pattern: "X も Y です",
+    section: "Extra",
+    focus: ["も"],
+    pool: ["は", "を", "に"],
+    sentences: [
+      s("わたし も がくせい です", "Yo también soy estudiante."),
+      s("かれ も いしゃ です", "Él también es médico."),
+      s("わたし も コーヒー が すき です", "A mí también me gusta el café."),
+      s("たなかさん も きました", "El Sr. Tanaka también vino."),
+      s("いもうと も にほんご を べんきょうします", "Mi hermana menor también estudia japonés."),
+      s("きょう も あめ です", "Hoy también llueve."),
+      s("この ほん も おもしろい です", "Este libro también es interesante."),
+      s("わたし も いきます", "Yo también voy."),
+      s("ねこ も います", "También hay un gato."),
+      s("あした も はたらきます", "Mañana también trabajo."),
+    ],
+  },
+  {
+    id: "adjetivos-i",
+    title: "Adjetivos い: afirmativo, negativo y pasado",
+    explanation: "Los adjetivos い se conjugan ellos mismos: たかい (es caro) → たかくない (no es caro) → たかかった (era caro) → たかくなかった (no era caro). です se queda al final sin cambiar.",
+    pattern: "X は Adj-い / -くない / -かった です",
+    section: "Extra",
+    tip: "Quita la い final y añade くない, かった o くなかった.",
+    adjective: "i",
+    focus: [],
+    sentences: [
+      s("この ラーメン は おいしい です", "Este ramen está delicioso.", { blank: "おいしい" }),
+      s("きょう は さむくない です", "Hoy no hace frío.", { blank: "さむくない" }),
+      s("きのう は あつかった です", "Ayer hizo calor.", { blank: "あつかった" }),
+      s("その ほん は おもしろくなかった です", "Ese libro no era interesante.", { blank: "おもしろくなかった" }),
+      s("にほんご は むずかしい です", "El japonés es difícil.", { blank: "むずかしい" }),
+      s("この かばん は たかくない です", "Este bolso no es caro.", { blank: "たかくない" }),
+      s("えいが は たのしかった です", "La película fue divertida.", { blank: "たのしかった" }),
+      s("わたし の へや は ひろくない です", "Mi habitación no es amplia.", { blank: "ひろくない" }),
+      s("その みせ は やすい です", "Esa tienda es barata.", { blank: "やすい" }),
+      s("テスト は やさしかった です", "El examen fue fácil.", { blank: "やさしかった" }),
+      s("あの やま は たかい です", "Aquella montaña es alta.", { blank: "たかい" }),
+      s("きのう の じゅぎょう は つまらなかった です", "La clase de ayer fue aburrida.", { blank: "つまらなかった" }),
+    ],
+  },
+  {
+    id: "adjetivos-na",
+    title: "Adjetivos な: afirmativo, negativo y pasado",
+    explanation: "Los adjetivos な (しずか, きれい, げんき…) NO cambian: lo que se conjuga es です. しずかです → しずかじゃないです → しずかでした → しずかじゃなかったです. Ojo con きれい: termina en い pero es adjetivo な.",
+    pattern: "X は Adj-な です / じゃないです / でした",
+    section: "Extra",
+    tip: "Adjetivo な = sustantivo: se conjuga igual que です.",
+    focus: ["です", "じゃないです", "でした", "じゃなかったです"],
+    sentences: [
+      s("この まち は しずか です", "Esta ciudad es tranquila."),
+      s("かれ は げんき じゃないです", "Él no está animado."),
+      s("わたし は スポーツ が じょうず じゃないです", "No soy hábil en los deportes."),
+      s("その こうえん は きれい でした", "Ese parque estaba bonito."),
+      s("きのう は ひま じゃなかったです", "Ayer no estaba libre."),
+      s("あの せんせい は しんせつ です", "Aquel profesor es amable."),
+      s("この へや は きれい じゃないです", "Esta habitación no está limpia."),
+      s("えき の ちかく は にぎやか です", "Los alrededores de la estación son animados."),
+      s("しゅくだい は かんたん でした", "La tarea fue sencilla."),
+      s("かのじょ は ゆうめい じゃなかったです", "Ella no era famosa."),
     ],
   },
   {
     id: "gustos-suki-hoshii-tai",
-    title: "Gustos y deseos: すき・ほしい・たいです",
-    explanation: "すきです (\"gusta\") y ほしいです (\"se desea algo\") se usan con が: コーヒーがすきです, みずがほしいです. Para decir que se quiere HACER algo, se usa la raíz ます del verbo + たいです: たべたいです (\"quiero comer\").",
-    pattern: "X が すき/ほしい です · Verbo-たいです",
-    section: "Otros",
-    exercises: [
-      { type: "order", tokens: ["わたし", "は", "くだもの", "が", "すき", "です"], translation: "Me gusta la fruta." },
-      { type: "order", tokens: ["わたし", "は", "みず", "が", "ほしい", "です"], translation: "Quiero agua." },
-      { type: "order", tokens: ["わたし", "は", "パン", "を", "たべたい", "です"], translation: "Quiero comer pan." },
-      { type: "order", tokens: ["かのじょ", "は", "がっこう", "に", "いきたい", "です"], translation: "Ella quiere ir a la escuela." },
-      { type: "particle", sentence: "わたしはくだもの＿すきです", answer: "が", options: ["が", "は", "を", "に"], translation: "Me gusta la fruta." },
-      { type: "particle", sentence: "わたしはみず＿ほしいです", answer: "が", options: ["が", "を", "で", "と"], translation: "Quiero agua." },
-      { type: "particle", sentence: "わたしはパン＿たべたいです", answer: "を", options: ["を", "が", "に", "へ"], translation: "Quiero comer pan." },
-      { type: "particle", sentence: "かのじょはがっこう＿いきたいです", answer: "に", options: ["に", "を", "が", "の"], translation: "Ella quiere ir a la escuela." },
+    title: "Gustos y deseos: すき・ほしい・〜たい",
+    explanation: "すきです (gusta), きらいです (no gusta) y ほしいです (quiero algo) marcan la cosa con が, no con を: コーヒーが すきです. Para decir que quieres HACER algo, cambia ます por たい: たべます → たべたいです (quiero comer).",
+    pattern: "X が すき/ほしい です · Verbo-たい です",
+    section: "Extra",
+    tip: "Sentimientos y deseos → が. Querer HACER → raíz + たい.",
+    focus: ["が"],
+    pool: ["を", "に", "で", "へ"],
+    sentences: [
+      s("わたし は コーヒー が すき です", "Me gusta el café."),
+      s("かれ は ねこ が きらい です", "A él no le gustan los gatos."),
+      s("わたし は あたらしい くつ が ほしい です", "Quiero zapatos nuevos."),
+      s("かのじょ は おんがく が だいすき です", "A ella le encanta la música."),
+      s("わたし は みず が ほしい です", "Quiero agua."),
+      s("なに が ほしい です か", "¿Qué quieres?"),
+      s("わたし は すし を たべたい です", "Quiero comer sushi.", { blank: "たべたい" }),
+      s("わたし は にほん へ いきたい です", "Quiero ir a Japón.", { blank: "いきたい" }),
+      s("かれ は えいが を みたい です", "Él quiere ver una película.", { blank: "みたい" }),
+      s("わたし は やさい が すき じゃないです", "No me gustan las verduras."),
+      s("こども は いぬ が ほしい です", "El niño quiere un perro."),
+      s("わたし は ねたい です", "Quiero dormir.", { blank: "ねたい" }),
     ],
   },
 ];
+
+export const GRAMMAR_LESSONS: GrammarLesson[] = LESSON_DEFS.map(buildLesson);

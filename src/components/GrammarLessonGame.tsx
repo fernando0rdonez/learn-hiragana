@@ -10,6 +10,8 @@ import { fireConfetti } from "./ConfettiOverlay";
 import AnswerReveal from "./AnswerReveal";
 import GrammarTokenChip from "./GrammarTokenChip";
 import GrammarTokenSlots from "./GrammarTokenSlots";
+import ParticleTrain from "./ParticleTrain";
+import { particleColor } from "../particleTrain";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
 import foxCelebratingImg from "../assets/character/fox-celebrating.png";
@@ -43,6 +45,28 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/** Ejercicios por sesión: cada lección tiene más oraciones de las que entran en una sesión. */
+const SESSION_SIZE = 12;
+
+/**
+ * Elige hasta SESSION_SIZE oraciones distintas al azar y alterna el tipo de
+ * ejercicio (ordenar / hueco), para que una misma oración no salga dos veces.
+ */
+function buildSession(all: GrammarExercise[]): GrammarExercise[] {
+  const bySid = new Map<number, GrammarExercise[]>();
+  all.forEach((ex, i) => {
+    const sid = ex.sid ?? -1 - i;
+    bySid.set(sid, [...(bySid.get(sid) ?? []), ex]);
+  });
+  const sids = shuffle([...bySid.keys()]).slice(0, SESSION_SIZE);
+  const startWithOrder = Math.random() < 0.5;
+  return sids.map((sid, i) => {
+    const group = bySid.get(sid)!;
+    const wantOrder = (i % 2 === 0) === startWithOrder;
+    return group.find((ex) => (ex.type === "order") === wantOrder) ?? group[0];
+  });
+}
+
 function buildChips(tokens: string[]): Chip[] {
   return shuffle(tokens.map((token, id) => ({ id, token, used: false })));
 }
@@ -61,7 +85,7 @@ interface Props {
 
 export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, onBack }: Props) {
   const [phase, setPhase] = useState<Phase>("explain");
-  const [exercises] = useState<GrammarExercise[]>(() => shuffle(lesson.exercises));
+  const [exercises] = useState<GrammarExercise[]>(() => buildSession(lesson.exercises));
   const [index, setIndex] = useState(0);
 
   // "order" state
@@ -139,7 +163,8 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
   const checkOrderAnswer = useCallback(
     (filledSlots: (string | null)[], ex: GrammarOrderExercise, currentFail: number) => {
       const answer = filledSlots as string[];
-      const isCorrect = answer.length === ex.tokens.length && answer.every((t, i) => t === ex.tokens[i]);
+      const matches = (order: string[]) => answer.length === order.length && answer.every((t, i) => t === order[i]);
+      const isCorrect = matches(ex.tokens) || (ex.accept ?? []).some(matches);
 
       if (isCorrect) {
         playChime();
@@ -258,7 +283,18 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
             {lesson.title}
           </h2>
           <p className="text-sm mt-3 leading-relaxed" style={{ color: "#33408C" }}>{lesson.explanation}</p>
+          {lesson.tip && (
+            <p className="text-sm mt-3 rounded-xl px-3 py-2 leading-relaxed" style={{ backgroundColor: "#FFFFFF", color: "#5B5470" }}>
+              💡 {lesson.tip}
+            </p>
+          )}
         </div>
+        {lesson.train && (
+          <div className="rounded-3xl border-2 p-4" style={{ borderColor: "#EDEFFB" }}>
+            <div className="text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: INDIGO }}>Tren de partículas</div>
+            <ParticleTrain currentLessonId={lesson.id} showMnemonic />
+          </div>
+        )}
         <button
           onClick={startLesson}
           className="w-full py-3.5 rounded-2xl text-white font-semibold"
@@ -301,6 +337,8 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
           phase={phase}
           animClass={animClass}
           foxPose={foxPose}
+          showTrain={!!lesson.train && failCount > 0}
+          lessonId={lesson.id}
           onChipTap={handleChipTap}
           onSlotTap={handleSlotTap}
           onClear={handleClearOrder}
@@ -330,13 +368,15 @@ interface OrderDrillProps {
   phase: Phase;
   animClass: string;
   foxPose: string;
+  showTrain: boolean;
+  lessonId: string;
   onChipTap: (id: number) => void;
   onSlotTap: (idx: number) => void;
   onClear: () => void;
   onContinue: () => void;
 }
 
-function OrderDrill({ ex, chips, slots, phase, animClass, foxPose, onChipTap, onSlotTap, onClear, onContinue }: OrderDrillProps) {
+function OrderDrill({ ex, chips, slots, phase, animClass, foxPose, showTrain, lessonId, onChipTap, onSlotTap, onClear, onContinue }: OrderDrillProps) {
   return (
     <div className="w-full flex flex-col items-center gap-5">
       <div className="w-full flex items-end justify-between gap-3">
@@ -346,6 +386,13 @@ function OrderDrill({ ex, chips, slots, phase, animClass, foxPose, onChipTap, on
         </div>
         <img src={foxPose} alt="" className="w-16 h-16 object-contain shrink-0" />
       </div>
+
+      {showTrain && (
+        <div className="w-full rounded-2xl px-3 py-2" style={{ backgroundColor: "#FAFAFF" }}>
+          <p className="text-[11px] font-semibold mb-1.5 text-center" style={{ color: "#8B7FA8" }}>💡 Sigue el orden del tren</p>
+          <ParticleTrain currentLessonId={lessonId} compact />
+        </div>
+      )}
 
       <GrammarTokenSlots
         slots={slots}
@@ -393,24 +440,47 @@ interface ParticleDrillProps {
 
 function ParticleDrill({ ex, options, phase, selectedOption, foxPose, onAnswer, onContinue }: ParticleDrillProps) {
   const [before, after] = ex.sentence.split("＿");
+  const longest = Math.max(...options.map((o) => o.length));
+  const blank = (
+    <span
+      className="inline-block mx-1 min-w-[2ch] px-2 rounded-lg border-2 border-dashed align-middle"
+      style={{ borderColor: INDIGO, color: INDIGO }}
+    >
+      {selectedOption ?? "　"}
+    </span>
+  );
 
   return (
     <div className="w-full flex flex-col items-center gap-5">
+      <div className="w-full flex items-end justify-between gap-3">
+        <div className="flex-1 min-w-0 rounded-2xl px-4 py-3" style={{ backgroundColor: "#EDEFFB" }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: INDIGO }}>
+            {ex.kind === "form" ? "Elige la forma correcta" : "Elige la partícula"}
+          </p>
+          <p className="text-sm font-medium mt-0.5" style={{ color: "#33408C" }}>{ex.translation}</p>
+        </div>
+        <img src={foxPose} alt="" className="w-16 h-16 object-contain shrink-0" />
+      </div>
       <div className="flex flex-col items-center gap-2">
         <div
           className="select-none leading-snug text-2xl text-center"
           style={{ fontFamily: "'Noto Sans JP', sans-serif", color: "#1A1A2E" }}
         >
-          {before}
-          <span
-            className="inline-block mx-1 min-w-[2ch] px-2 rounded-lg border-2 border-dashed align-middle"
-            style={{ borderColor: INDIGO, color: INDIGO }}
-          >
-            {selectedOption ?? "　"}
-          </span>
-          {after}
+          {ex.parts ? (
+            // Fichas separadas por un pequeño espacio y partículas con su color del tren.
+            ex.parts.map((t, i) =>
+              t === "＿" ? (
+                <span key={i}>{blank}</span>
+              ) : (
+                <span key={i} className="mx-[0.15em]" style={particleColor(t) ? { color: particleColor(t)!.fg, fontWeight: 700 } : undefined}>
+                  {t}
+                </span>
+              ),
+            )
+          ) : (
+            <>{before}{blank}{after}</>
+          )}
         </div>
-        <img src={foxPose} alt="" className="w-16 h-16 object-contain shrink-0" />
       </div>
 
       <div className="w-full grid grid-cols-2 gap-2.5">
@@ -427,7 +497,9 @@ function ParticleDrill({ ex, options, phase, selectedOption, foxPose, onAnswer, 
               key={opt}
               disabled={phase !== "playing"}
               onClick={() => onAnswer(opt)}
-              className="py-3.5 rounded-2xl border-2 text-xl font-semibold text-center transition-colors disabled:opacity-100"
+              className={`py-3.5 px-2 rounded-2xl border-2 font-semibold text-center transition-colors disabled:opacity-100 break-all ${
+                ex.kind === "form" ? (longest > 7 ? "text-sm" : "text-lg") : "text-xl"
+              }`}
               style={{ ...style, fontFamily: "'Noto Sans JP', sans-serif" }}
             >
               {opt}

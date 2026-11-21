@@ -4,6 +4,7 @@ import { GRAMMAR_LESSONS } from "../grammar";
 import type { ViewName } from "../data";
 import type { ProgressItems, CharStatus } from "../types";
 import { grammarStatus } from "../utils";
+import ParticleTrain from "../components/ParticleTrain";
 
 interface Props {
   progress: ProgressItems;
@@ -32,6 +33,12 @@ const STATUS_COLOR: Record<CharStatus, string> = {
   mastered: "#0A6E54",
 };
 
+const BOOK_SUBTITLE: Record<string, string> = {
+  "Japonés Básico I": "Estado de ser y partículas básicas",
+  "Japonés Básico II": "Verbos, el orden de las partículas y existencia",
+  "Extra": "Temas que no están en los libros del curso",
+};
+
 function groupBySection(lessons: GrammarLesson[]): { section: string; lessons: GrammarLesson[] }[] {
   const sections: { section: string; lessons: GrammarLesson[] }[] = [];
   for (const lesson of lessons) {
@@ -45,6 +52,7 @@ function groupBySection(lessons: GrammarLesson[]): { section: string; lessons: G
 export default function GrammarSetupView({ progress, setSelectedGrammarLessonId, setView }: Props) {
   const sections = groupBySection(GRAMMAR_LESSONS);
   const masteredCount = GRAMMAR_LESSONS.filter((l) => grammarStatus(progress, l.id) === "mastered").length;
+  const lessonNumber = new Map(GRAMMAR_LESSONS.map((l, i) => [l.id, i + 1]));
 
   function openLesson(id: string) {
     setSelectedGrammarLessonId(id);
@@ -65,11 +73,25 @@ export default function GrammarSetupView({ progress, setSelectedGrammarLessonId,
         {masteredCount} de {GRAMMAR_LESSONS.length} lecciones dominadas
       </p>
 
+      <div className="mt-5 rounded-3xl border-2 p-4" style={{ borderColor: BORDER }}>
+        <div className="text-xs font-semibold tracking-wide uppercase mb-1" style={{ color: INDIGO }}>Tren de partículas</div>
+        <p className="text-xs mb-3" style={{ color: TEXT_SECOND }}>
+          El orden en que van las partículas. Cada vagón se enciende cuando practicas su lección.
+        </p>
+        <ParticleTrain
+          isUnlocked={(st) => st.lessonIds.some((id) => grammarStatus(progress, id) !== "untested")}
+          showMnemonic
+        />
+      </div>
+
       <div className="mt-6 flex flex-col gap-6">
         {sections.map(({ section, lessons }) => (
           <div key={section}>
-            <div className="text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: TEXT_SECOND }}>
-              {section}
+            <div className="mb-2">
+              <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>{section}</div>
+              {BOOK_SUBTITLE[section] && (
+                <div className="text-xs mt-0.5" style={{ color: TEXT_SECOND, opacity: 0.8 }}>{BOOK_SUBTITLE[section]}</div>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               {lessons.map((lesson) => {
@@ -83,6 +105,12 @@ export default function GrammarSetupView({ progress, setSelectedGrammarLessonId,
                     style={{ backgroundColor: isMastered ? INDIGO_LIGHT : "#FFFFFF", borderColor: isMastered ? INDIGO : BORDER }}
                   >
                     <div className="flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                        style={{ backgroundColor: isMastered ? INDIGO : INDIGO_LIGHT, color: isMastered ? "#FFFFFF" : INDIGO_DARK }}
+                      >
+                        {section === "Extra" ? "+" : lessonNumber.get(lesson.id)}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold" style={{ color: TEXT_MAIN }}>{lesson.title}</span>

@@ -1,4 +1,6 @@
-type SlotStatus = "idle" | "correct" | "wrong";
+import { particleColor } from "../particleTrain";
+
+type SlotStatus ="idle" | "correct" | "wrong";
 
 interface Props {
   slots: (string | null)[];
@@ -27,7 +29,11 @@ export default function GrammarTokenSlots({ slots, animClass, status = "idle", o
                 ? FILLED_STYLES[status]
                 : "border-[#D8D2E8] bg-white text-[#D8D2E8] cursor-default"
             }`}
-          style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+          style={{
+            fontFamily: "'Noto Sans JP', sans-serif",
+            // En reposo, las partículas conservan su color del tren de partículas.
+            ...(token !== null && status === "idle" && particleColor(token) ? { color: particleColor(token)!.fg, fontWeight: 700 } : {}),
+          }}
         >
           {token ?? ""}
         </button>

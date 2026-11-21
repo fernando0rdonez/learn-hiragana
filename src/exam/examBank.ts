@@ -280,7 +280,8 @@ function genPronombresFamilia(n: number): ExamQuestion[] {
 
 function genParticulas(n: number): ExamQuestion[] {
   const all = GRAMMAR_LESSONS.flatMap((l) =>
-    (l.exercises.filter((ex) => ex.type === "particle") as GrammarParticleExercise[])
+    // Solo partículas con una única respuesta válida (el examen se responde escribiendo).
+    (l.exercises.filter((ex) => ex.type === "particle" && ex.kind === "particle" && !ex.alt) as GrammarParticleExercise[])
       .map((ex) => ({ ...ex, lessonId: l.id })),
   );
   return sample(all, n).map((ex, i) => ({
