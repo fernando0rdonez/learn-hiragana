@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
-import type { GrammarLesson, GrammarExercise, GrammarOrderExercise, GrammarParticleExercise } from "../grammar";
+import type { GrammarLesson, GrammarExercise, GrammarOrderExercise, GrammarParticleExercise, GrammarQAExercise } from "../grammar";
 import { advanceBox } from "../leitner";
 import { grammarProgressKey, type GrammarPracticeMode } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
@@ -12,6 +12,8 @@ import GrammarTokenChip from "./GrammarTokenChip";
 import GrammarTokenSlots from "./GrammarTokenSlots";
 import ParticleTrain from "./ParticleTrain";
 import SyllableBuildDrill from "./SyllableBuildDrill";
+import SpotErrorDrill from "./SpotErrorDrill";
+import { toExtraOrder, toSpot, type GrammarExtraOrderExercise, type GrammarSpotExercise } from "../grammarGames";
 import { toBuildExercise, BUILD_LEVELS, type GrammarBuildExercise, type BuildLevel } from "../grammarBuild";
 import { particleColor } from "../particleTrain";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
@@ -50,8 +52,16 @@ function shuffle<T>(arr: T[]): T[] {
 /** Ejercicios por sesión: cada lección tiene más oraciones de las que entran en una sesión. */
 const SESSION_SIZE = 12;
 
-/** Ejercicio de una sesión: los de grammar.ts + «armar sílaba por sílaba» (derivado de "order"). */
-type SessionExercise = GrammarExercise | GrammarBuildExercise;
+/**
+ * Ejercicio de una sesión: los de grammar.ts + los derivados de cada oración
+ * (sílabas, dictado, ordenar con trampas, encuentra el error) + pregunta→respuesta.
+ */
+type SessionExercise =
+  | GrammarExercise
+  | GrammarBuildExercise
+  | GrammarExtraOrderExercise
+  | GrammarSpotExercise
+  | GrammarQAExercise;
 type ExerciseType = SessionExercise["type"];
 
 /**
@@ -61,13 +71,20 @@ type ExerciseType = SessionExercise["type"];
 type GrammarGameMode = "mix" | ExerciseType;
 
 const GAME_MODES: { id: GrammarGameMode; label: string; hint: string }[] = [
-  { id: "mix",      label: "Mezclado",     hint: "Todos los juegos, al azar" },
-  { id: "order",    label: "Solo ordenar", hint: "Arma la frase con fichas" },
-  { id: "particle", label: "Solo huecos",  hint: "Elige la partícula o la forma" },
-  { id: "build",    label: "Sílabas",      hint: "Arma las palabras sílaba por sílaba" },
+  { id: "mix",       label: "Mezclado",             hint: "Todos los juegos, al azar" },
+  { id: "order",     label: "Ordenar",              hint: "Arma la frase con fichas" },
+  { id: "extra",     label: "Ordenar con trampas",  hint: "Sobran 1–2 fichas" },
+  { id: "particle",  label: "Huecos",               hint: "Elige la partícula o la forma" },
+  { id: "qa",        label: "Pregunta y respuesta", hint: "Responde con la partícula de la pregunta" },
+  { id: "spot",      label: "Encuentra el error",   hint: "Toca la ficha que está mal" },
+  { id: "build",     label: "Sílabas",              hint: "Arma las palabras sílaba por sílaba" },
+  { id: "dictation", label: "Dictado",              hint: "Escucha y arma la frase con sílabas" },
 ];
 
-const MIX_TYPES: ExerciseType[] = ["order", "particle", "build"];
+/** Tipos que se rotan en «Mezclado» (pregunta→respuesta se intercala aparte: tiene sus propios datos). */
+const MIX_TYPES: ExerciseType[] = ["order", "particle", "build", "extra", "spot", "dictation"];
+const MIX_QA_COUNT = 2;
+const USES_SYLLABLES: GrammarGameMode[] = ["build", "dictation", "mix"];
 
 const MODE_STORAGE_KEY = "grammar-game-mode";
 const LEVEL_STORAGE_KEY = "grammar-build-level";
@@ -91,17 +108,24 @@ function writeStored(key: string, value: string) {
  * de ejercicio (ordenar / hueco / sílabas) para que una misma oración no salga
  * dos veces; en los otros modos usa solo ese tipo.
  */
-function buildSession(all: GrammarExercise[], mode: GrammarGameMode): SessionExercise[] {
+function buildSession(lesson: GrammarLesson, mode: GrammarGameMode): SessionExercise[] {
+  if (mode === "qa") return shuffle(lesson.qaExercises).slice(0, SESSION_SIZE);
   const bySid = new Map<number, SessionExercise[]>();
-  all.forEach((ex, i) => {
+  lesson.exercises.forEach((ex, i) => {
     const sid = ex.sid ?? -1 - i;
     bySid.set(sid, [...(bySid.get(sid) ?? []), ex]);
   });
-  // «Sílabas» se deriva de cada "order"; las partículas alternativas del hueco nunca salen como extra.
+  // Juegos derivados de cada oración; las partículas alternativas del hueco nunca salen como extra.
   for (const group of bySid.values()) {
     const order = group.find((ex): ex is GrammarOrderExercise => ex.type === "order");
     const particle = group.find((ex): ex is GrammarParticleExercise => ex.type === "particle");
-    if (order) group.push(toBuildExercise(order, particle?.alt));
+    if (!order) continue;
+    group.push(toBuildExercise(order, particle?.alt));
+    group.push(toBuildExercise(order, particle?.alt, "dictation"));
+    const extra = toExtraOrder(order, particle);
+    if (extra) group.push(extra);
+    const spot = toSpot(order, particle);
+    if (spot) group.push(spot);
   }
   const sids = shuffle([...bySid.keys()]);
   if (mode !== "mix") {
@@ -111,11 +135,21 @@ function buildSession(all: GrammarExercise[], mode: GrammarGameMode): SessionExe
       .slice(0, SESSION_SIZE);
   }
   const start = Math.floor(Math.random() * MIX_TYPES.length);
-  return sids.slice(0, SESSION_SIZE).map((sid, i) => {
+  const session = sids.slice(0, SESSION_SIZE).map((sid, i) => {
     const group = bySid.get(sid)!;
     const want = MIX_TYPES[(start + i) % MIX_TYPES.length];
     return group.find((ex) => ex.type === want) ?? group[0];
   });
+  // Unas pocas preguntas→respuesta, en posiciones al azar (sin la primera, para no empezar con la más rara).
+  const qas = shuffle(lesson.qaExercises).slice(0, Math.min(MIX_QA_COUNT, session.length - 1));
+  const positions = shuffle(session.map((_, i) => i).slice(1)).slice(0, qas.length);
+  qas.forEach((q, k) => { session[positions[k]] = q; });
+  return session;
+}
+
+/** Fichas del banco de un ejercicio de ordenar (con trampas, las que sobran). */
+function chipTokens(ex: GrammarOrderExercise | GrammarExtraOrderExercise): string[] {
+  return ex.type === "extra" ? [...ex.tokens, ...ex.extras] : ex.tokens;
 }
 
 function buildChips(tokens: string[]): Chip[] {
@@ -124,13 +158,19 @@ function buildChips(tokens: string[]): Chip[] {
 
 /** Frase completa (sin espacios) que corresponde a un ejercicio ya resuelto — usada para el resumen y el TTS al corregir. */
 function fullSentence(ex: SessionExercise): string {
-  return ex.type === "particle" ? ex.sentence.replace("＿", ex.answer) : ex.tokens.join("");
+  if (ex.type === "particle" || ex.type === "qa") return ex.sentence.replace("＿", ex.answer);
+  if (ex.type === "spot") return ex.correctTokens.join("");
+  return ex.tokens.join("");
 }
 
 const PROGRESS_MODE: Record<ExerciseType, GrammarPracticeMode> = {
   order: "grammar-order",
   particle: "grammar-particle",
   build: "grammar-build",
+  dictation: "grammar-dictation",
+  extra: "grammar-extra",
+  spot: "grammar-spot",
+  qa: "grammar-qa",
 };
 
 interface Props {
@@ -166,6 +206,10 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
 
   const today = toISODate();
   const current: SessionExercise | null = exercises[index] ?? null;
+  const hasQA = lesson.qaExercises.length > 0;
+  // Si el modo guardado no existe en esta lección (pregunta→respuesta), se juega «Mezclado».
+  const effectiveMode: GrammarGameMode = mode === "qa" && !hasQA ? "mix" : mode;
+  const sessionLength = Math.min(SESSION_SIZE, effectiveMode === "qa" ? lesson.qaExercises.length : lesson.sentences.length);
 
   const foxPose =
     phase === "correct" ? foxCelebratingImg :
@@ -173,15 +217,15 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
     foxNeutralImg;
 
   function initExercise(ex: SessionExercise) {
-    if (ex.type === "build") {
-      // SyllableBuildDrill maneja su propio estado (se monta de nuevo en cada ejercicio).
-    } else if (ex.type === "order") {
-      setChips(buildChips(ex.tokens));
+    if (ex.type === "build" || ex.type === "dictation" || ex.type === "spot") {
+      // Estos componentes manejan su propio estado (se montan de nuevo en cada ejercicio).
+    } else if (ex.type === "order" || ex.type === "extra") {
+      setChips(buildChips(chipTokens(ex)));
       setSlots(Array(ex.tokens.length).fill(null));
       setSlotChipIds(Array(ex.tokens.length).fill(null));
       setFailCount(0);
       setAnimClass("");
-    } else {
+    } else if (ex.type === "particle" || ex.type === "qa") {
       setSelectedOption(null);
       setParticleOptions(shuffle(ex.options));
     }
@@ -206,7 +250,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
   }
 
   function startLesson() {
-    const session = buildSession(lesson.exercises, mode);
+    const session = buildSession(lesson, effectiveMode);
     setExercises(session);
     if (session.length === 0) { setPhase("done"); return; }
     setIndex(0);
@@ -243,7 +287,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
   }
 
   const checkOrderAnswer = useCallback(
-    (filledSlots: (string | null)[], ex: GrammarOrderExercise, currentFail: number) => {
+    (filledSlots: (string | null)[], ex: GrammarOrderExercise | GrammarExtraOrderExercise, currentFail: number) => {
       const answer = filledSlots as string[];
       const matches = (order: string[]) => answer.length === order.length && answer.every((t, i) => t === order[i]);
       const isCorrect = matches(ex.tokens) || (ex.accept ?? []).some(matches);
@@ -267,7 +311,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
         } else {
           setPhase("wrong");
           setTimeout(() => {
-            setChips(buildChips(ex.tokens));
+            setChips(buildChips(chipTokens(ex)));
             setSlots(Array(ex.tokens.length).fill(null));
             setSlotChipIds(Array(ex.tokens.length).fill(null));
             setPhase("playing");
@@ -280,7 +324,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
   );
 
   function handleChipTap(chipId: number) {
-    if (phase !== "playing" || !current || current.type !== "order") return;
+    if (phase !== "playing" || !current || (current.type !== "order" && current.type !== "extra")) return;
 
     const emptyIdx = slots.findIndex((s) => s === null);
     if (emptyIdx === -1) return;
@@ -327,14 +371,14 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
   }
 
   function handleClearOrder() {
-    if (!current || current.type !== "order" || phase !== "playing") return;
-    setChips(buildChips(current.tokens));
+    if (!current || (current.type !== "order" && current.type !== "extra") || phase !== "playing") return;
+    setChips(buildChips(chipTokens(current)));
     setSlots(Array(current.tokens.length).fill(null));
     setSlotChipIds(Array(current.tokens.length).fill(null));
   }
 
   function handleParticleAnswer(option: string) {
-    if (phase !== "playing" || !current || current.type !== "particle") return;
+    if (phase !== "playing" || !current || (current.type !== "particle" && current.type !== "qa")) return;
     setSelectedOption(option);
     const isCorrect = option === current.answer;
     if (isCorrect) {
@@ -381,27 +425,31 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
           <div className="text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: "#8B7FA8" }}>Tipo de juego</div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="radiogroup" aria-label="Tipo de juego">
             {GAME_MODES.map((m) => {
-              const selected = m.id === mode;
+              const selected = m.id === effectiveMode;
+              const unavailable = m.id === "qa" && !hasQA;
               return (
                 <button
                   key={m.id}
                   role="radio"
                   aria-checked={selected}
+                  disabled={unavailable}
                   onClick={() => chooseMode(m.id)}
-                  className="rounded-2xl border-2 px-2 py-2.5 text-center transition-colors"
+                  className="rounded-2xl border-2 px-2 py-2.5 text-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{
                     borderColor: selected ? INDIGO : "#EEEEEE",
                     backgroundColor: selected ? "#EDEFFB" : "#FFFFFF",
                   }}
                 >
                   <div className="text-sm font-semibold" style={{ color: selected ? INDIGO_DARK : "#1A1A2E" }}>{m.label}</div>
-                  <div className="text-[11px] mt-0.5 leading-tight" style={{ color: "#8B7FA8" }}>{m.hint}</div>
+                  <div className="text-[11px] mt-0.5 leading-tight" style={{ color: "#8B7FA8" }}>
+                    {unavailable ? "No hay en esta lección" : m.hint}
+                  </div>
                 </button>
               );
             })}
           </div>
         </div>
-        {(mode === "build" || mode === "mix") && (
+        {USES_SYLLABLES.includes(effectiveMode) && (
           <div>
             <div className="text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: "#8B7FA8" }}>Nivel de sílabas</div>
             <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Nivel de sílabas">
@@ -443,7 +491,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
           className="w-full py-3.5 rounded-2xl text-white font-semibold"
           style={{ backgroundColor: INDIGO }}
         >
-          Comenzar ({Math.min(SESSION_SIZE, lesson.sentences.length)} ejercicios)
+          Comenzar ({sessionLength} ejercicios)
         </button>
       </div>
     );
@@ -472,7 +520,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
         <div className="h-full transition-all" style={{ width: `${progressPct}%`, background: `linear-gradient(90deg, ${INDIGO}, ${INDIGO_DARK})` }} />
       </div>
 
-      {current.type === "build" ? (
+      {current.type === "build" || current.type === "dictation" ? (
         <SyllableBuildDrill
           key={index}
           ex={current}
@@ -481,7 +529,14 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
           onResult={(ok) => recordResult(current, ok)}
           onContinue={advanceToNext}
         />
-      ) : current.type === "order" ? (
+      ) : current.type === "spot" ? (
+        <SpotErrorDrill
+          key={index}
+          ex={current}
+          onResult={(ok) => recordResult(current, ok)}
+          onContinue={advanceToNext}
+        />
+      ) : current.type === "order" || current.type === "extra" ? (
         <OrderDrill
           ex={current}
           chips={chips}
@@ -496,7 +551,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
           onClear={handleClearOrder}
           onContinue={advanceToNext}
         />
-      ) : (
+      ) : current.type === "particle" || current.type === "qa" ? (
         <ParticleDrill
           ex={current}
           options={particleOptions}
@@ -506,7 +561,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
           onAnswer={handleParticleAnswer}
           onContinue={advanceToNext}
         />
-      )}
+      ) : null}
     </div>
   );
 }
@@ -514,7 +569,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
 // ── Drill: ordenar fichas ───────────────────────────────────────────────────
 
 interface OrderDrillProps {
-  ex: GrammarOrderExercise;
+  ex: GrammarOrderExercise | GrammarExtraOrderExercise;
   chips: Chip[];
   slots: (string | null)[];
   phase: Phase;
@@ -533,7 +588,9 @@ function OrderDrill({ ex, chips, slots, phase, animClass, foxPose, showTrain, le
     <div className="w-full flex flex-col items-center gap-5">
       <div className="w-full flex items-end justify-between gap-3">
         <div className="flex-1 min-w-0 rounded-2xl px-4 py-3" style={{ backgroundColor: "#EDEFFB" }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: INDIGO }}>Ordena la frase</p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: INDIGO }}>
+            {ex.type === "extra" ? `Ordena la frase · sobran ${ex.extras.length} ficha${ex.extras.length > 1 ? "s" : ""}` : "Ordena la frase"}
+          </p>
           <p className="text-sm font-medium mt-0.5" style={{ color: "#33408C" }}>{ex.translation}</p>
         </div>
         <img src={foxPose} alt="" className="w-16 h-16 object-contain shrink-0" />
@@ -581,7 +638,7 @@ function OrderDrill({ ex, chips, slots, phase, animClass, foxPose, showTrain, le
 // ── Drill: partícula hueca ───────────────────────────────────────────────────
 
 interface ParticleDrillProps {
-  ex: GrammarParticleExercise;
+  ex: GrammarParticleExercise | GrammarQAExercise;
   options: string[];
   phase: Phase;
   selectedOption: string | null;
@@ -607,13 +664,28 @@ function ParticleDrill({ ex, options, phase, selectedOption, foxPose, onAnswer, 
       <div className="w-full flex items-end justify-between gap-3">
         <div className="flex-1 min-w-0 rounded-2xl px-4 py-3" style={{ backgroundColor: "#EDEFFB" }}>
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: INDIGO }}>
-            {ex.kind === "form" ? "Elige la forma correcta" : "Elige la partícula"}
+            {ex.type === "qa" ? "Responde la pregunta" : ex.kind === "form" ? "Elige la forma correcta" : "Elige la partícula"}
           </p>
           <p className="text-sm font-medium mt-0.5" style={{ color: "#33408C" }}>{ex.translation}</p>
         </div>
         <img src={foxPose} alt="" className="w-16 h-16 object-contain shrink-0" />
       </div>
+      {ex.type === "qa" && (
+        <div className="w-full rounded-2xl px-4 py-3 border-2" style={{ borderColor: "#EDEFFB" }}>
+          <div className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#8B7FA8" }}>Pregunta</div>
+          <div className="text-xl leading-snug" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: "#1A1A2E" }}>
+            {ex.question.map((t, i) => (
+              <span key={i} className="mx-[0.12em]" style={particleColor(t) ? { color: particleColor(t)!.fg, fontWeight: 700 } : undefined}>
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex flex-col items-center gap-2">
+        {ex.type === "qa" && (
+          <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#8B7FA8" }}>Respuesta</div>
+        )}
         <div
           className="select-none leading-snug text-2xl text-center"
           style={{ fontFamily: "'Noto Sans JP', sans-serif", color: "#1A1A2E" }}

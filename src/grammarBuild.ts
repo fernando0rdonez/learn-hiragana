@@ -11,7 +11,7 @@ import { CONFUSED_PAIRS, getConfusablePairs } from "./confusedPairs";
 import { KATAKANA_CONFUSED_PAIRS } from "./confusedPairsKatakana";
 
 export interface GrammarBuildExercise {
-  type: "build";
+  type: "build" | "dictation"; // "dictation" (Fase 3): se escucha la frase en vez de leer la traducción
   tokens: string[];        // palabras de la oración en el orden canónico
   accept?: string[][];     // otros órdenes válidos (mismo significado)
   translation: string;
@@ -19,9 +19,9 @@ export interface GrammarBuildExercise {
   sid?: number;
 }
 
-export function toBuildExercise(ex: GrammarOrderExercise, alt?: string[]): GrammarBuildExercise {
+export function toBuildExercise(ex: GrammarOrderExercise, alt?: string[], type: GrammarBuildExercise["type"] = "build"): GrammarBuildExercise {
   return {
-    type: "build",
+    type,
     tokens: ex.tokens,
     translation: ex.translation,
     ...(ex.accept ? { accept: ex.accept } : {}),
@@ -79,15 +79,26 @@ function shuffle<T>(arr: T[], rng: Rng): T[] {
 }
 
 /**
- * Sílabas que NUNCA deben salir como extra porque permitirían formar otra oración
- * válida que el ejercicio marcaría como error: las partículas alternativas de la
- * oración (に en vez de へ) y el intercambio は ⇄ が.
+ * Fichas que NUNCA deben salir como extra (sílabas o palabras) porque permitirían
+ * formar otra oración válida —con el mismo sentido— que el ejercicio marcaría como
+ * error: las partículas alternativas de la oración (`alt`), に ⇄ へ con verbos de
+ * movimiento, に ⇄ と (はなします), は ⇄ が ⇄ も en el tema/sujeto y を ⇄ は (contraste).
  */
-function forbiddenExtras(ex: GrammarBuildExercise): Set<string> {
-  const f = new Set(ex.alt ?? []);
-  if (ex.tokens.includes("は")) f.add("が");
-  if (ex.tokens.includes("が")) f.add("は");
+export function forbiddenSwaps(tokens: string[], alt: string[] = []): Set<string> {
+  const f = new Set(alt);
+  const has = (t: string) => tokens.includes(t);
+  if (has("へ")) f.add("に");                         // がっこうへ / がっこうに いきます
+  if (has("に")) { f.add("へ"); f.add("と"); }        // ははに / ははと はなしました
+  if (has("と")) f.add("に");
+  if (has("は")) { f.add("が"); f.add("も"); }        // わたしは / わたしが / わたしも
+  if (has("が")) { f.add("は"); f.add("も"); }
+  if (has("も")) { f.add("は"); f.add("が"); }
+  if (has("を")) f.add("は");                         // パンを / パンは たべます (contraste)
   return f;
+}
+
+function forbiddenExtras(ex: GrammarBuildExercise): Set<string> {
+  return forbiddenSwaps(ex.tokens, ex.alt);
 }
 
 /** Elige `count` sílabas extra para la oración, por prioridad y sin repetir. */

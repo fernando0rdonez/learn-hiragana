@@ -12,9 +12,9 @@ Fase N». Al terminar una fase, marca su casilla en *Estado* y anota la rama/PR.
 
 | Fase | Descripción | Estado | Rama / PR |
 |---|---|---|---|
-| 1 | Lecciones en orden del libro, contenido del curso 2, tren de partículas | ✅ hecha (sin PR aún) | `feat/gramatica-por-libro` |
-| 2 | Ejercicio «Armar sílaba por sílaba» (fichas, sin teclado japonés) | ✅ hecha (sin PR aún) | `feat/gramatica-silabas` (sale de `feat/gramatica-por-libro`) |
-| 3 | Pregunta→respuesta, Encuentra el error, Ordenar con palabras extra, Dictado | ⏳ pendiente | — |
+| 1 | Lecciones en orden del libro, contenido del curso 2, tren de partículas | ✅ hecha | #76 (integrado) |
+| 2 | Ejercicio «Armar sílaba por sílaba» (fichas, sin teclado japonés) | ✅ hecha | #77 (integrado) |
+| 3 | Pregunta→respuesta, Encuentra el error, Ordenar con palabras extra, Dictado | ✅ hecha (sin PR aún) | `feat/gramatica-fase3` |
 | 4 | Lectura de repaso (texto corto + preguntas) | ⏳ pendiente | — |
 
 ---
@@ -143,6 +143,22 @@ Para agregar oraciones: añadir líneas `s("…", "…")` a la lección y correr
   (segmentación + distractores, con `src/grammarBuild.test.ts`).
 
 ## Fase 3 — Más tipos de ejercicio
+
+> **Implementado.** Selector con 8 tipos (`GAME_MODES` en `GrammarLessonGame.tsx`): Mezclado,
+> Ordenar, Ordenar con trampas, Huecos, Pregunta y respuesta, Encuentra el error, Sílabas y
+> Dictado. «Mezclado» rota ordenar/hueco/sílabas/trampas/error/dictado e intercala 2 preguntas.
+> - **Pregunta → respuesta:** datos en `qa: [qa(pregunta, respuesta, es)]` de cada lección
+>   (`grammar.ts`, ~5 por lección en 10 lecciones). El hueco por defecto es la partícula que
+>   sigue a la palabra de pregunta (どこ「で」→ としょかん「で」); para kosoado se indica `blank`.
+>   En lecciones sin pares, el botón aparece desactivado.
+> - **Ordenar con trampas** y **Encuentra el error:** `src/grammarGames.ts`; las fichas
+>   sobrantes/erróneas salen de los distractores del hueco de la misma oración, filtrados con
+>   `forbiddenSwaps` (`grammarBuild.ts`: に⇄へ, に⇄と, は⇄が⇄も, を→は y las `alt`), para que
+>   nunca se pueda armar otra oración válida con el mismo sentido.
+> - **Encuentra el error:** 2 intentos; solo cuenta como acierto al primero.
+> - **Dictado:** `SyllableBuildDrill` con `type: "dictation"`: suena al empezar, botones
+>   «Escuchar» y «Más lento», y la traducción se muestra solo al final.
+> - Progreso: modos `grammar-dictation`, `grammar-extra`, `grammar-spot`, `grammar-qa`.
 
 Todos se generan desde las oraciones existentes; añadir el modo de progreso correspondiente.
 

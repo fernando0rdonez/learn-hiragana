@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Lightbulb, RotateCcw } from "lucide-react";
+import { Lightbulb, RotateCcw, Volume2, Turtle } from "lucide-react";
 import {
   makePuzzle, isBuildCorrect, wrongSlots, BUILD_LEVELS,
   type GrammarBuildExercise, type BuildLevel, type BuildPuzzle,
@@ -42,8 +42,15 @@ export default function SyllableBuildDrill({ ex, level, speakTiles, onResult, on
   const [anim, setAnim] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { speak } = useSpeech();
+  const isDictation = ex.type === "dictation";
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  // Dictado: la frase suena sola al empezar (el usuario ya tocó «Continuar» o «Comenzar»).
+  useEffect(() => {
+    if (isDictation) speak(ex.tokens.join(""));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const boundaries = BUILD_LEVELS[level].boundaries;
   const sentence = ex.tokens.join("");
@@ -178,9 +185,29 @@ export default function SyllableBuildDrill({ ex, level, speakTiles, onResult, on
       <div className="w-full flex items-end justify-between gap-3">
         <div className="flex-1 min-w-0 rounded-2xl px-4 py-3" style={{ backgroundColor: "#EDEFFB" }}>
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: INDIGO }}>
-            Arma la frase sílaba por sílaba · {BUILD_LEVELS[level].label}
+            {isDictation ? "Dictado" : "Arma la frase sílaba por sílaba"} · {BUILD_LEVELS[level].label}
           </p>
-          <p className="text-sm font-medium mt-0.5" style={{ color: "#33408C" }}>{ex.translation}</p>
+          {isDictation ? (
+            // En el dictado la traducción se ve solo al final: hay que guiarse por el oído.
+            <div className="flex flex-wrap gap-2 mt-1.5">
+              <button
+                onClick={() => speak(sentence)}
+                className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold text-white"
+                style={{ backgroundColor: INDIGO }}
+              >
+                <Volume2 size={13} /> Escuchar
+              </button>
+              <button
+                onClick={() => speak(sentence, 0.5)}
+                className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border"
+                style={{ borderColor: INDIGO, color: INDIGO }}
+              >
+                <Turtle size={13} /> Más lento
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm font-medium mt-0.5" style={{ color: "#33408C" }}>{ex.translation}</p>
+          )}
         </div>
         <img src={fox} alt="" className="w-16 h-16 object-contain shrink-0" />
       </div>

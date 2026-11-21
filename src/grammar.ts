@@ -39,6 +39,25 @@ export interface GrammarParticleExercise {
 
 export type GrammarExercise = GrammarOrderExercise | GrammarParticleExercise;
 
+/**
+ * Pregunta → respuesta (Fase 3): se muestra la pregunta y hay que completar la
+ * respuesta con la partícula (o forma) que corresponde a la palabra de pregunta:
+ * どこで…か → としょかん「で」. Mismos campos que el hueco, más la pregunta.
+ */
+export interface GrammarQAExercise extends Omit<GrammarParticleExercise, "type"> {
+  type: "qa";
+  question: string[];     // fichas de la pregunta
+  parts: string[];
+}
+
+export interface GrammarQAPair {
+  q: string;              // pregunta, fichas separadas por espacios
+  a: string;              // respuesta, fichas separadas por espacios
+  es: string;             // «—pregunta —respuesta» en español
+  blank?: string;         // ficha a vaciar en la respuesta (por defecto: la partícula que sigue a la palabra de pregunta)
+  alt?: string[];
+}
+
 export interface GrammarSentence {
   jp: string;             // fichas separadas por espacios
   es: string;             // traducción (con contexto entre paréntesis si hace falta)
@@ -62,10 +81,12 @@ export interface GrammarLesson {
   pool?: string[];        // partículas distractoras, por prioridad (la 1.ª siempre aparece)
   adjective?: "i";        // activa el conjunto de formas de adjetivo い
   sentences: GrammarSentence[];
+  qa?: GrammarQAPair[];   // pares pregunta → respuesta (Fase 3)
   exercises: GrammarExercise[];
+  qaExercises: GrammarQAExercise[];
 }
 
-type LessonDef = Omit<GrammarLesson, "exercises">;
+type LessonDef = Omit<GrammarLesson, "exercises" | "qaExercises">;
 
 // ── Conjuntos de opciones automáticos ────────────────────────────────────────
 
@@ -158,6 +179,40 @@ function alternativeOrders(tokens: string[], s: GrammarSentence): string[][] {
   return alts;
 }
 
+export const QUESTION_WORDS = ["なん", "なに", "だれ", "どこ", "いつ", "なんじ", "なんようび", "なんがつ", "どれ"];
+
+/** Hueco por defecto de la respuesta: la partícula que sigue a la palabra de pregunta (どこ「で」 → としょかん「で」). */
+function qaBlank(pair: GrammarQAPair): string | undefined {
+  if (pair.blank) return pair.blank;
+  const q = pair.q.split(" ");
+  const i = q.findIndex((t) => QUESTION_WORDS.includes(t));
+  const particle = i >= 0 ? q[i + 1] : undefined;
+  return particle && PARTICLES.includes(particle) && particle !== "か" ? particle : undefined;
+}
+
+function buildQA(def: LessonDef): GrammarQAExercise[] {
+  return (def.qa ?? []).map((pair, i) => {
+    const tokens = pair.a.split(" ").filter(Boolean);
+    const blank = qaBlank(pair);
+    const idx = blank ? tokens.indexOf(blank) : -1;
+    if (idx === -1) throw new Error(`${def.id}: sin hueco en la respuesta «${pair.a}»`);
+    const answer = tokens[idx];
+    const parts = tokens.map((t, k) => (k === idx ? "＿" : t));
+    const s: GrammarSentence = { jp: pair.a, es: pair.es, ...(pair.alt ? { alt: pair.alt } : {}) };
+    return {
+      type: "qa",
+      question: pair.q.split(" ").filter(Boolean),
+      sentence: parts.join(""),
+      parts,
+      answer,
+      options: optionsFor(answer, s, def, i),
+      translation: pair.es,
+      kind: PARTICLES.includes(answer) ? "particle" : "form",
+      ...(pair.alt ? { alt: pair.alt } : {}),
+    };
+  });
+}
+
 function buildLesson(def: LessonDef): GrammarLesson {
   const exercises: GrammarExercise[] = [];
   def.sentences.forEach((s, sid) => {
@@ -183,10 +238,11 @@ function buildLesson(def: LessonDef): GrammarLesson {
       sid,
     });
   });
-  return { ...def, exercises };
+  return { ...def, exercises, qaExercises: buildQA(def) };
 }
 
 const s = (jp: string, es: string, extra: Partial<GrammarSentence> = {}): GrammarSentence => ({ jp, es, ...extra });
+const qa = (q: string, a: string, es: string, extra: Partial<GrammarQAPair> = {}): GrammarQAPair => ({ q, a, es, ...extra });
 
 // ── Lecciones ────────────────────────────────────────────────────────────────
 
@@ -343,6 +399,13 @@ const LESSON_DEFS: LessonDef[] = [
       s("その ほん は せんせい の ではありません", "Ese libro no es del profesor."),
       s("あれ は なん です か", "¿Qué es aquello?"),
     ],
+    qa: [
+      qa("これ は なん です か", "それ は ほん です", "—¿Qué es esto? —Eso es un libro.", { blank: "それ" }),
+      qa("それ は なん です か", "これ は かぎ です", "—¿Qué es eso? —Esto es una llave.", { blank: "これ" }),
+      qa("あれ は なん です か", "あれ は がっこう です", "—¿Qué es aquello? —Aquello es una escuela.", { blank: "あれ" }),
+      qa("この かばん は だれ の です か", "その かばん は わたし の です", "—¿De quién es este bolso? —Ese bolso es mío.", { blank: "その" }),
+      qa("どれ が あなた の ほん です か", "それ が わたし の ほん です", "—¿Cuál es tu libro? —Ese es mi libro.", { blank: "それ" }),
+    ],
   },
   {
     id: "verbos-masu",
@@ -462,6 +525,13 @@ const LESSON_DEFS: LessonDef[] = [
       s("わたし は しがつ に にほん へ いきます", "En abril voy a Japón."),
       s("たんじょうび に ケーキ を たべます", "En mi cumpleaños como pastel."),
     ],
+    qa: [
+      qa("なんじ に おきます か", "しちじ に おきます", "—¿A qué hora te levantas? —A las siete."),
+      qa("なんようび に はたらきます か", "どようび に はたらきます", "—¿Qué día trabajas? —Los sábados."),
+      qa("なんじ に ねました か", "じゅうじ に ねました", "—¿A qué hora te acostaste? —A las diez."),
+      qa("なんがつ に にほん へ いきます か", "しがつ に いきます", "—¿En qué mes vas a Japón? —En abril."),
+      qa("なんじ に ばんごはん を たべます か", "はちじ に たべます", "—¿A qué hora cenas? —A las ocho."),
+    ],
   },
   {
     id: "kara-made",
@@ -486,6 +556,13 @@ const LESSON_DEFS: LessonDef[] = [
       s("わたし は きのう よじ から ろくじ まで テレビ を みました", "Ayer vi la tele de cuatro a seis."),
       s("わたし は がっこう から うち まで あるきました", "Caminé de la escuela a casa."),
       s("なつやすみ は いつ から いつ まで です か", "¿Desde cuándo hasta cuándo son las vacaciones de verano?", { blank: "まで" }),
+    ],
+    qa: [
+      qa("なんじ から はたらきます か", "くじ から はたらきます", "—¿Desde qué hora trabajas? —Desde las nueve."),
+      qa("なんじ まで べんきょうします か", "じゅうじ まで べんきょうします", "—¿Hasta qué hora estudias? —Hasta las diez."),
+      qa("なんようび から やすみ です か", "どようび から やすみ です", "—¿Desde qué día tienes descanso? —Desde el sábado."),
+      qa("どこ まで あるきます か", "えき まで あるきます", "—¿Hasta dónde caminas? —Hasta la estación."),
+      qa("なんがつ まで にほん に います か", "はちがつ まで います", "—¿Hasta qué mes estás en Japón? —Hasta agosto."),
     ],
   },
   {
@@ -514,6 +591,12 @@ const LESSON_DEFS: LessonDef[] = [
       s("ほん と ノート を かいました", "Compré un libro y un cuaderno.", { options: ["と", "へ", "を", "が"], orders: ["ノート と ほん を かいました"] }),
       s("わたし は らいしゅう りょうしん と りょこう を します", "La próxima semana viajo con mis padres."),
     ],
+    qa: [
+      qa("だれ と いきます か", "ともだち と いきます", "—¿Con quién vas? —Con mi amigo."),
+      qa("だれ と ひるごはん を たべました か", "はは と たべました", "—¿Con quién almorzaste? —Con mi madre."),
+      qa("だれ と はなしました か", "せんせい と はなしました", "—¿Con quién hablaste? —Con el profesor."),
+      qa("だれ と えいが を みます か", "かのじょ と みます", "—¿Con quién ves la película? —Con ella."),
+    ],
   },
   {
     id: "particula-de",
@@ -541,6 +624,12 @@ const LESSON_DEFS: LessonDef[] = [
       s("わたしたち は ふね で くに へ かえりました", "Regresamos a nuestro país en barco."),
       s("こども は スプーン で カレー を たべます", "El niño come curry con cuchara."),
     ],
+    qa: [
+      qa("なに で がっこう へ いきます か", "じてんしゃ で いきます", "—¿En qué vas a la escuela? —En bicicleta."),
+      qa("なに で たべます か", "はし で たべます", "—¿Con qué comes? —Con palillos."),
+      qa("なに で かきました か", "ペン で かきました", "—¿Con qué lo escribiste? —Con bolígrafo."),
+      qa("なに で きました か", "でんしゃ で きました", "—¿En qué viniste? —En tren."),
+    ],
   },
   {
     id: "particula-he",
@@ -565,6 +654,12 @@ const LESSON_DEFS: LessonDef[] = [
       s("かれ は どこ へ いきました か", "¿A dónde fue él?", { alt: ["に"] }),
       s("マリアさん は くに へ かえりました", "María regresó a su país.", { alt: ["に"] }),
       s("わたし は あした ともだち と えいがかん へ いきます", "Mañana voy al cine con mi amigo.", { alt: ["に"] }),
+    ],
+    qa: [
+      qa("どこ へ いきます か", "ぎんこう へ いきます", "—¿A dónde vas? —Al banco.", { alt: ["に"] }),
+      qa("どこ へ かえります か", "うち へ かえります", "—¿A dónde regresas? —A casa.", { alt: ["に"] }),
+      qa("あした どこ へ いきます か", "こうえん へ いきます", "—¿A dónde vas mañana? —Al parque.", { alt: ["に"] }),
+      qa("きのう どこ へ いきました か", "としょかん へ いきました", "—¿A dónde fuiste ayer? —A la biblioteca.", { alt: ["に"] }),
     ],
   },
   {
@@ -594,6 +689,13 @@ const LESSON_DEFS: LessonDef[] = [
       s("かのじょ は デパート で ぼうし を かいました", "Ella compró un sombrero en los grandes almacenes."),
       s("こども は こうえん で あそびます", "Los niños juegan en el parque."),
     ],
+    qa: [
+      qa("どこ に すんでいます か", "おおさか に すんでいます", "—¿Dónde vives? —En Osaka."),
+      qa("どこ で はたらきます か", "びょういん で はたらきます", "—¿Dónde trabajas? —En un hospital."),
+      qa("どこ へ いきます か", "デパート へ いきます", "—¿A dónde vas? —A los grandes almacenes.", { alt: ["に"] }),
+      qa("どこ で べんきょうします か", "としょかん で べんきょうします", "—¿Dónde estudias? —En la biblioteca."),
+      qa("ねこ は どこ に います か", "へや に います", "—¿Dónde está el gato? —En la habitación."),
+    ],
   },
   {
     id: "particula-wo",
@@ -621,6 +723,13 @@ const LESSON_DEFS: LessonDef[] = [
       s("わたし は にちようび に へや の そうじ を します", "Los domingos limpio mi habitación."),
       s("こども は こうえん で しゃしん を とりました", "El niño sacó fotos en el parque."),
     ],
+    qa: [
+      qa("なに を たべます か", "すし を たべます", "—¿Qué comes? —Sushi."),
+      qa("なに を のみました か", "おちゃ を のみました", "—¿Qué bebiste? —Té."),
+      qa("なに を かいました か", "ほん を かいました", "—¿Qué compraste? —Un libro."),
+      qa("なに を みます か", "えいが を みます", "—¿Qué ves? —Una película."),
+      qa("なに を べんきょうします か", "にほんご を べんきょうします", "—¿Qué estudias? —Japonés."),
+    ],
   },
   {
     id: "particula-ga",
@@ -646,6 +755,13 @@ const LESSON_DEFS: LessonDef[] = [
       s("だれ が せんせい です か", "¿Quién es el profesor?"),
       s("あの ひと が せんせい です", "(—¿Quién es el profesor?) Aquella persona es el profesor."),
       s("かれ は いしゃ です", "(Hablándote de él) Él es médico."),
+    ],
+    qa: [
+      qa("だれ が きました か", "やまださん が きました", "—¿Quién vino? —Vino la Sra. Yamada."),
+      qa("だれ が せんせい です か", "あの ひと が せんせい です", "—¿Quién es el profesor? —Aquella persona es el profesor."),
+      qa("どれ が あなた の かさ です か", "これ が わたし の かさ です", "—¿Cuál es tu paraguas? —Este es mi paraguas."),
+      qa("なに が すき です か", "ねこ が すき です", "—¿Qué te gusta? —Me gustan los gatos."),
+      qa("だれ が この てがみ を かきました か", "あね が かきました", "—¿Quién escribió esta carta? —La escribió mi hermana mayor."),
     ],
   },
   {
@@ -673,6 +789,13 @@ const LESSON_DEFS: LessonDef[] = [
       s("にわ に とり が います", "Hay un pájaro en el jardín."),
       s("ねこ は テーブル の した に いません", "El gato no está debajo de la mesa."),
       s("あそこ に かさ が ありました", "Allí había un paraguas."),
+    ],
+    qa: [
+      qa("つくえ の うえ に なに が あります か", "ほん が あります", "—¿Qué hay encima del escritorio? —Hay un libro."),
+      qa("いぬ は どこ に います か", "にわ に います", "—¿Dónde está el perro? —En el jardín."),
+      qa("きょうしつ に だれ が います か", "せんせい が います", "—¿Quién está en el aula? —Está el profesor."),
+      qa("かぎ は どこ に あります か", "かばん の なか に あります", "—¿Dónde está la llave? —Dentro del bolso."),
+      qa("へや に なに が います か", "ねこ が います", "—¿Qué hay en la habitación? —Hay un gato."),
     ],
   },
 
