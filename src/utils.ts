@@ -301,15 +301,15 @@ export function resolveKanjiSession(
   return { pool: items, limit: Math.min(length, items.length) };
 }
 
-export type GrammarPracticeMode = "grammar-order" | "grammar-particle";
+export type GrammarPracticeMode = "grammar-order" | "grammar-particle" | "grammar-build";
 
-const GRAMMAR_MODES: GrammarPracticeMode[] = ["grammar-order", "grammar-particle"];
+const GRAMMAR_MODES: GrammarPracticeMode[] = ["grammar-order", "grammar-particle", "grammar-build"];
 
 export function grammarProgressKey(mode: GrammarPracticeMode, lessonId: string): string {
   return `${mode}:${lessonId}`;
 }
 
-/** Same thresholds as vocabStatus/phraseStatus/kanjiStatus, summed across both grammar drills. */
+/** Same thresholds as vocabStatus/phraseStatus/kanjiStatus, summed across all grammar drills. */
 export function grammarStatus(items: ProgressItems, lessonId: string): CharStatus {
   let attempts = 0, correct = 0;
   for (const mode of GRAMMAR_MODES) {
@@ -416,7 +416,7 @@ export function phoneticsAccuracy(items: ProgressItems, phenomenon: PhoneticEntr
   return aggregateAccuracy(items, keys);
 }
 
-/** % de acierto agregado de todos los drills de gramática (order + particle, #6). */
+/** % de acierto agregado de todos los drills de gramática (order + particle + build, #6). */
 export function grammarAccuracy(items: ProgressItems): number | null {
   const keys = GRAMMAR_LESSONS.flatMap((l) => GRAMMAR_MODES.map((m) => grammarProgressKey(m, l.id)));
   return aggregateAccuracy(items, keys);

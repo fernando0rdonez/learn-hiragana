@@ -3,7 +3,7 @@ import { ArrowLeft, RotateCcw } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
 import type { GrammarLesson, GrammarExercise, GrammarOrderExercise, GrammarParticleExercise } from "../grammar";
 import { advanceBox } from "../leitner";
-import { grammarProgressKey } from "../utils";
+import { grammarProgressKey, type GrammarPracticeMode } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
 import { useSpeech } from "../hooks/useSpeech";
 import { fireConfetti } from "./ConfettiOverlay";
@@ -11,6 +11,8 @@ import AnswerReveal from "./AnswerReveal";
 import GrammarTokenChip from "./GrammarTokenChip";
 import GrammarTokenSlots from "./GrammarTokenSlots";
 import ParticleTrain from "./ParticleTrain";
+import SyllableBuildDrill from "./SyllableBuildDrill";
+import { toBuildExercise, BUILD_LEVELS, type GrammarBuildExercise, type BuildLevel } from "../grammarBuild";
 import { particleColor } from "../particleTrain";
 import VocabSessionSummary, { type SessionResult } from "./VocabSessionSummary";
 import foxNeutralImg from "../assets/character/fox-neutral.png";
@@ -48,50 +50,71 @@ function shuffle<T>(arr: T[]): T[] {
 /** Ejercicios por sesión: cada lección tiene más oraciones de las que entran en una sesión. */
 const SESSION_SIZE = 12;
 
-/** Tipo de juego elegido al empezar la lección (las fases 2-3 de docs/GRAMATICA_PLAN.md añadirán más). */
-type GrammarGameMode = "mix" | "order" | "particle";
+/** Ejercicio de una sesión: los de grammar.ts + «armar sílaba por sílaba» (derivado de "order"). */
+type SessionExercise = GrammarExercise | GrammarBuildExercise;
+type ExerciseType = SessionExercise["type"];
+
+/**
+ * Tipo de juego elegido al empezar la lección. Cada juego nuevo de las fases 2-3
+ * (docs/GRAMATICA_PLAN.md) se agrega aquí y entra también en «Mezclado».
+ */
+type GrammarGameMode = "mix" | ExerciseType;
 
 const GAME_MODES: { id: GrammarGameMode; label: string; hint: string }[] = [
-  { id: "mix",      label: "Mezclado",     hint: "Ordenar y completar, al azar" },
+  { id: "mix",      label: "Mezclado",     hint: "Todos los juegos, al azar" },
   { id: "order",    label: "Solo ordenar", hint: "Arma la frase con fichas" },
   { id: "particle", label: "Solo huecos",  hint: "Elige la partícula o la forma" },
+  { id: "build",    label: "Sílabas",      hint: "Arma las palabras sílaba por sílaba" },
 ];
 
-const MODE_STORAGE_KEY = "grammar-game-mode";
+const MIX_TYPES: ExerciseType[] = ["order", "particle", "build"];
 
-function loadMode(): GrammarGameMode {
+const MODE_STORAGE_KEY = "grammar-game-mode";
+const LEVEL_STORAGE_KEY = "grammar-build-level";
+const AUDIO_STORAGE_KEY = "grammar-build-tile-audio";
+
+function readStored<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
   try {
-    const v = localStorage.getItem(MODE_STORAGE_KEY);
-    return v === "order" || v === "particle" || v === "mix" ? v : "mix";
+    const v = localStorage.getItem(key);
+    return (allowed as readonly string[]).includes(v ?? "") ? (v as T) : fallback;
   } catch {
-    return "mix";
+    return fallback;
   }
 }
 
-function saveMode(mode: GrammarGameMode) {
-  try { localStorage.setItem(MODE_STORAGE_KEY, mode); } catch { /* sin almacenamiento: no pasa nada */ }
+function writeStored(key: string, value: string) {
+  try { localStorage.setItem(key, value); } catch { /* sin almacenamiento: no pasa nada */ }
 }
 
 /**
- * Elige hasta SESSION_SIZE oraciones distintas al azar. En "mix" alterna el tipo
- * de ejercicio (ordenar / hueco) para que una misma oración no salga dos veces;
- * en los otros modos usa solo ese tipo.
+ * Elige hasta SESSION_SIZE oraciones distintas al azar. En "mix" rota los tipos
+ * de ejercicio (ordenar / hueco / sílabas) para que una misma oración no salga
+ * dos veces; en los otros modos usa solo ese tipo.
  */
-function buildSession(all: GrammarExercise[], mode: GrammarGameMode): GrammarExercise[] {
-  if (mode !== "mix") {
-    return shuffle(all.filter((ex) => ex.type === mode)).slice(0, SESSION_SIZE);
-  }
-  const bySid = new Map<number, GrammarExercise[]>();
+function buildSession(all: GrammarExercise[], mode: GrammarGameMode): SessionExercise[] {
+  const bySid = new Map<number, SessionExercise[]>();
   all.forEach((ex, i) => {
     const sid = ex.sid ?? -1 - i;
     bySid.set(sid, [...(bySid.get(sid) ?? []), ex]);
   });
-  const sids = shuffle([...bySid.keys()]).slice(0, SESSION_SIZE);
-  const startWithOrder = Math.random() < 0.5;
-  return sids.map((sid, i) => {
+  // «Sílabas» se deriva de cada "order"; las partículas alternativas del hueco nunca salen como extra.
+  for (const group of bySid.values()) {
+    const order = group.find((ex): ex is GrammarOrderExercise => ex.type === "order");
+    const particle = group.find((ex): ex is GrammarParticleExercise => ex.type === "particle");
+    if (order) group.push(toBuildExercise(order, particle?.alt));
+  }
+  const sids = shuffle([...bySid.keys()]);
+  if (mode !== "mix") {
+    return sids
+      .map((sid) => bySid.get(sid)!.find((ex) => ex.type === mode))
+      .filter((ex): ex is SessionExercise => !!ex)
+      .slice(0, SESSION_SIZE);
+  }
+  const start = Math.floor(Math.random() * MIX_TYPES.length);
+  return sids.slice(0, SESSION_SIZE).map((sid, i) => {
     const group = bySid.get(sid)!;
-    const wantOrder = (i % 2 === 0) === startWithOrder;
-    return group.find((ex) => (ex.type === "order") === wantOrder) ?? group[0];
+    const want = MIX_TYPES[(start + i) % MIX_TYPES.length];
+    return group.find((ex) => ex.type === want) ?? group[0];
   });
 }
 
@@ -100,9 +123,15 @@ function buildChips(tokens: string[]): Chip[] {
 }
 
 /** Frase completa (sin espacios) que corresponde a un ejercicio ya resuelto — usada para el resumen y el TTS al corregir. */
-function fullSentence(ex: GrammarExercise): string {
-  return ex.type === "order" ? ex.tokens.join("") : ex.sentence.replace("＿", ex.answer);
+function fullSentence(ex: SessionExercise): string {
+  return ex.type === "particle" ? ex.sentence.replace("＿", ex.answer) : ex.tokens.join("");
 }
+
+const PROGRESS_MODE: Record<ExerciseType, GrammarPracticeMode> = {
+  order: "grammar-order",
+  particle: "grammar-particle",
+  build: "grammar-build",
+};
 
 interface Props {
   lesson: GrammarLesson;
@@ -113,8 +142,12 @@ interface Props {
 
 export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, onBack }: Props) {
   const [phase, setPhase] = useState<Phase>("explain");
-  const [mode, setMode] = useState<GrammarGameMode>(loadMode);
-  const [exercises, setExercises] = useState<GrammarExercise[]>([]);
+  const [mode, setMode] = useState<GrammarGameMode>(() =>
+    readStored(MODE_STORAGE_KEY, GAME_MODES.map((m) => m.id), "mix"));
+  const [buildLevel, setBuildLevel] = useState<BuildLevel>(() =>
+    readStored(LEVEL_STORAGE_KEY, Object.keys(BUILD_LEVELS) as BuildLevel[], "facil"));
+  const [tileAudio, setTileAudio] = useState(() => readStored(AUDIO_STORAGE_KEY, ["on", "off"], "off") === "on");
+  const [exercises, setExercises] = useState<SessionExercise[]>([]);
   const [index, setIndex] = useState(0);
 
   // "order" state
@@ -132,15 +165,17 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
   const { speak } = useSpeech();
 
   const today = toISODate();
-  const current: GrammarExercise | null = exercises[index] ?? null;
+  const current: SessionExercise | null = exercises[index] ?? null;
 
   const foxPose =
     phase === "correct" ? foxCelebratingImg :
     phase === "wrong" || phase === "reveal" ? foxSadImg :
     foxNeutralImg;
 
-  function initExercise(ex: GrammarExercise) {
-    if (ex.type === "order") {
+  function initExercise(ex: SessionExercise) {
+    if (ex.type === "build") {
+      // SyllableBuildDrill maneja su propio estado (se monta de nuevo en cada ejercicio).
+    } else if (ex.type === "order") {
       setChips(buildChips(ex.tokens));
       setSlots(Array(ex.tokens.length).fill(null));
       setSlotChipIds(Array(ex.tokens.length).fill(null));
@@ -155,7 +190,19 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
 
   function chooseMode(m: GrammarGameMode) {
     setMode(m);
-    saveMode(m);
+    writeStored(MODE_STORAGE_KEY, m);
+  }
+
+  function chooseLevel(l: BuildLevel) {
+    setBuildLevel(l);
+    writeStored(LEVEL_STORAGE_KEY, l);
+  }
+
+  function toggleTileAudio() {
+    setTileAudio((on) => {
+      writeStored(AUDIO_STORAGE_KEY, on ? "off" : "on");
+      return !on;
+    });
   }
 
   function startLesson() {
@@ -176,9 +223,8 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
     initExercise(exercises[nextIndex]);
   }
 
-  function recordResult(ex: GrammarExercise, isCorrect: boolean) {
-    const mode = ex.type === "order" ? "grammar-order" : "grammar-particle";
-    const key = grammarProgressKey(mode, lesson.id);
+  function recordResult(ex: SessionExercise, isCorrect: boolean) {
+    const key = grammarProgressKey(PROGRESS_MODE[ex.type], lesson.id);
     const prevP: ItemProgress = progress[key] ?? { box: 0, nextDue: today, attempts: 0, correct: 0 };
     const { box, nextDue } = advanceBox(prevP, isCorrect, today);
     const newP: ItemProgress = {
@@ -333,7 +379,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
         )}
         <div>
           <div className="text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: "#8B7FA8" }}>Tipo de juego</div>
-          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tipo de juego">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="radiogroup" aria-label="Tipo de juego">
             {GAME_MODES.map((m) => {
               const selected = m.id === mode;
               return (
@@ -355,6 +401,43 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
             })}
           </div>
         </div>
+        {(mode === "build" || mode === "mix") && (
+          <div>
+            <div className="text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: "#8B7FA8" }}>Nivel de sílabas</div>
+            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Nivel de sílabas">
+              {(Object.keys(BUILD_LEVELS) as BuildLevel[]).map((l) => {
+                const selected = l === buildLevel;
+                return (
+                  <button
+                    key={l}
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => chooseLevel(l)}
+                    className="rounded-2xl border-2 px-2 py-2 text-center transition-colors"
+                    style={{ borderColor: selected ? INDIGO : "#EEEEEE", backgroundColor: selected ? "#EDEFFB" : "#FFFFFF" }}
+                  >
+                    <div className="text-sm font-semibold" style={{ color: selected ? INDIGO_DARK : "#1A1A2E" }}>{BUILD_LEVELS[l].label}</div>
+                    <div className="text-[11px] mt-0.5 leading-tight" style={{ color: "#8B7FA8" }}>{BUILD_LEVELS[l].hint}</div>
+                  </button>
+                );
+              })}
+            </div>
+            {buildLevel === "facil" && (
+              <label className="mt-3 flex items-center justify-between gap-3 rounded-2xl border-2 px-4 py-3 cursor-pointer" style={{ borderColor: "#EEEEEE" }}>
+                <span className="text-sm" style={{ color: "#1A1A2E" }}>
+                  🔊 Escuchar cada sílaba al tocarla
+                </span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  checked={tileAudio}
+                  onChange={toggleTileAudio}
+                  className="w-5 h-5 accent-[#4C5FBF]"
+                />
+              </label>
+            )}
+          </div>
+        )}
         <button
           onClick={startLesson}
           className="w-full py-3.5 rounded-2xl text-white font-semibold"
@@ -389,7 +472,16 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
         <div className="h-full transition-all" style={{ width: `${progressPct}%`, background: `linear-gradient(90deg, ${INDIGO}, ${INDIGO_DARK})` }} />
       </div>
 
-      {current.type === "order" ? (
+      {current.type === "build" ? (
+        <SyllableBuildDrill
+          key={index}
+          ex={current}
+          level={buildLevel}
+          speakTiles={buildLevel === "facil" && tileAudio}
+          onResult={(ok) => recordResult(current, ok)}
+          onContinue={advanceToNext}
+        />
+      ) : current.type === "order" ? (
         <OrderDrill
           ex={current}
           chips={chips}
