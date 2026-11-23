@@ -3,6 +3,7 @@ import type { GrammarLesson } from "../../grammar";
 import type { ViewName } from "../../data";
 import GrammarSetupView from "../GrammarSetupView";
 import GrammarLessonGame from "../../components/GrammarLessonGame";
+import ParticleOrderGame from "../../components/ParticleOrderGame";
 
 interface Props {
   view: ViewName;
@@ -33,6 +34,10 @@ export default function GrammarModuleViews({
           onProgressUpdate={onProgressUpdate}
           onBack={() => setView("grammarSetup")}
         />
+      )}
+
+      {view === "grammarTrain" && (
+        <ParticleOrderGame onBack={() => setView("grammarSetup")} />
       )}
     </>
   );
