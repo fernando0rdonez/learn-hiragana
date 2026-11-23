@@ -119,3 +119,49 @@ test("una palabra de tiempo sin partícula puede ir antes del tema", () => {
   assert.ok(ex && ex.type === "order");
   assert.deepEqual(ex.accept, [["きのう", "わたし", "は", "すし", "を", "たべました"]]);
 });
+
+// ── Lecturas de repaso (Fase 4) ──────────────────────────────────────────────
+
+test("la lectura de repaso cierra el curso 2 (antes de Extra)", () => {
+  const ids = GRAMMAR_LESSONS.map((l) => l.id);
+  const i = ids.indexOf("lectura-repaso-2");
+  assert.ok(i > 0);
+  assert.equal(GRAMMAR_LESSONS[i].section, "Japonés Básico II");
+  assert.equal(GRAMMAR_LESSONS[i + 1].section, "Extra");
+});
+
+test("las líneas de las lecturas son las oraciones de la lección", () => {
+  const l = GRAMMAR_LESSONS.find((x) => x.id === "lectura-repaso-2")!;
+  assert.ok((l.readings?.length ?? 0) >= 3);
+  assert.deepEqual(l.sentences.map((s) => s.jp), l.readings!.flatMap((r) => r.lines.map((x) => x.jp)));
+});
+
+test("cada lectura tiene 5+ preguntas con 4 opciones únicas que incluyen la respuesta", () => {
+  const l = GRAMMAR_LESSONS.find((x) => x.id === "lectura-repaso-2")!;
+  const readingIds = new Set<string>();
+  for (const r of l.readings!) {
+    readingIds.add(r.id);
+    assert.ok(r.lines.length >= 5, r.id);
+    assert.ok(r.questions.length >= 5, r.id);
+    for (const q of r.questions) {
+      assert.equal(q.options.length, 4, `${r.id}: ${q.q}`);
+      assert.equal(new Set(q.options).size, 4, `${r.id}: ${q.q}`);
+      assert.ok(q.options.includes(q.answer), `${r.id}: ${q.q}`);
+      assert.ok(q.why.length > 0);
+    }
+  }
+  assert.equal(readingIds.size, l.readings!.length, "ids de lectura repetidos");
+});
+
+test("las respuestas en japonés de las lecturas salen del texto", () => {
+  const l = GRAMMAR_LESSONS.find((x) => x.id === "lectura-repaso-2")!;
+  for (const r of l.readings!) {
+    const text = r.lines.map((x) => x.jp.replace(/ /g, "")).join("");
+    for (const q of r.questions) {
+      if (!q.jp) continue;
+      // La respuesta (sin espacios) aparece literalmente en el texto, salvo el sujeto omitido.
+      const core = q.answer.replace(/ /g, "");
+      assert.ok(text.includes(core) || text.includes(core.replace(/^.+?が/, "")), `${r.id}: ${q.answer}`);
+    }
+  }
+});

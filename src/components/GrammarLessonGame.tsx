@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import type { ProgressItems, ItemProgress } from "../types";
-import type { GrammarLesson, GrammarExercise, GrammarOrderExercise, GrammarParticleExercise, GrammarQAExercise } from "../grammar";
+import type { GrammarLesson, GrammarExercise, GrammarOrderExercise, GrammarParticleExercise, GrammarQAExercise, GrammarReadingQuestion } from "../grammar";
 import { advanceBox } from "../leitner";
 import { grammarProgressKey, type GrammarPracticeMode } from "../utils";
 import { playChime, playBuzz } from "../utils/audio";
@@ -13,6 +13,7 @@ import GrammarTokenSlots from "./GrammarTokenSlots";
 import ParticleTrain from "./ParticleTrain";
 import SyllableBuildDrill from "./SyllableBuildDrill";
 import SpotErrorDrill from "./SpotErrorDrill";
+import ReadingDrill from "./ReadingDrill";
 import { toExtraOrder, toSpot, type GrammarExtraOrderExercise, type GrammarSpotExercise } from "../grammarGames";
 import { toBuildExercise, BUILD_LEVELS, type GrammarBuildExercise, type BuildLevel } from "../grammarBuild";
 import { particleColor } from "../particleTrain";
@@ -56,12 +57,22 @@ const SESSION_SIZE = 12;
  * Ejercicio de una sesión: los de grammar.ts + los derivados de cada oración
  * (sílabas, dictado, ordenar con trampas, encuentra el error) + pregunta→respuesta.
  */
+/** Una pregunta de comprensión de una lectura (Fase 4); el texto se muestra completo. */
+interface GrammarReadingExercise {
+  type: "reading";
+  readingIndex: number;
+  qIndex: number;
+  question: GrammarReadingQuestion;
+  translation: string;
+}
+
 type SessionExercise =
   | GrammarExercise
   | GrammarBuildExercise
   | GrammarExtraOrderExercise
   | GrammarSpotExercise
-  | GrammarQAExercise;
+  | GrammarQAExercise
+  | GrammarReadingExercise;
 type ExerciseType = SessionExercise["type"];
 
 /**
@@ -71,6 +82,7 @@ type ExerciseType = SessionExercise["type"];
 type GrammarGameMode = "mix" | ExerciseType;
 
 const GAME_MODES: { id: GrammarGameMode; label: string; hint: string }[] = [
+  { id: "reading",   label: "Lectura",              hint: "Lee un texto y responde" },
   { id: "mix",       label: "Mezclado",             hint: "Todos los juegos, al azar" },
   { id: "order",     label: "Ordenar",              hint: "Arma la frase con fichas" },
   { id: "extra",     label: "Ordenar con trampas",  hint: "Sobran 1–2 fichas" },
@@ -110,6 +122,15 @@ function writeStored(key: string, value: string) {
  */
 function buildSession(lesson: GrammarLesson, mode: GrammarGameMode): SessionExercise[] {
   if (mode === "qa") return shuffle(lesson.qaExercises).slice(0, SESSION_SIZE);
+  if (mode === "reading") {
+    // Un texto al azar; sus preguntas en el orden del texto.
+    const readings = lesson.readings ?? [];
+    if (readings.length === 0) return [];
+    const readingIndex = Math.floor(Math.random() * readings.length);
+    return readings[readingIndex].questions.map((question, qIndex) => ({
+      type: "reading", readingIndex, qIndex, question, translation: question.q,
+    }));
+  }
   const bySid = new Map<number, SessionExercise[]>();
   lesson.exercises.forEach((ex, i) => {
     const sid = ex.sid ?? -1 - i;
@@ -160,6 +181,7 @@ function buildChips(tokens: string[]): Chip[] {
 function fullSentence(ex: SessionExercise): string {
   if (ex.type === "particle" || ex.type === "qa") return ex.sentence.replace("＿", ex.answer);
   if (ex.type === "spot") return ex.correctTokens.join("");
+  if (ex.type === "reading") return ex.question.answer;
   return ex.tokens.join("");
 }
 
@@ -171,6 +193,7 @@ const PROGRESS_MODE: Record<ExerciseType, GrammarPracticeMode> = {
   extra: "grammar-extra",
   spot: "grammar-spot",
   qa: "grammar-qa",
+  reading: "grammar-reading",
 };
 
 interface Props {
@@ -182,8 +205,10 @@ interface Props {
 
 export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, onBack }: Props) {
   const [phase, setPhase] = useState<Phase>("explain");
+  // En la lección de lectura se empieza siempre por «Lectura»; en las demás, el último modo elegido.
   const [mode, setMode] = useState<GrammarGameMode>(() =>
-    readStored(MODE_STORAGE_KEY, GAME_MODES.map((m) => m.id), "mix"));
+    lesson.readings?.length ? "reading" : readStored(MODE_STORAGE_KEY, GAME_MODES.map((m) => m.id), "mix"));
+  const [showReadingEs, setShowReadingEs] = useState(false);
   const [buildLevel, setBuildLevel] = useState<BuildLevel>(() =>
     readStored(LEVEL_STORAGE_KEY, Object.keys(BUILD_LEVELS) as BuildLevel[], "facil"));
   const [tileAudio, setTileAudio] = useState(() => readStored(AUDIO_STORAGE_KEY, ["on", "off"], "off") === "on");
@@ -207,9 +232,13 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
   const today = toISODate();
   const current: SessionExercise | null = exercises[index] ?? null;
   const hasQA = lesson.qaExercises.length > 0;
-  // Si el modo guardado no existe en esta lección (pregunta→respuesta), se juega «Mezclado».
-  const effectiveMode: GrammarGameMode = mode === "qa" && !hasQA ? "mix" : mode;
-  const sessionLength = Math.min(SESSION_SIZE, effectiveMode === "qa" ? lesson.qaExercises.length : lesson.sentences.length);
+  const hasReading = (lesson.readings?.length ?? 0) > 0;
+  // Si el modo guardado no existe en esta lección (pregunta→respuesta, lectura), se juega «Mezclado».
+  const effectiveMode: GrammarGameMode =
+    (mode === "qa" && !hasQA) || (mode === "reading" && !hasReading) ? "mix" : mode;
+  const sessionLength =
+    effectiveMode === "reading" ? lesson.readings![0].questions.length :
+    Math.min(SESSION_SIZE, effectiveMode === "qa" ? lesson.qaExercises.length : lesson.sentences.length);
 
   const foxPose =
     phase === "correct" ? foxCelebratingImg :
@@ -217,7 +246,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
     foxNeutralImg;
 
   function initExercise(ex: SessionExercise) {
-    if (ex.type === "build" || ex.type === "dictation" || ex.type === "spot") {
+    if (ex.type === "build" || ex.type === "dictation" || ex.type === "spot" || ex.type === "reading") {
       // Estos componentes manejan su propio estado (se montan de nuevo en cada ejercicio).
     } else if (ex.type === "order" || ex.type === "extra") {
       setChips(buildChips(chipTokens(ex)));
@@ -424,7 +453,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
         <div>
           <div className="text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: "#8B7FA8" }}>Tipo de juego</div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="radiogroup" aria-label="Tipo de juego">
-            {GAME_MODES.map((m) => {
+            {GAME_MODES.filter((m) => m.id !== "reading" || hasReading).map((m) => {
               const selected = m.id === effectiveMode;
               const unavailable = m.id === "qa" && !hasQA;
               return (
@@ -491,7 +520,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
           className="w-full py-3.5 rounded-2xl text-white font-semibold"
           style={{ backgroundColor: INDIGO }}
         >
-          Comenzar ({sessionLength} ejercicios)
+          Comenzar ({sessionLength} {effectiveMode === "reading" ? "preguntas" : "ejercicios"})
         </button>
       </div>
     );
@@ -526,6 +555,18 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
           ex={current}
           level={buildLevel}
           speakTiles={buildLevel === "facil" && tileAudio}
+          onResult={(ok) => recordResult(current, ok)}
+          onContinue={advanceToNext}
+        />
+      ) : current.type === "reading" ? (
+        <ReadingDrill
+          key={index}
+          reading={lesson.readings![current.readingIndex]}
+          question={current.question}
+          questionNumber={current.qIndex + 1}
+          totalQuestions={exercises.length}
+          showTranslation={showReadingEs}
+          onToggleTranslation={() => setShowReadingEs((v) => !v)}
           onResult={(ok) => recordResult(current, ok)}
           onContinue={advanceToNext}
         />

@@ -67,6 +67,23 @@ export interface GrammarSentence {
   orders?: string[];      // otros órdenes válidos de las mismas fichas (ej. "ねこ と いぬ が います")
 }
 
+/** Pregunta de comprensión de una lectura (Fase 4). */
+export interface GrammarReadingQuestion {
+  q: string;              // pregunta en español
+  jp?: string;            // la misma pregunta en japonés (fichas separadas por espacios), si se hace en japonés
+  options: string[];      // incluye `answer`
+  answer: string;
+  why: string;            // qué partícula/palabra del texto da la respuesta
+}
+
+export interface GrammarReading {
+  id: string;
+  title: string;          // en japonés
+  titleEs: string;
+  lines: GrammarSentence[]; // cada línea también alimenta los demás juegos de la lección
+  questions: GrammarReadingQuestion[];
+}
+
 export type GrammarBook = "Japonés Básico I" | "Japonés Básico II" | "Extra";
 
 export interface GrammarLesson {
@@ -82,6 +99,7 @@ export interface GrammarLesson {
   adjective?: "i";        // activa el conjunto de formas de adjetivo い
   sentences: GrammarSentence[];
   qa?: GrammarQAPair[];   // pares pregunta → respuesta (Fase 3)
+  readings?: GrammarReading[]; // lecturas de repaso (Fase 4); sus líneas son las `sentences` de la lección
   exercises: GrammarExercise[];
   qaExercises: GrammarQAExercise[];
 }
@@ -243,6 +261,95 @@ function buildLesson(def: LessonDef): GrammarLesson {
 
 const s = (jp: string, es: string, extra: Partial<GrammarSentence> = {}): GrammarSentence => ({ jp, es, ...extra });
 const qa = (q: string, a: string, es: string, extra: Partial<GrammarQAPair> = {}): GrammarQAPair => ({ q, a, es, ...extra });
+
+// ── Lecturas de repaso (Fase 4) ──────────────────────────────────────────────
+// Textos PROPIOS (no del PDF) que juntan lo del curso 2: tiempo に, から〜まで,
+// と, で (medio y lugar), へ, を, に de existencia, あります/います y posiciones.
+// Las preguntas obligan a fijarse en las partículas para responder.
+
+const READINGS: GrammarReading[] = [
+  {
+    id: "maria",
+    title: "マリアさん の いちにち",
+    titleEs: "El día de María",
+    lines: [
+      s("マリアさん は メキシコ の りゅうがくせい です", "María es una estudiante de intercambio de México.", { blank: "の", options: ["の", "に", "を", "へ"] }),
+      s("いま とうきょう に すんでいます", "Ahora vive en Tokio.", { blank: "に" }),
+      s("まいあさ しちじ に おきます", "Cada mañana se levanta a las siete.", { blank: "に" }),
+      s("くじ から さんじ まで だいがく で べんきょうします", "De nueve a tres estudia en la universidad.", { blank: "で" }),
+      s("ごご は きっさてん で はたらきます", "Por la tarde trabaja en una cafetería.", { blank: "で" }),
+      s("どようび に ともだち と えいが を みます", "Los sábados ve películas con sus amigos.", { blank: "と" }),
+      s("にちようび は うち で やすみます", "Los domingos descansa en casa.", { blank: "で", options: ["で", "に", "へ", "と"] }),
+    ],
+    questions: [
+      { q: "¿Dónde vive María?", options: ["En Tokio", "En México", "En la universidad", "En una cafetería"], answer: "En Tokio",
+        why: "とうきょう に すんでいます: con un verbo de existencia, に marca dónde está o vive." },
+      { q: "¿Hasta qué hora estudia?", options: ["Hasta las tres", "Desde las nueve", "Hasta las siete", "Hasta las nueve"], answer: "Hasta las tres",
+        why: "さんじ まで = hasta las tres. くじ から = desde las nueve." },
+      { q: "¿Qué hace en la cafetería?", options: ["Trabaja", "Estudia", "Descansa", "Ve películas"], answer: "Trabaja",
+        why: "きっさてん で はたらきます: で marca el lugar donde se hace la acción." },
+      { q: "¿Con quién ve películas?", options: ["Con sus amigos", "Con su familia", "Sola", "Con su profesor"], answer: "Con sus amigos",
+        why: "ともだち と = con sus amigos." },
+      { q: "¿A qué hora se levanta María?", jp: "マリアさん は なんじ に おきます か",
+        options: ["しちじ に おきます", "くじ に おきます", "さんじ に おきます", "ごご に おきます"], answer: "しちじ に おきます",
+        why: "なんじ に → しちじ に: la respuesta lleva la misma partícula que la pregunta." },
+    ],
+  },
+  {
+    id: "ken",
+    title: "けんさん の しゅうまつ",
+    titleEs: "La semana de Ken",
+    lines: [
+      s("けんさん は おおさか の ぎんこういん です", "Ken es un empleado de banco de Osaka.", { blank: "の", options: ["の", "に", "を", "へ"] }),
+      s("げつようび から きんようび まで はたらきます", "Trabaja de lunes a viernes.", { blank: "から", options: ["から", "まで", "に", "で"] }),
+      s("まいあさ でんしゃ で かいしゃ へ いきます", "Cada mañana va a la oficina en tren.", { blank: "で" }),
+      s("どようび に かぞく と こうえん へ いきます", "Los sábados va al parque con su familia.", { blank: "と", options: ["と", "に", "を", "へ"] }),
+      s("こうえん で こども と あそびます", "En el parque juega con su hijo.", { blank: "で" }),
+      s("にちようび に ほん を よみます", "Los domingos lee libros.", { blank: "を" }),
+      s("よる は テレビ で えいが を みます", "Por la noche ve películas en la tele.", { blank: "で" }),
+    ],
+    questions: [
+      { q: "¿Qué días trabaja Ken?", options: ["De lunes a viernes", "Solo los sábados", "Solo los domingos", "De viernes a lunes"], answer: "De lunes a viernes",
+        why: "げつようび から きんようび まで = desde el lunes hasta el viernes." },
+      { q: "¿Cómo va a la oficina?", options: ["En tren", "En autobús", "Caminando", "En coche"], answer: "En tren",
+        why: "でんしゃ で: で marca el medio." },
+      { q: "¿A dónde va los sábados?", options: ["Al parque", "A la oficina", "Al banco", "A Osaka"], answer: "Al parque",
+        why: "こうえん へ いきます: へ marca el destino de un verbo de movimiento." },
+      { q: "¿Con quién va al parque?", options: ["Con su familia", "Con sus amigos", "Solo", "Con sus compañeros"], answer: "Con su familia",
+        why: "かぞく と = con su familia." },
+      { q: "¿Qué hace Ken los domingos?", jp: "けんさん は にちようび に なに を します か",
+        options: ["ほん を よみます", "えいが を みます", "こども と あそびます", "はたらきます"], answer: "ほん を よみます",
+        why: "にちようび に ほん を よみます: なに を → ほん を." },
+    ],
+  },
+  {
+    id: "yui",
+    title: "ゆいさん の へや",
+    titleEs: "La habitación de Yui",
+    lines: [
+      s("ゆいさん は きょうと に すんでいます", "Yui vive en Kioto.", { blank: "に" }),
+      s("へや に つくえ と ベッド が あります", "En su habitación hay un escritorio y una cama.", { blank: "と", options: ["と", "を", "へ", "で"], orders: ["へや に ベッド と つくえ が あります"] }),
+      s("つくえ の うえ に ほん が あります", "Encima del escritorio hay libros.", { blank: "が", options: ["が", "を", "で", "へ"] }),
+      s("ベッド の した に ねこ が います", "Debajo de la cama hay un gato.", { blank: "います" }),
+      s("ねこ の なまえ は ミケ です", "El gato se llama Mike.", { blank: "の" }),
+      s("ゆいさん は まいばん へや で えいご を べんきょうします", "Cada noche Yui estudia inglés en su habitación.", { blank: "で" }),
+      s("あした ともだち が ゆいさん の うち へ きます", "Mañana una amiga viene a casa de Yui.", { blank: "へ", alt: ["に"] }),
+    ],
+    questions: [
+      { q: "¿Qué hay debajo de la cama?", options: ["Un gato", "Libros", "Un escritorio", "Una amiga"], answer: "Un gato",
+        why: "ベッド の した に ねこ が います: した = debajo." },
+      { q: "¿Dónde están los libros?", options: ["Encima del escritorio", "Debajo de la cama", "Dentro de la cama", "Delante de la casa"], answer: "Encima del escritorio",
+        why: "つくえ の うえ に = encima del escritorio." },
+      { q: "¿Por qué con el gato se usa います y no あります?", options: ["Porque es un ser vivo", "Porque es pequeño", "Porque está debajo", "Porque tiene nombre"], answer: "Porque es un ser vivo",
+        why: "います es para personas y animales; あります, para cosas." },
+      { q: "¿Qué estudia Yui y dónde?", options: ["Inglés, en su habitación", "Japonés, en su habitación", "Inglés, en la escuela", "Japonés, en la biblioteca"], answer: "Inglés, en su habitación",
+        why: "へや で えいご を べんきょうします: で = dónde, を = qué." },
+      { q: "¿Quién viene mañana a casa de Yui?", jp: "だれ が ゆいさん の うち へ きます か",
+        options: ["ともだち が きます", "ねこ が きます", "ゆいさん が きます", "せんせい が きます"], answer: "ともだち が きます",
+        why: "だれ が → ともだち が: la palabra de pregunta como sujeto lleva が, y la respuesta también." },
+    ],
+  },
+];
 
 // ── Lecciones ────────────────────────────────────────────────────────────────
 
@@ -797,6 +904,20 @@ const LESSON_DEFS: LessonDef[] = [
       qa("かぎ は どこ に あります か", "かばん の なか に あります", "—¿Dónde está la llave? —Dentro del bolso."),
       qa("へや に なに が います か", "ねこ が います", "—¿Qué hay en la habitación? —Hay un gato."),
     ],
+  },
+
+  {
+    id: "lectura-repaso-2",
+    title: "Lectura de repaso: todo el curso 2",
+    explanation: "Tres textos cortos que juntan todo lo del curso 2. Léelos (o escúchalos) y responde: las partículas te dicen cuándo (に, から〜まで), con quién (と), cómo o dónde se hace algo (で), a dónde (へ), qué (を) y dónde está algo (に + あります/います). Las líneas de los textos también se practican con los demás juegos.",
+    pattern: "Lectura · は に から〜まで と で へ を が",
+    section: "Japonés Básico II",
+    tip: "Si dudas, busca la partícula: la respuesta casi siempre está justo antes de ella.",
+    train: true,
+    focus: [],
+    pool: ["に", "で", "を", "へ", "と"],
+    sentences: READINGS.flatMap((r) => r.lines),
+    readings: READINGS,
   },
 
   // ══ Extra (no está en los libros) ═════════════════════════════════════════
