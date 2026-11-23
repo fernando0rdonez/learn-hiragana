@@ -77,7 +77,7 @@ A "day" is the **participant's local date** (`toISODate()` in `src/utils.ts`), n
 
 ---
 
-## Phase B — Create / join / list (no check-ins yet) `[~]` (built and verified with one account; second-account join still to test)
+## Phase B — Create / join / list (no check-ins yet) `[x]` (second-account cold join verified in Phase D's two-account test)
 
 **Goal**: two accounts can create a goal, share the link, and both see it in their goal list.
 
@@ -130,7 +130,7 @@ A "day" is the **participant's local date** (`toISODate()` in `src/utils.ts`), n
 
 ---
 
-## Phase D — Goal board + Home nudge `[ ]`
+## Phase D — Goal board + Home nudge `[x]` (verified with two accounts; ✅ day only via unit tests)
 
 **Goal**: everyone in the goal sees who studied on which day.
 
@@ -141,6 +141,23 @@ A "day" is the **participant's local date** (`toISODate()` in `src/utils.ts`), n
 - `HomeView`: if I have an active goal with unfinished tasks today, a compact card "Meta: te falta 1 sesión de gramática" → `goalBoard`.
 
 **Verification**: with both accounts, A completes today's tasks, B completes one of two → A sees A ✅ / B ◐ and B sees the same. Mobile width (375px) grid scrolls without page overflow. Zero console errors.
+
+**As built** (2026-11-23):
+- `src/goals.ts`: `sessionLookup`, `dayStatus` (`done | partial | pending | missed | future | beforeJoin`), `goalStreak` (counts back from today, or from yesterday while today is open; after the end, from the last day), `completionRate` (today only counts once done, so it doesn't dip every morning; `null` before the first closed day), `todayProgress`, `remainingSummary` (+ 4 unit tests).
+- `useGoals.loadBoard(goalId)` (goal, participants ordered by join with profiles, me first, all check-ins); `MyGoal.todaySessions` (my sessions today per task, loaded in `refreshGoals` and patched by `recordStudyEvent`).
+- `GoalBoardView`: "Tu día de hoy" with per-task progress segments and **Practicar** (grammar lesson → that lesson; book/any → grammar setup; vocab category → vocab setup with only that category selected; hiragana → hiragana setup), "Invitar" → `goalShare`, and the people × days grid (sticky name column with streak 🔥 and %, horizontal scroll that starts centered on today, legend).
+- Navigation: opening a goal (list, join, Home card) → `goalBoard`; creating a goal → `goalShare` first (nobody to show yet); `goalShare`'s back → board.
+- Home: card "Meta · <title> — Te falta 1 sesión de …" for the first active goal with open tasks (placed with `mt-14` so the hero's fox doesn't overlap it).
+
+**Actually verified** (Chrome, one real account, goal `222651a8` with vocab done and grammar 0/2): Home card reads "Te faltan 2 sesiones de Gramática — Partícula に…"; it opens the board with "Día 1 de 7 · 1 persona · 0 ya cumplió hoy", Familia "1/1 Listo", grammar "0/2 Practicar", and today's cell as ◐ "A medias"; Practicar opens the *Partícula に* lesson. Build + 128 tests pass; no console errors after a full reload.
+
+**Two-account test** (2026-11-23; account B in the desktop app's built-in browser so A's Chrome session stayed signed in):
+- B opened `/meta/222651a8` **logged out** → "Inicia sesión para unirte"; signed in via OTP → landed straight on `goalJoin` with the code intact ("Fernando 🦊 te invitó a una meta · 1 de 10 ya se unieron") → joined → board "2 personas". This also closes Phase B's open item.
+- B's **Practicar** on the vocab task opened Vocabulario with only Familia selected; a 10-word *Reconocer* session → toast "Tarea de hoy cumplida · Vocabulario — Familia · 1/1 hoy".
+- Both boards (A in Chrome, B in the built-in browser) show the same thing: 2 rows, both ◐ today; each person's Home card says "Te faltan 2 sesiones de Gramática — …".
+- Phone width (375 px emulated): page `scrollWidth` = 375 (no page overflow); the 7-day grid scrolls inside its own container (341 px visible / 360 px content).
+
+**Still to test**: a ✅ day and a streak > 0 live (needs two grammar-lesson sessions; covered by unit tests only).
 
 ---
 

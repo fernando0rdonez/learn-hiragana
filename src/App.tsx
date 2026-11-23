@@ -61,6 +61,8 @@ import DateTimeModuleViews from "./views/modules/DateTimeModuleViews";
 import CompetitionModuleViews from "./views/modules/CompetitionModuleViews";
 import GoalModuleViews from "./views/modules/GoalModuleViews";
 import GoalToast from "./components/GoalToast";
+import { remainingSummary, todayProgress, type GoalTask } from "./goals";
+import type { GoalNudge } from "./views/HomeView";
 
 // Vistas de estudio activo — salir de cualquiera de estas hacia una vista
 // que no está en el set dispara un push (ver setView más abajo).
@@ -104,7 +106,7 @@ export default function HiraganaTrainer() {
     submitResult, leaderboard, rivalHistories,
   } = useCompetition({ session });
   const {
-    myGoals, loadingGoals, pendingGoalCode, stashGoalCode, consumeGoalCode,
+    myGoals, loadingGoals, loadBoard, pendingGoalCode, stashGoalCode, consumeGoalCode,
     activeGoalId, setActiveGoalId, createGoal, previewGoal, joinGoal,
     recordStudyEvent, goalNotice, dismissGoalNotice,
   } = useGoals({ session });
@@ -215,6 +217,33 @@ export default function HiraganaTrainer() {
     else if (session && pendingGoalCode) setView("goalJoin");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
+
+  // Home card for the first active goal that still has open tasks today.
+  const goalNudge: GoalNudge | null = (() => {
+    for (const goal of myGoals) {
+      if (goal.phase !== "active") continue;
+      const text = remainingSummary(todayProgress(goal, (taskId) => goal.todaySessions[taskId] ?? 0, toISODate()));
+      if (text) return { title: goal.title, text, onOpen: () => { setActiveGoalId(goal.id); setView("goalBoard"); } };
+    }
+    return null;
+  })();
+
+  /** "Practicar" on the goal board: jump to the study screen that satisfies that task. */
+  function practiceGoalTask(task: GoalTask) {
+    if (task.module === "grammar") {
+      if (task.target.lessonId) {
+        setSelectedGrammarLessonId(task.target.lessonId);
+        setView("grammarLesson");
+      } else {
+        setView("grammarSetup");
+      }
+    } else if (task.module === "vocab") {
+      if (task.target.category) setSelectedVocabCategories(new Set([task.target.category]));
+      setView("vocabCategory");
+    } else {
+      setView("hiraganaSetup");
+    }
+  }
 
   // ── Setup helpers ─────────────────────────────────────────────────────────
 
@@ -453,6 +482,7 @@ export default function HiraganaTrainer() {
         {/* ── Core: home / settings / metodología / stats / roadmap ── */}
         {["home", "settings", "methodology", "stats", "roadmap"].includes(view) && (
           <CoreViews
+            goalNudge={goalNudge}
             view={view}
             setView={setView}
             progress={progress}
@@ -784,7 +814,7 @@ export default function HiraganaTrainer() {
         )}
 
         {/* ── Metas compartidas ── */}
-        {(view === "goalHome" || view === "goalCreate" || view === "goalJoin" || view === "goalShare") && (
+        {(view === "goalHome" || view === "goalCreate" || view === "goalJoin" || view === "goalShare" || view === "goalBoard") && (
           <GoalModuleViews
             view={view}
             setView={setView}
@@ -800,6 +830,8 @@ export default function HiraganaTrainer() {
             createGoal={createGoal}
             previewGoal={previewGoal}
             joinGoal={joinGoal}
+            loadBoard={loadBoard}
+            onPractice={practiceGoalTask}
           />
         )}
 

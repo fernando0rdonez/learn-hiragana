@@ -37,6 +37,14 @@ interface Props {
   examHistory: ExamAttempt[];
   saveError: boolean;
   setView: (v: ViewName) => void;
+  /** Today's open shared-goal tasks (Shared Goals, Phase D); null hides the card. */
+  goalNudge?: GoalNudge | null;
+}
+
+export interface GoalNudge {
+  title: string;
+  text: string;
+  onOpen: () => void;
 }
 
 // ── Module visual config ────────────────────────────────────────────────────
@@ -59,7 +67,7 @@ function pct(mastered: number, total: number): number {
   return total > 0 ? Math.round((mastered / total) * 100) : 0;
 }
 
-export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, masteredKosoadoTotal, examHistory, saveError, setView }: Props) {
+export default function HomeView({ streak, masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal, masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, masteredKosoadoTotal, examHistory, saveError, setView, goalNudge }: Props) {
   const [heroModule] = useState(readLastUsedModule);
 
   function goTo(view: ViewName, moduleId?: ModuleId) {
@@ -179,6 +187,21 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
           style={{ width: 140, height: "auto", bottom: -56, right: 14, zIndex: 2, filter: "drop-shadow(0 10px 14px rgba(0,0,0,0.25))" }}
         />
       </div>
+
+      {goalNudge && (
+        <button
+          onClick={goalNudge.onOpen}
+          className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 mt-14 text-left"
+          style={{ border: "1.5px solid #C9DDF7", backgroundColor: "#F3F8FE" }}
+        >
+          <Target size={18} style={{ color: "#2F6FD6" }} className="shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-semibold uppercase tracking-wide truncate" style={{ color: "#5A86C8" }}>Meta · {goalNudge.title}</div>
+            <div className="text-[13px] font-bold" style={{ color: "#2F6FD6" }}>{goalNudge.text}</div>
+          </div>
+          <ChevronRight size={16} className="shrink-0" style={{ color: "#2F6FD6" }} />
+        </button>
+      )}
 
       {/* ── Módulos: grilla compacta ── */}
       <div className="mt-8">

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   addDays, daysBetween, goalDays, goalEndDate, goalPhase, goalDayNumber,
   taskLabel, goalTitle, validateTasks, taskMatchesEvent, matchingTasks,
+  sessionLookup, dayStatus, goalStreak, completionRate, todayProgress, remainingSummary,
   type GoalTask, type StudyEvent,
 } from "./goals";
 import { GRAMMAR_LESSONS } from "./grammar";
@@ -106,4 +107,54 @@ test("matchingTasks spans goals and skips goals outside their window", () => {
     { goalId: "g2", taskId: "c" },
   ]);
   assert.deepEqual(matchingTasks(goals, event, "2026-11-25"), [{ goalId: "g2", taskId: "c" }]);
+});
+
+// ── Board ────────────────────────────────────────────────────────────────
+
+const boardGoal = {
+  start_date: "2026-11-20",
+  duration_days: 7 as const,
+  tasks: [task({ id: "g", perDay: 2 }), task({ id: "v", module: "vocab" })],
+};
+
+function lookupFrom(rows: [string, string, number][]) {
+  return sessionLookup(rows.map(([task_id, local_date, sessions]) => ({ user_id: "me", task_id, local_date, sessions })), "me");
+}
+
+test("dayStatus: done needs every task at its daily target", () => {
+  const s = lookupFrom([["g", "2026-11-20", 2], ["v", "2026-11-20", 1], ["g", "2026-11-21", 3], ["g", "2026-11-22", 1]]);
+  const status = (d: string) => dayStatus(boardGoal, s, "2026-11-20", d, "2026-11-24");
+  assert.equal(status("2026-11-20"), "done");
+  assert.equal(status("2026-11-21"), "partial"); // grammar over target but vocab missing
+  assert.equal(status("2026-11-22"), "partial");
+  assert.equal(status("2026-11-23"), "missed");
+  assert.equal(status("2026-11-24"), "pending");
+  assert.equal(status("2026-11-25"), "future");
+  assert.equal(dayStatus(boardGoal, s, "2026-11-22", "2026-11-21", "2026-11-24"), "beforeJoin");
+});
+
+test("goalStreak counts back from today, or from yesterday while today is open", () => {
+  const done = (d: string): [string, string, number][] => [["g", d, 2], ["v", d, 1]];
+  const s = lookupFrom([...done("2026-11-21"), ...done("2026-11-22"), ...done("2026-11-23")]);
+  assert.equal(goalStreak(boardGoal, s, "2026-11-20", "2026-11-24"), 3); // today still open
+  assert.equal(goalStreak(boardGoal, s, "2026-11-20", "2026-11-23"), 3); // today done
+  assert.equal(goalStreak(boardGoal, s, "2026-11-20", "2026-11-25"), 0); // yesterday missed
+  assert.equal(goalStreak(boardGoal, s, "2026-11-20", "2026-12-10"), 0); // after the end: last day missed
+});
+
+test("completionRate ignores today until it's done and days before joining", () => {
+  const s = lookupFrom([["g", "2026-11-20", 2], ["v", "2026-11-20", 1]]);
+  assert.equal(completionRate(boardGoal, s, "2026-11-20", "2026-11-20"), 1);
+  assert.equal(completionRate(boardGoal, s, "2026-11-20", "2026-11-21"), 1);
+  assert.equal(completionRate(boardGoal, s, "2026-11-20", "2026-11-22"), 0.5);
+  assert.equal(completionRate(boardGoal, s, "2026-11-22", "2026-11-22"), null);
+});
+
+test("todayProgress and remainingSummary", () => {
+  const s = lookupFrom([["g", "2026-11-24", 1]]);
+  const progress = todayProgress(boardGoal, s, "2026-11-24");
+  assert.deepEqual(progress.map((p) => [p.sessions, p.remaining]), [[1, 1], [0, 1]]);
+  assert.equal(remainingSummary(progress), "Te faltan 2 tareas de hoy");
+  assert.equal(remainingSummary([progress[0]]), "Te falta 1 sesión de Gramática");
+  assert.equal(remainingSummary([{ ...progress[1], remaining: 0 }]), null);
 });

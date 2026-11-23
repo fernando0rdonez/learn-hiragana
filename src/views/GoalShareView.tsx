@@ -17,11 +17,11 @@ interface Props {
   goal: MyGoal;
 }
 
-export function goalInviteUrl(code: string): string {
+function goalInviteUrl(code: string): string {
   return `${window.location.origin}${import.meta.env.BASE_URL}meta/${code}`;
 }
 
-/** Goal details + invite link. Phase D adds the people × days board on top of this. */
+/** Goal details + invite link; reached right after creating a goal and from the board's "Invitar". */
 export default function GoalShareView({ setView, goal }: Props) {
   const [copied, setCopied] = useState(false);
   const url = goalInviteUrl(goal.invite_code);
@@ -53,8 +53,8 @@ export default function GoalShareView({ setView, goal }: Props) {
   return (
     <div className="pb-8">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => setView("goalHome")} className="flex items-center gap-1 text-sm hover:opacity-70" style={{ color: TEXT_SECOND }}>
-          <ArrowLeft size={14} /> Metas
+        <button onClick={() => setView("goalBoard")} className="flex items-center gap-1 text-sm hover:opacity-70" style={{ color: TEXT_SECOND }}>
+          <ArrowLeft size={14} /> Tablero
         </button>
       </div>
       <h1 className="text-2xl font-bold mb-1 text-balance" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: TEXT_MAIN }}>{goal.title}</h1>

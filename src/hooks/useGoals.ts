@@ -6,13 +6,29 @@ import { toISODate } from "../utils";
 import { MAX_PLAYERS } from "./useCompetition";
 import {
   goalPhase, goalTitle, matchingTasks, targetLabel, validateTasks,
-  type GoalDuration, type GoalPhase, type GoalRow, type GoalTask, type GoalTaskRef, type StudyEvent,
+  type CheckinRow, type GoalDuration, type GoalPhase, type GoalRow, type GoalTask, type GoalTaskRef, type StudyEvent,
 } from "../goals";
 
 export interface MyGoal extends GoalRow {
   participantCount: number;
   isCreator: boolean;
   phase: GoalPhase;
+  /** My sessions today per task id (for the Home nudge); kept in sync by recordStudyEvent. */
+  todaySessions: Record<string, number>;
+}
+
+export interface BoardMember {
+  userId: string;
+  displayName: string;
+  avatarId: string;
+  joinedDate: string;
+  isMe: boolean;
+}
+
+export interface GoalBoard {
+  goal: GoalRow;
+  members: BoardMember[]; // me first, then by join order
+  checkins: CheckinRow[];
 }
 
 export interface GoalPreview {
@@ -122,21 +138,28 @@ export function useGoals({ session }: Params) {
       return;
     }
 
-    const [{ data: goals }, { data: participants }] = await Promise.all([
+    const today = toISODate();
+    const [{ data: goals }, { data: participants }, { data: myToday }] = await Promise.all([
       supabase.from("goals").select("*").in("id", goalIds),
       supabase.from("goal_participants").select("goal_id").in("goal_id", goalIds),
+      supabase.from("goal_checkins").select("goal_id, task_id, sessions")
+        .eq("user_id", userId).eq("local_date", today).in("goal_id", goalIds),
     ]);
 
     const countByGoal = new Map<string, number>();
     for (const p of participants ?? []) countByGoal.set(p.goal_id, (countByGoal.get(p.goal_id) ?? 0) + 1);
+    const todayByGoal = new Map<string, Record<string, number>>();
+    for (const c of myToday ?? []) {
+      todayByGoal.set(c.goal_id, { ...(todayByGoal.get(c.goal_id) ?? {}), [c.task_id]: c.sessions });
+    }
 
-    const today = toISODate();
     const rows: MyGoal[] = ((goals ?? []) as GoalRow[])
       .map((g) => ({
         ...g,
         participantCount: countByGoal.get(g.id) ?? 0,
         isCreator: g.created_by === userId,
         phase: goalPhase(g, today),
+        todaySessions: todayByGoal.get(g.id) ?? {},
       }))
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
 
@@ -201,7 +224,11 @@ export function useGoals({ session }: Params) {
     for (const ref of matches) {
       const result = await sendCheckin(ref, today);
       const task = myGoalsRef.current.find((g) => g.id === ref.goalId)?.tasks.find((t) => t.id === ref.taskId);
-      if (task && "sessions" in result) notices.push({ label: targetLabel(task), sessions: result.sessions, perDay: task.perDay });
+      if (!task || !("sessions" in result)) continue;
+      notices.push({ label: targetLabel(task), sessions: result.sessions, perDay: task.perDay });
+      setMyGoals((prev) => prev.map((g) => (g.id === ref.goalId
+        ? { ...g, todaySessions: { ...g.todaySessions, [ref.taskId]: result.sessions } }
+        : g)));
     }
     // With several matches, show one that this session actually moved (not already over target).
     const notice = notices.find((n) => n.sessions <= n.perDay) ?? notices[0];
@@ -271,8 +298,36 @@ export function useGoals({ session }: Params) {
     return { ok: true };
   }
 
+  /** Everything the people × days board needs for one goal (Phase D). */
+  const loadBoard = useCallback(async (goalId: string): Promise<GoalBoard | { error: string }> => {
+    if (!isSupabaseConfigured || !session) return { error: "Inicia sesión para ver la meta." };
+    const [{ data: goal }, { data: participants }, { data: checkins, error: checkinsError }] = await Promise.all([
+      supabase.from("goals").select("*").eq("id", goalId).maybeSingle(),
+      supabase.from("goal_participants").select("user_id, joined_date, joined_at").eq("goal_id", goalId),
+      supabase.from("goal_checkins").select("user_id, task_id, local_date, sessions").eq("goal_id", goalId),
+    ]);
+    if (!goal || checkinsError) return { error: "No pudimos cargar la meta. Intenta de nuevo." };
+
+    const people = (participants ?? []).sort((a, b) => a.joined_at.localeCompare(b.joined_at));
+    const { data: profiles } = people.length
+      ? await supabase.from("profiles").select("id, display_name, avatar_id").in("id", people.map((p) => p.user_id))
+      : { data: [] as { id: string; display_name: string; avatar_id: string }[] };
+    const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+    const members: BoardMember[] = people.map((p) => ({
+      userId: p.user_id,
+      displayName: profileById.get(p.user_id)?.display_name ?? "alguien",
+      avatarId: profileById.get(p.user_id)?.avatar_id ?? DEFAULT_AVATAR_ID,
+      joinedDate: p.joined_date,
+      isMe: p.user_id === session.user.id,
+    }));
+    members.sort((a, b) => Number(b.isMe) - Number(a.isMe));
+
+    return { goal: goal as GoalRow, members, checkins: (checkins ?? []) as CheckinRow[] };
+  }, [session]);
+
   return {
-    myGoals, loadingGoals, refreshGoals,
+    myGoals, loadingGoals, refreshGoals, loadBoard,
     pendingGoalCode, stashGoalCode, consumeGoalCode,
     activeGoalId, setActiveGoalId,
     createGoal, previewGoal, joinGoal,

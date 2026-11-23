@@ -167,3 +167,89 @@ export function matchingTasks(
     .filter((g) => goalPhase(g, today) === "active")
     .flatMap((g) => g.tasks.filter((t) => taskMatchesEvent(t, event)).map((t) => ({ goalId: g.id, taskId: t.id })));
 }
+
+// ── Board: per-person day status, streak and completion (Phase D) ─────────
+
+export interface CheckinRow {
+  user_id: string;
+  task_id: string;
+  local_date: string;
+  sessions: number;
+}
+
+/**
+ * done = every task hit its daily target · partial = some progress · pending = today, nothing yet ·
+ * missed = past day with nothing · future = not reached yet · beforeJoin = before this person joined.
+ */
+export type DayStatus = "done" | "partial" | "pending" | "missed" | "future" | "beforeJoin";
+
+/** sessions[taskId][date] for one person. */
+export type SessionLookup = (taskId: string, date: string) => number;
+
+export function sessionLookup(checkins: CheckinRow[], userId: string): SessionLookup {
+  const byKey = new Map<string, number>();
+  for (const c of checkins) {
+    if (c.user_id === userId) byKey.set(`${c.task_id}|${c.local_date}`, c.sessions);
+  }
+  return (taskId, date) => byKey.get(`${taskId}|${date}`) ?? 0;
+}
+
+type BoardGoal = Pick<GoalRow, "tasks" | "start_date" | "duration_days">;
+
+export function dayStatus(goal: BoardGoal, sessions: SessionLookup, joinedDate: string, date: string, today: string): DayStatus {
+  if (date > today) return "future";
+  if (date < joinedDate) return "beforeJoin";
+  const counts = goal.tasks.map((t) => Math.min(sessions(t.id, date), t.perDay));
+  if (goal.tasks.every((t, i) => counts[i] >= t.perDay)) return "done";
+  if (counts.some((n) => n > 0)) return "partial";
+  return date === today ? "pending" : "missed";
+}
+
+/** Consecutive ✅ days ending today — or ending yesterday while today is still open. */
+export function goalStreak(goal: BoardGoal, sessions: SessionLookup, joinedDate: string, today: string): number {
+  const end = goalEndDate(goal);
+  let day = today > end ? end : today;
+  if (day === today && dayStatus(goal, sessions, joinedDate, day, today) !== "done") day = addDays(day, -1);
+  let streak = 0;
+  while (day >= goal.start_date && dayStatus(goal, sessions, joinedDate, day, today) === "done") {
+    streak++;
+    day = addDays(day, -1);
+  }
+  return streak;
+}
+
+/**
+ * Share of this person's closed days that were ✅ (0–1), or null before their first closed day.
+ * Today only counts once it's done, so the rate doesn't dip every morning.
+ */
+export function completionRate(goal: BoardGoal, sessions: SessionLookup, joinedDate: string, today: string): number | null {
+  const days = goalDays(goal).filter((d) => d >= joinedDate && d <= today);
+  const statuses = days.map((d) => dayStatus(goal, sessions, joinedDate, d, today));
+  const counted = statuses.filter((s, i) => days[i] !== today || s === "done");
+  if (counted.length === 0) return null;
+  return counted.filter((s) => s === "done").length / counted.length;
+}
+
+export interface TaskProgress {
+  task: GoalTask;
+  sessions: number; // capped at perDay
+  remaining: number;
+}
+
+export function todayProgress(goal: BoardGoal, sessions: SessionLookup, today: string): TaskProgress[] {
+  return goal.tasks.map((task) => {
+    const done = Math.min(sessions(task.id, today), task.perDay);
+    return { task, sessions: done, remaining: task.perDay - done };
+  });
+}
+
+/** Home nudge copy for what's left today, or null when everything is done. */
+export function remainingSummary(progress: TaskProgress[]): string | null {
+  const open = progress.filter((p) => p.remaining > 0);
+  if (open.length === 0) return null;
+  if (open.length === 1) {
+    const { remaining, task } = open[0];
+    return `Te ${remaining === 1 ? "falta 1 sesión" : `faltan ${remaining} sesiones`} de ${targetLabel(task)}`;
+  }
+  return `Te faltan ${open.length} tareas de hoy`;
+}
