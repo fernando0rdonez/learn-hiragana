@@ -82,6 +82,17 @@ export default function GrammarSetupView({ progress, setSelectedGrammarLessonId,
           isUnlocked={(st) => st.lessonIds.some((id) => grammarStatus(progress, id) !== "untested")}
           showMnemonic
         />
+        <button
+          onClick={() => setView("grammarTrain")}
+          className="mt-3 w-full flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:opacity-90"
+          style={{ backgroundColor: INDIGO }}
+        >
+          <div>
+            <div className="text-sm font-semibold text-white">🚃 Ordena el tren</div>
+            <div className="text-xs mt-0.5" style={{ color: INDIGO_LIGHT }}>Practica el orden: tema, tiempo, compañía, lugar…</div>
+          </div>
+          <ChevronRight size={18} className="shrink-0 text-white" />
+        </button>
       </div>
 
       <div className="mt-6 flex flex-col gap-6">

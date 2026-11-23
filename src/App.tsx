@@ -631,7 +631,7 @@ export default function HiraganaTrainer() {
         )}
 
         {/* ── Gramática ── */}
-        {(view === "grammarSetup" || view === "grammarLesson") && (
+        {(view === "grammarSetup" || view === "grammarLesson" || view === "grammarTrain") && (
           <GrammarModuleViews
             view={view}
             setView={setView}
