@@ -1,4 +1,4 @@
-import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, MessageCircleQuestion, GraduationCap, SpellCheck2, Headphones, Trophy, Clock, Handshake, ClipboardCheck, Star } from "lucide-react";
+import { ChevronRight, Flame, BookOpen, Mic, PenLine, Hash, HelpCircle, Settings, MessageCircle, MessageCircleQuestion, GraduationCap, SpellCheck2, Headphones, Trophy, Clock, Handshake, ClipboardCheck, Star, Target } from "lucide-react";
 import { useState } from "react";
 import type { StreakData, ExamAttempt } from "../types";
 import { HONORIFIC_EXERCISES } from "../honorifics";
@@ -12,6 +12,7 @@ import { KEY_HOURS, KEY_MINUTE_UNITS, KEY_WEEKDAYS, KEY_MONTHS, KEY_DAYS_OF_MONT
 import { PHRASES } from "../phrases";
 import { KANJI } from "../kanji";
 import { GRAMMAR_LESSONS } from "../grammar";
+import { MAX_PLAYERS } from "../hooks/useCompetition";
 import { LISTENING_SENTENCES } from "../listening";
 import { isSupabaseConfigured } from "../lib/supabase";
 import foxStudying from "../assets/character/fox-studying.png";
@@ -353,7 +354,7 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
               <Trophy size={18} style={{ color: "#178A5C" }} className="shrink-0" />
               <div className="min-w-0">
                 <div className="text-[13px] font-bold" style={{ color: "#178A5C" }}>Reta a un amigo</div>
-                <div className="text-[11px] font-semibold" style={{ color: "#4E9C7C" }}>Hasta 6 jugadores · opcional</div>
+                <div className="text-[11px] font-semibold" style={{ color: "#4E9C7C" }}>Hasta {MAX_PLAYERS} jugadores · opcional</div>
               </div>
               <ChevronRight size={16} className="shrink-0 ml-auto mr-8" style={{ color: "#178A5C" }} />
             </button>
@@ -363,6 +364,21 @@ export default function HomeView({ streak, masteredTotal, masteredKataTotal, mas
               className="absolute -right-1 -bottom-4 w-14 h-auto pointer-events-none select-none"
             />
           </div>
+        )}
+
+        {isSupabaseConfigured && (
+          <button
+            onClick={() => setView("goalHome")}
+            className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 mb-4 text-left"
+            style={{ border: "1.5px dashed #C9DDF7", backgroundColor: "#F3F8FE" }}
+          >
+            <Target size={18} style={{ color: "#2F6FD6" }} className="shrink-0" />
+            <div className="min-w-0">
+              <div className="text-[13px] font-bold" style={{ color: "#2F6FD6" }}>Metas con amigos</div>
+              <div className="text-[11px] font-semibold" style={{ color: "#5A86C8" }}>Estudien juntos cada día · hasta {MAX_PLAYERS} personas</div>
+            </div>
+            <ChevronRight size={16} className="shrink-0 ml-auto" style={{ color: "#2F6FD6" }} />
+          </button>
         )}
 
         <div className="flex items-center gap-2.5 mt-2.5 px-1 py-2">

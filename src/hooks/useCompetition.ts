@@ -75,7 +75,8 @@ export interface RivalHistory {
 }
 
 const INVITE_CODE_STORAGE_KEY = "pendingCompeteCode";
-const MAX_PLAYERS = 6;
+/** Shared cap for competitions and shared goals; must match the DB triggers (0006, goals). */
+export const MAX_PLAYERS = 10;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -286,7 +287,7 @@ export function useCompetition({ session }: Params) {
   /**
    * Todos los participantes del reto, con su resultado si ya lo subieron —
    * incluye a quienes aún no han jugado (submitted: false) para que la pantalla
-   * de resultado pueda mostrar "N de 6 ya jugaron", no solo el ranking final.
+   * de resultado pueda mostrar "N de 10 ya jugaron", no solo el ranking final.
    */
   async function leaderboard(competitionId: string): Promise<LeaderboardEntry[]> {
     if (!isSupabaseConfigured) return [];

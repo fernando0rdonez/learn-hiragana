@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Share2, Copy, Check } from "lucide-react";
 import type { ViewName } from "../data";
 import type { CompetitionModuleId, CompetitionMode, CompetitionRow, CompetitionSize } from "../hooks/useCompetition";
+import { MAX_PLAYERS } from "../hooks/useCompetition";
 import type { DateTimeCompetitionMode } from "../dateTime";
 
 const PURPLE      = "#7B4FD4";
@@ -97,7 +98,7 @@ export default function CompetitionCreateView({ setView, createCompetition }: Pr
           </div>
         </div>
         <p className="text-xs mt-3 leading-relaxed" style={{ color: TEXT_SECOND }}>
-          Expira en 48 horas. Hasta 6 personas pueden unirse con este link.
+          Expira en 48 horas. Hasta {MAX_PLAYERS} personas pueden unirse con este link.
         </p>
 
         <button

@@ -201,9 +201,11 @@ interface Props {
   progress: ProgressItems;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
+  /** Fires when a full session is finished (shared goals check-in). */
+  onComplete?: () => void;
 }
 
-export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, onBack }: Props) {
+export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, onBack, onComplete }: Props) {
   const [phase, setPhase] = useState<Phase>("explain");
   // En la lección de lectura se empieza siempre por «Lectura»; en las demás, el último modo elegido.
   const [mode, setMode] = useState<GrammarGameMode>(() =>
@@ -290,6 +292,7 @@ export default function GrammarLessonGame({ lesson, progress, onProgressUpdate, 
     const nextIndex = index + 1;
     if (nextIndex >= exercises.length) {
       setPhase("done");
+      onComplete?.();
       return;
     }
     setIndex(nextIndex);

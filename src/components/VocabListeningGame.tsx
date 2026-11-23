@@ -111,6 +111,8 @@ interface Props {
   sessionLimit?: number;
   onProgressUpdate: (updates: ProgressItems) => void;
   onBack: () => void;
+  /** Fires once when a session with at least one answer finishes (shared goals check-in). */
+  onComplete?: (results: SessionResult[]) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -121,6 +123,7 @@ export default function VocabListeningGame({
   sessionLimit = 50,
   onProgressUpdate,
   onBack,
+  onComplete,
 }: Props) {
   const [queue, setQueue] = useState<VocabWord[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
@@ -130,6 +133,11 @@ export default function VocabListeningGame({
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
   const { speak } = useSpeech();
+
+  useEffect(() => {
+    if (phase === "done" && sessionResults.length > 0) onComplete?.(sessionResults);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   const today = toISODate();
 

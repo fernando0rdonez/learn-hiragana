@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Share2, Copy, Check, Play } from "lucide-react";
 import type { ViewName } from "../data";
 import type { MyCompetition } from "../hooks/useCompetition";
-import { competitionLabel } from "../hooks/useCompetition";
+import { competitionLabel, MAX_PLAYERS } from "../hooks/useCompetition";
 
 const PURPLE      = "#7B4FD4";
 const PURPLE_DARK = "#5533A8";
@@ -81,7 +81,7 @@ export default function CompetitionShareView({ setView, competition, onPlay }: P
         </div>
       </div>
       <p className="text-xs mt-3 leading-relaxed" style={{ color: TEXT_SECOND }}>
-        Hasta 6 personas pueden unirse con el código o el link.
+        Hasta {MAX_PLAYERS} personas pueden unirse con el código o el link.
       </p>
 
       <button

@@ -21,7 +21,7 @@ import { DEFAULT_STREAK, DEFAULT_DAILY_PROGRESS, recordCorrectAnswer } from "./s
 import { getAvailablePhonetics } from "./phonetics";
 import ConfettiOverlay from "./components/ConfettiOverlay";
 import { type ViewName, ALL_CHARS } from "./data";
-import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS } from "./dataKatakana";
+import { KATAKANA_ALL_CHARS, KATAKANA_ALL_ROW_GROUPS, isKatakanaRow } from "./dataKatakana";
 import { toISODate, buildQueueItems, charStatus, rowStats, resolveVocabSession, vocabStatus, resolvePhraseSession, phraseStatus, resolveKanjiSession, kanjiStatus, grammarStatus, resolveListeningSession, listeningStatus, honorificStatus, kosoadoStatus } from "./utils";
 import { useProgress } from "./hooks/useProgress";
 import { useStreak } from "./hooks/useStreak";
@@ -29,6 +29,7 @@ import { useSession } from "./hooks/useSession";
 import { useAuth } from "./hooks/useAuth";
 import { useProgressSync } from "./hooks/useProgressSync";
 import { useCompetition } from "./hooks/useCompetition";
+import { useGoals } from "./hooks/useGoals";
 import { isSupabaseConfigured } from "./lib/supabase";
 import { CURRENT_SCHEMA_VERSION } from "./storage";
 import { type NumberKeysLength } from "./views/NumberSetupView";
@@ -58,6 +59,8 @@ import ExamView from "./views/ExamView";
 import NumberModuleViews from "./views/modules/NumberModuleViews";
 import DateTimeModuleViews from "./views/modules/DateTimeModuleViews";
 import CompetitionModuleViews from "./views/modules/CompetitionModuleViews";
+import GoalModuleViews from "./views/modules/GoalModuleViews";
+import GoalToast from "./components/GoalToast";
 
 // Vistas de estudio activo — salir de cualquiera de estas hacia una vista
 // que no está en el set dispara un push (ver setView más abajo).
@@ -100,6 +103,11 @@ export default function HiraganaTrainer() {
     createCompetition, previewCompetition, joinCompetition,
     submitResult, leaderboard, rivalHistories,
   } = useCompetition({ session });
+  const {
+    myGoals, loadingGoals, pendingGoalCode, stashGoalCode, consumeGoalCode,
+    activeGoalId, setActiveGoalId, createGoal, previewGoal, joinGoal,
+    recordStudyEvent, goalNotice, dismissGoalNotice,
+  } = useGoals({ session });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
   const [selectedCompoundRows, setSelectedCompoundRows] = useState<Set<string>>(new Set());
@@ -158,7 +166,13 @@ export default function HiraganaTrainer() {
     launchSession, startSession, startWordSession,
     handleSubmit, handleProductionAnswer, handleProductionNext, handleWordContinue,
     reviewMisses,
-  } = useSession({ progress, setProgress, streak, dailyProgress, persist, setView, sessionMode });
+  } = useSession({
+    progress, setProgress, streak, dailyProgress, persist, setView, sessionMode,
+    // Katakana shares this hook; only hiragana sessions count for hiragana goal tasks.
+    onPracticeSessionComplete: (pool) => {
+      if (pool.length > 0 && !pool.some((c) => isKatakanaRow(c.row))) void recordStudyEvent({ module: "hiragana" });
+    },
+  });
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -182,15 +196,23 @@ export default function HiraganaTrainer() {
     const path = window.location.pathname;
     const rest = path.startsWith(base) ? path.slice(base.length) : path.replace(/^\//, "");
     const match = rest.match(/^compete\/([A-Za-z0-9]+)$/);
-    if (!match) return;
-    stashInviteCode(match[1]);
-    window.history.replaceState(null, "", base);
-    setView("competeJoin");
+    // Same pattern for shared goals: /meta/:code (docs/GOALS_PLAN.md, Phase B).
+    const goalMatch = rest.match(/^meta\/([A-Za-z0-9]+)$/);
+    if (match) {
+      stashInviteCode(match[1]);
+      window.history.replaceState(null, "", base);
+      setView("competeJoin");
+    } else if (goalMatch) {
+      stashGoalCode(goalMatch[1].toLowerCase());
+      window.history.replaceState(null, "", base);
+      setView("goalJoin");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (session && pendingInviteCode) setView("competeJoin");
+    else if (session && pendingGoalCode) setView("goalJoin");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
@@ -416,6 +438,11 @@ export default function HiraganaTrainer() {
 
   return (
     <div className="min-h-screen bg-white text-stone-900 flex justify-center px-4 py-8">
+      <GoalToast
+        notice={goalNotice}
+        onDismiss={dismissGoalNotice}
+        onOpen={() => { dismissGoalNotice(); setView("goalHome"); }}
+      />
       <ConfettiOverlay />
       <style>{`
         @keyframes stampIn { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
@@ -591,6 +618,7 @@ export default function HiraganaTrainer() {
             updateShowRomaji={updateShowRomaji}
             vocabSessionPool={vocabSessionPool}
             vocabSessionLimit={vocabSessionLimit}
+            onStudyEvent={(e) => void recordStudyEvent(e)}
           />
         )}
 
@@ -639,6 +667,7 @@ export default function HiraganaTrainer() {
             onProgressUpdate={onProgressUpdate}
             setSelectedGrammarLessonId={setSelectedGrammarLessonId}
             selectedGrammarLesson={selectedGrammarLesson}
+            onStudyEvent={(e) => void recordStudyEvent(e)}
           />
         )}
 
@@ -751,6 +780,26 @@ export default function HiraganaTrainer() {
             startSession={startSession}
             progress={progress}
             onProgressUpdate={onProgressUpdate}
+          />
+        )}
+
+        {/* ── Metas compartidas ── */}
+        {(view === "goalHome" || view === "goalCreate" || view === "goalJoin" || view === "goalShare") && (
+          <GoalModuleViews
+            view={view}
+            setView={setView}
+            session={session}
+            authLoading={authLoading}
+            myGoals={myGoals}
+            loadingGoals={loadingGoals}
+            pendingGoalCode={pendingGoalCode}
+            stashGoalCode={stashGoalCode}
+            consumeGoalCode={consumeGoalCode}
+            activeGoalId={activeGoalId}
+            setActiveGoalId={setActiveGoalId}
+            createGoal={createGoal}
+            previewGoal={previewGoal}
+            joinGoal={joinGoal}
           />
         )}
 

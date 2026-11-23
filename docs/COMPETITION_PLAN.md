@@ -1,4 +1,4 @@
-# Async Competition Mode — MVP (Hiragana recognition + Vocabulary spell-it, up to 6 players)
+# Async Competition Mode — MVP (Hiragana recognition + Vocabulary spell-it, up to 10 players)
 
 Implementation plan for [`BACKLOG.md` spec #16](./BACKLOG.md), scoped to an MVP slice and extended beyond the spec's original "1v1" framing to small-group challenges.
 Each phase is self-contained and independently verifiable — pick up at the first `[ ]` in a fresh session.
@@ -8,7 +8,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 
 `docs/BACKLOG.md` spec **#16 · Modo Competencia asíncrona** describes letting users challenge each other to the same fixed set of items, played independently, with a shared result and rival history. It depends on #15 (auth + sync), already shipped (`useAuth`, `useProgressSync`, `supabase/migrations/0001_progress.sql`). The spec is written generically ("any module"), but building item-resolution for all ~10 study modules on day one multiplies both code and QA. **Decision (confirmed with user): ship an MVP covering only two modules — Hiragana recognition and Vocabulary spell-it** — proving the schema, RLS, invite-link/auth interaction, and result/history UI end-to-end before generalizing.
 
-**Decision (confirmed with user, revising the spec's literal "1v1" title): a challenge supports up to 6 players, not exactly 2.** Result display is a ranked leaderboard rather than a head-to-head screen. Per-rival win/loss/streak history is kept and still computed pairwise (comparing scores between any two players who happened to share a completed challenge) — this works unchanged for groups because `competition_summary`'s self-join already produces one row per *pair* of results within a challenge, not one row per challenge, so it generalizes from 2 to N participants with no schema changes.
+**Decision (confirmed with user, revising the spec's literal "1v1" title): a challenge supports up to 6 players, not exactly 2.** **Raised to 10 on 2026-11-23** (`0006_competition_cap_10.sql`, shared with the new Shared Goals feature — see `GOALS_PLAN.md` Phase 0); the historical phase notes below still say 6. Result display is a ranked leaderboard rather than a head-to-head screen. Per-rival win/loss/streak history is kept and still computed pairwise (comparing scores between any two players who happened to share a completed challenge) — this works unchanged for groups because `competition_summary`'s self-join already produces one row per *pair* of results within a challenge, not one row per challenge, so it generalizes from 2 to N participants with no schema changes.
 
 This also follows directly from the App.tsx extraction (see git history): Competition becomes an 11th module (`useCompetition()` hook + `CompetitionModuleViews.tsx` under `src/views/modules/`), mounted from `App.tsx` exactly like `VocabModuleViews`/`KanjiModuleViews`/etc., instead of bolting five raw view blocks onto the switch.
 
