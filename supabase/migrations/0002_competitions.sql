@@ -193,10 +193,10 @@ create trigger on_competition_result_inserted
   for each row execute function public.mark_competition_completed();
 
 -- ── Vista: historial cabeza a cabeza ────────────────────────────────────
--- Vista simple (NO security definer) para que siga respetando el RLS de las
--- tablas base — cada usuario solo ve las filas de competition_results a las
--- que ya tiene acceso como participante; el head-to-head se agrega en el
--- cliente a partir de esta vista, filtrado por par de usuarios.
+-- NOTE: a plain view runs with its owner's privileges and therefore bypasses
+-- the base tables' RLS. 0008 sets security_invoker = true so it respects them;
+-- the head-to-head history is aggregated in the client from this view,
+-- filtered to the current user.
 
 create or replace view public.competition_summary as
 select
