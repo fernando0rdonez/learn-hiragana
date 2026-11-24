@@ -1,5 +1,6 @@
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../../data";
+import type { ScannedInvite } from "../../qrInvite";
 import type { CharWithRow, ProgressItems, SessionMode } from "../../types";
 import { ALL_CHARS } from "../../data";
 import { VOCABULARY } from "../../vocabulary";
@@ -20,6 +21,8 @@ import { parseTimeKey } from "../../dateTime";
 interface Props {
   view: ViewName;
   setView: (v: ViewName) => void;
+  /** Routes a scanned invite to the competition or goal join view. */
+  onScannedInvite: (invite: ScannedInvite) => void;
   session: Session | null;
   authLoading: boolean;
   myCompetitions: MyCompetition[];
@@ -42,7 +45,7 @@ interface Props {
 
 /** Fase C+D: juego de Hiragana y Vocabulario + resultado. */
 export default function CompetitionModuleViews({
-  view, setView, session, authLoading, myCompetitions, loadingCompetitions,
+  view, setView, onScannedInvite, session, authLoading, myCompetitions, loadingCompetitions,
   pendingInviteCode, stashInviteCode, activeCompetitionId, setActiveCompetitionId,
   createCompetition, previewCompetition, joinCompetition, consumeInviteCode,
   submitResult, leaderboard, rivalHistories, startSession,
@@ -114,6 +117,7 @@ export default function CompetitionModuleViews({
           loadingCompetitions={loadingCompetitions}
           onOpen={handleOpenCompetition}
           onJoinByCode={handleJoinByCode}
+          onScanned={onScannedInvite}
         />
       )}
 

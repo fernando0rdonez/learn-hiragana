@@ -1,5 +1,6 @@
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../../data";
+import type { ScannedInvite } from "../../qrInvite";
 import type { GoalDuration, GoalRow, GoalTask } from "../../goals";
 import type { GoalActionResult, GoalBoard, GoalPreview, MyGoal } from "../../hooks/useGoals";
 import GoalHomeView from "../GoalHomeView";
@@ -11,6 +12,8 @@ import GoalBoardView from "../GoalBoardView";
 interface Props {
   view: ViewName;
   setView: (v: ViewName) => void;
+  /** Routes a scanned invite to the competition or goal join view. */
+  onScannedInvite: (invite: ScannedInvite) => void;
   session: Session | null;
   authLoading: boolean;
   myGoals: MyGoal[];
@@ -29,7 +32,7 @@ interface Props {
 
 /** Shared Goals views (docs/GOALS_PLAN.md, Phases B and D). */
 export default function GoalModuleViews({
-  view, setView, session, authLoading, myGoals, loadingGoals,
+  view, setView, onScannedInvite, session, authLoading, myGoals, loadingGoals,
   pendingGoalCode, stashGoalCode, consumeGoalCode, activeGoalId, setActiveGoalId,
   createGoal, previewGoal, joinGoal, loadBoard, onPractice,
 }: Props) {
@@ -58,6 +61,7 @@ export default function GoalModuleViews({
           loadingGoals={loadingGoals}
           onOpen={(g) => openGoal(g.id)}
           onJoinByCode={handleJoinByCode}
+          onScanned={onScannedInvite}
         />
       )}
 

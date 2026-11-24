@@ -61,6 +61,7 @@ import DateTimeModuleViews from "./views/modules/DateTimeModuleViews";
 import CompetitionModuleViews from "./views/modules/CompetitionModuleViews";
 import GoalModuleViews from "./views/modules/GoalModuleViews";
 import GoalToast from "./components/GoalToast";
+import type { ScannedInvite } from "./qrInvite";
 import { remainingSummary, todayProgress, type GoalTask } from "./goals";
 import type { GoalNudge } from "./views/HomeView";
 
@@ -211,6 +212,17 @@ export default function HiraganaTrainer() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /** In-app QR scanner result (docs/QR_JOIN_PLAN.md): same path as the deep link above. */
+  function joinScannedInvite(invite: ScannedInvite) {
+    if (invite.kind === "goal") {
+      stashGoalCode(invite.code);
+      setView("goalJoin");
+    } else {
+      stashInviteCode(invite.code);
+      setView("competeJoin");
+    }
+  }
 
   useEffect(() => {
     if (session && pendingInviteCode) setView("competeJoin");
@@ -792,6 +804,7 @@ export default function HiraganaTrainer() {
           <CompetitionModuleViews
             view={view}
             setView={setView}
+            onScannedInvite={joinScannedInvite}
             session={session}
             authLoading={authLoading}
             myCompetitions={myCompetitions}
@@ -818,6 +831,7 @@ export default function HiraganaTrainer() {
           <GoalModuleViews
             view={view}
             setView={setView}
+            onScannedInvite={joinScannedInvite}
             session={session}
             authLoading={authLoading}
             myGoals={myGoals}

@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { ArrowLeft, Plus, Target, ArrowRight } from "lucide-react";
+import { ArrowLeft, Plus, Target, ArrowRight, ScanLine } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
+import type { ScannedInvite } from "../qrInvite";
+import QrScannerModal from "../components/QrScannerModal";
 import type { MyGoal } from "../hooks/useGoals";
 import { MAX_PLAYERS } from "../hooks/useCompetition";
 import { goalDayNumber, goalEndDate } from "../goals";
@@ -21,6 +23,8 @@ interface Props {
   loadingGoals: boolean;
   onOpen: (goal: MyGoal) => void;
   onJoinByCode: (code: string) => void;
+  /** Joins whatever the in-app QR scanner found — may be the other kind of invite. */
+  onScanned: (invite: ScannedInvite) => void;
 }
 
 function formatDate(isoDate: string): string {
@@ -28,7 +32,8 @@ function formatDate(isoDate: string): string {
   return new Date(y, m - 1, d).toLocaleDateString("es", { day: "numeric", month: "short" });
 }
 
-export default function GoalHomeView({ setView, session, authLoading, myGoals, loadingGoals, onOpen, onJoinByCode }: Props) {
+export default function GoalHomeView({ setView, session, authLoading, myGoals, loadingGoals, onOpen, onJoinByCode, onScanned }: Props) {
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [code, setCode] = useState("");
   const active = myGoals.filter((g) => g.phase !== "finished");
   const finished = myGoals.filter((g) => g.phase === "finished");
@@ -101,6 +106,24 @@ export default function GoalHomeView({ setView, session, authLoading, myGoals, l
               </button>
             </div>
           </form>
+          <button
+            type="button"
+            onClick={() => setScannerOpen(true)}
+            className="w-full mt-2.5 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold border-[1.5px]"
+            style={{ borderColor: PURPLE, color: PURPLE_DARK }}
+          >
+            <ScanLine size={16} /> Escanear QR
+          </button>
+          {scannerOpen && (
+            <QrScannerModal
+              fallbackKind="goal"
+              onClose={() => setScannerOpen(false)}
+              onResult={(invite) => {
+                setScannerOpen(false);
+                onScanned(invite);
+              }}
+            />
+          )}
 
           {loadingGoals && <p className="text-sm mt-8" style={{ color: TEXT_SECOND }}>Cargando…</p>}
 

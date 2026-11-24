@@ -3,6 +3,8 @@ import { ArrowLeft, Share2, Copy, Check, Play } from "lucide-react";
 import type { ViewName } from "../data";
 import type { MyCompetition } from "../hooks/useCompetition";
 import { competitionLabel, MAX_PLAYERS } from "../hooks/useCompetition";
+import { inviteUrl } from "../qrInvite";
+import InviteQr from "../components/InviteQr";
 
 const PURPLE      = "#7B4FD4";
 const PURPLE_DARK = "#5533A8";
@@ -16,13 +18,9 @@ interface Props {
   onPlay: () => void;
 }
 
-function inviteUrl(code: string): string {
-  return `${window.location.origin}${import.meta.env.BASE_URL}compete/${code}`;
-}
-
 export default function CompetitionShareView({ setView, competition, onPlay }: Props) {
   const [copied, setCopied] = useState(false);
-  const url = inviteUrl(competition.invite_code);
+  const url = inviteUrl("compete", competition.invite_code);
 
   async function handleShare() {
     if (navigator.share) {
@@ -55,6 +53,14 @@ export default function CompetitionShareView({ setView, competition, onPlay }: P
       </p>
 
       <div className="rounded-2xl p-4" style={{ backgroundColor: "#F9F8FC", border: `1.5px dashed ${BORDER}` }}>
+        <div className="flex flex-col items-center mb-4">
+          <div className="p-2 rounded-2xl bg-white border" style={{ borderColor: BORDER }}>
+            <InviteQr value={url} size={196} label="Código QR de la invitación" />
+          </div>
+          <p className="text-xs text-center mt-2.5 leading-relaxed text-balance" style={{ color: TEXT_SECOND }}>
+            Pídeles que lo escaneen desde <span className="whitespace-nowrap">かな道 →</span> Competir → <span className="font-bold">Escanear QR</span>
+          </p>
+        </div>
         <div className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: TEXT_SECOND }}>Código del reto</div>
         <div className="text-lg font-extrabold tracking-widest rounded-xl px-3 py-2.5 mb-3 bg-white border text-center" style={{ color: PURPLE_DARK, borderColor: BORDER }}>
           {competition.invite_code}
@@ -81,7 +87,7 @@ export default function CompetitionShareView({ setView, competition, onPlay }: P
         </div>
       </div>
       <p className="text-xs mt-3 leading-relaxed" style={{ color: TEXT_SECOND }}>
-        Hasta {MAX_PLAYERS} personas pueden unirse con el código o el link.
+        Hasta {MAX_PLAYERS} personas pueden unirse con el QR, el código o el link.
       </p>
 
       <button
