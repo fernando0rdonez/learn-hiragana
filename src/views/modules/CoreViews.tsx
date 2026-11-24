@@ -6,6 +6,7 @@ import SettingsView from "../SettingsView";
 import MethodologyView from "../MethodologyView";
 import StatsView from "../StatsView";
 import RoadmapView from "../RoadmapView";
+import type { GoalNudge } from "../HomeView";
 
 interface Props {
   view: ViewName;
@@ -27,6 +28,7 @@ interface Props {
   masteredKosoadoTotal: number;
   examHistory: ExamAttempt[];
   saveError: boolean;
+  goalNudge?: GoalNudge | null;
   resetConfirm: boolean;
   setResetConfirm: (v: boolean) => void;
   resetProgress: () => void;
@@ -58,7 +60,7 @@ interface Props {
 export default function CoreViews({
   view, setView, progress, streak, dailyProgress, today,
   masteredTotal, masteredKataTotal, masteredNumberKeys, masteredDateTimeKeys, masteredVocabTotal, masteredPhrasesTotal,
-  masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, masteredKosoadoTotal, examHistory, saveError,
+  masteredKanjiTotal, masteredGrammarTotal, masteredListeningTotal, masteredHonorificsTotal, masteredKosoadoTotal, examHistory, saveError, goalNudge,
   resetConfirm, setResetConfirm, resetProgress, exportProgress,
   importError, pendingImport, importSuccess, stageImport, confirmImport, cancelImport,
   session, authLoading, otpStage, otpError, pendingEmail, cooldownSeconds,
@@ -84,6 +86,7 @@ export default function CoreViews({
           examHistory={examHistory}
           saveError={saveError}
           setView={setView}
+          goalNudge={goalNudge}
         />
       )}
 

@@ -5,6 +5,8 @@ import VocabSetupView from "../VocabSetupView";
 import VocabularyGame from "../../components/VocabularyGame";
 import VocabRecognizeGame from "../../components/VocabRecognizeGame";
 import VocabListeningGame from "../../components/VocabListeningGame";
+import type { SessionResult } from "../../components/VocabSessionSummary";
+import type { StudyEvent } from "../../goals";
 
 interface Props {
   view: ViewName;
@@ -21,14 +23,25 @@ interface Props {
   updateShowRomaji: (v: boolean) => void;
   vocabSessionPool: VocabWord[];
   vocabSessionLimit: number;
+  onStudyEvent: (event: StudyEvent) => void;
 }
 
 export default function VocabModuleViews({
   view, setView, progress, onProgressUpdate,
   selectedVocabCategories, toggleVocabCategory, setSelectedVocabCategories,
   vocabSessionLength, setVocabSessionLength, filteredVocabulary,
-  showRomaji, updateShowRomaji, vocabSessionPool, vocabSessionLimit,
+  showRomaji, updateShowRomaji, vocabSessionPool, vocabSessionLimit, onStudyEvent,
 }: Props) {
+  // One category per word actually played, so a goal can tell how much of the session was e.g. "Familia".
+  function reportSession(results: SessionResult[]) {
+    if (results.length === 0) return;
+    const categoryByWord = new Map(vocabSessionPool.map((w) => [w.hiragana, w.category]));
+    const categories = results
+      .map((r) => categoryByWord.get(r.word.hiragana))
+      .filter((c): c is string => !!c);
+    onStudyEvent({ module: "vocab", categories });
+  }
+
   return (
     <>
       {view === "vocabCategory" && (
@@ -54,6 +67,7 @@ export default function VocabModuleViews({
           sessionLimit={vocabSessionLimit}
           onProgressUpdate={onProgressUpdate}
           onBack={() => setView("home")}
+          onComplete={reportSession}
         />
       )}
 
@@ -64,6 +78,7 @@ export default function VocabModuleViews({
           sessionLimit={vocabSessionLimit}
           onProgressUpdate={onProgressUpdate}
           onBack={() => setView("home")}
+          onComplete={reportSession}
         />
       )}
 
@@ -74,6 +89,7 @@ export default function VocabModuleViews({
           sessionLimit={vocabSessionLimit}
           onProgressUpdate={onProgressUpdate}
           onBack={() => setView("home")}
+          onComplete={reportSession}
         />
       )}
     </>

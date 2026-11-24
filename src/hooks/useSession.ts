@@ -21,9 +21,11 @@ interface UseSessionParams {
   persist: (items: ProgressItems, streak?: StreakData, daily?: DailyProgress) => void;
   setView: (v: ViewName) => void;
   sessionMode: SessionMode;
+  /** Fires when a regular (non-competition) kana session finishes, with its pool (shared goals check-in). */
+  onPracticeSessionComplete?: (pool: CharWithRow[]) => void;
 }
 
-export function useSession({ progress, setProgress, streak, dailyProgress, persist, setView, sessionMode }: UseSessionParams) {
+export function useSession({ progress, setProgress, streak, dailyProgress, persist, setView, sessionMode, onPracticeSessionComplete }: UseSessionParams) {
   const [previewRows, setPreviewRows] = useState<{ id: string; title: string; chars: CharData[] }[]>([]);
   const pendingStartRef = useRef<(() => void) | null>(null);
 
@@ -83,6 +85,9 @@ export function useSession({ progress, setProgress, streak, dailyProgress, persi
         const uniqueMissed = new Set(missedListRef.current.map((m) => `${m.mode}:${m.kana}`)).size;
         onSessionCompleteRef.current = null;
         onComplete(total - uniqueMissed, total);
+      } else {
+        // Competition sessions are scored on their own and don't count toward goals.
+        onPracticeSessionComplete?.(sessionPoolRef.current);
       }
       return;
     }

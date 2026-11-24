@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
 import type { CompetitionPreview } from "../hooks/useCompetition";
-import { competitionLabel } from "../hooks/useCompetition";
+import { competitionLabel, MAX_PLAYERS } from "../hooks/useCompetition";
 import foxImg from "../assets/character/fox-neutral.png";
 
 const PURPLE      = "#7B4FD4";
@@ -134,12 +134,12 @@ export default function CompetitionJoinView({ setView, session, authLoading, cod
       </div>
 
       <p className="text-center text-sm font-semibold mt-5" style={{ color: TEXT_SECOND }}>
-        {preview.participantCount} de 6 ya se unieron
+        {preview.participantCount} de {MAX_PLAYERS} ya se unieron
       </p>
 
       {blocked ? (
         <p className="text-center text-sm mt-4" style={{ color: TEXT_SECOND }}>
-          {preview.expired ? "Este reto ya expiró." : "Este reto ya llegó al máximo de 6 jugadores."}
+          {preview.expired ? "Este reto ya expiró." : `Este reto ya llegó al máximo de ${MAX_PLAYERS} jugadores.`}
         </p>
       ) : (
         <>

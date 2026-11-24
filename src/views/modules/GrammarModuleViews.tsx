@@ -1,6 +1,7 @@
 import type { ProgressItems } from "../../types";
 import type { GrammarLesson } from "../../grammar";
 import type { ViewName } from "../../data";
+import type { StudyEvent } from "../../goals";
 import GrammarSetupView from "../GrammarSetupView";
 import GrammarLessonGame from "../../components/GrammarLessonGame";
 import ParticleOrderGame from "../../components/ParticleOrderGame";
@@ -12,10 +13,11 @@ interface Props {
   onProgressUpdate: (updates: ProgressItems) => void;
   setSelectedGrammarLessonId: (id: string | null) => void;
   selectedGrammarLesson: GrammarLesson | null;
+  onStudyEvent: (event: StudyEvent) => void;
 }
 
 export default function GrammarModuleViews({
-  view, setView, progress, onProgressUpdate, setSelectedGrammarLessonId, selectedGrammarLesson,
+  view, setView, progress, onProgressUpdate, setSelectedGrammarLessonId, selectedGrammarLesson, onStudyEvent,
 }: Props) {
   return (
     <>
@@ -33,11 +35,19 @@ export default function GrammarModuleViews({
           progress={progress}
           onProgressUpdate={onProgressUpdate}
           onBack={() => setView("grammarSetup")}
+          onComplete={() => onStudyEvent({
+            module: "grammar",
+            lessonId: selectedGrammarLesson.id,
+            book: selectedGrammarLesson.section,
+          })}
         />
       )}
 
       {view === "grammarTrain" && (
-        <ParticleOrderGame onBack={() => setView("grammarSetup")} />
+        <ParticleOrderGame
+          onBack={() => setView("grammarSetup")}
+          onComplete={() => onStudyEvent({ module: "grammarTrain" })}
+        />
       )}
     </>
   );

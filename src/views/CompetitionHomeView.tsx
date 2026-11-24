@@ -3,7 +3,7 @@ import { ArrowLeft, Plus, Trophy, ArrowRight } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
 import type { MyCompetition } from "../hooks/useCompetition";
-import { competitionLabel } from "../hooks/useCompetition";
+import { competitionLabel, MAX_PLAYERS } from "../hooks/useCompetition";
 
 const PURPLE      = "#7B4FD4";
 const PURPLE_DARK = "#5533A8";
@@ -64,7 +64,7 @@ export default function CompetitionHomeView({ setView, session, authLoading, myC
       {session && (
         <>
           <div className="relative rounded-3xl p-6 text-white" style={{ background: `linear-gradient(135deg, ${PURPLE}, ${PURPLE_DARK})` }}>
-            <div className="text-xs font-semibold tracking-wide uppercase opacity-80">Reto grupal · hasta 6 jugadores</div>
+            <div className="text-xs font-semibold tracking-wide uppercase opacity-80">Reto grupal · hasta {MAX_PLAYERS} jugadores</div>
             <div className="text-xl font-bold mt-1.5 mb-1.5">Reta a tus amigos</div>
             <p className="text-sm opacity-90 mb-4 max-w-[240px] leading-relaxed">
               Todos juegan el mismo set de kana o vocabulario — cada uno cuando pueda.

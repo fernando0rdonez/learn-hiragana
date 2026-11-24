@@ -27,6 +27,8 @@ const PARTICLES = new Set(["は", "に", "と", "で", "へ", "を", "から", "
 
 interface Props {
   onBack: () => void;
+  /** Fires when a full session is finished (shared goals check-in). */
+  onComplete?: () => void;
 }
 
 /** Summary line for an exercise (used for the missed list at the end). */
@@ -40,7 +42,7 @@ function summaryOf(ex: TrainExercise): SessionResult["word"] {
  * "Ordena el tren": a standalone grammar practice for the particle order
  * (は → に → と → で → へ/を → verb). Not tied to a lesson, so it records no Leitner progress.
  */
-export default function ParticleOrderGame({ onBack }: Props) {
+export default function ParticleOrderGame({ onBack, onComplete }: Props) {
   const [phase, setPhase] = useState<"intro" | "playing" | "done">("intro");
   const [exercises, setExercises] = useState<TrainExercise[]>([]);
   const [index, setIndex] = useState(0);
@@ -58,8 +60,10 @@ export default function ParticleOrderGame({ onBack }: Props) {
   }
 
   function next() {
-    if (index + 1 >= exercises.length) setPhase("done");
-    else setIndex(index + 1);
+    if (index + 1 >= exercises.length) {
+      setPhase("done");
+      onComplete?.();
+    } else setIndex(index + 1);
   }
 
   if (phase === "intro") {
