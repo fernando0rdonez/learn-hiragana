@@ -373,7 +373,18 @@ export function useCompetition({ session }: Params) {
     return byRival;
   }
 
+  /** Soft delete, creator-only (enforced in the RPC); the reto disappears for every participant. */
+  const deleteCompetition = useCallback(async (competitionId: string): Promise<{ ok: true } | { ok: false; error: string }> => {
+    if (!isSupabaseConfigured || !session) return { ok: false, error: "Inicia sesión para eliminar el reto." };
+    const { data, error } = await supabase.rpc("delete_competition", { p_id: competitionId });
+    if (error || !data) return { ok: false, error: "No pudimos eliminar el reto. Intenta de nuevo." };
+    setMyCompetitions((prev) => prev.filter((c) => c.id !== competitionId));
+    setActiveCompetitionId((prev) => (prev === competitionId ? null : prev));
+    return { ok: true };
+  }, [session]);
+
   return {
+    deleteCompetition,
     myCompetitions,
     loadingCompetitions,
     myDisplayName,

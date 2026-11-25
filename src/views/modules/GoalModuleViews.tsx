@@ -27,6 +27,7 @@ interface Props {
   previewGoal: (code: string) => Promise<GoalPreview | { error: string }>;
   joinGoal: (goalId: string) => Promise<GoalActionResult>;
   loadBoard: (goalId: string) => Promise<GoalBoard | { error: string }>;
+  deleteGoal: (goalId: string) => Promise<GoalActionResult>;
   onPractice: (task: GoalTask) => void;
 }
 
@@ -34,7 +35,7 @@ interface Props {
 export default function GoalModuleViews({
   view, setView, onScannedInvite, session, authLoading, myGoals, loadingGoals,
   pendingGoalCode, stashGoalCode, consumeGoalCode, activeGoalId, setActiveGoalId,
-  createGoal, previewGoal, joinGoal, loadBoard, onPractice,
+  createGoal, previewGoal, joinGoal, loadBoard, deleteGoal, onPractice,
 }: Props) {
   const activeGoal = myGoals.find((g) => g.id === activeGoalId);
 
@@ -60,6 +61,7 @@ export default function GoalModuleViews({
           myGoals={myGoals}
           loadingGoals={loadingGoals}
           onOpen={(g) => openGoal(g.id)}
+          onDelete={deleteGoal}
           onJoinByCode={handleJoinByCode}
           onScanned={onScannedInvite}
         />

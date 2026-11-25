@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ArrowLeft, Plus, Trophy, ArrowRight, ScanLine } from "lucide-react";
+import { ArrowLeft, Plus, Trophy, ArrowRight, ScanLine, Trash2 } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
 import type { ScannedInvite } from "../qrInvite";
@@ -22,6 +22,7 @@ interface Props {
   myCompetitions: MyCompetition[];
   loadingCompetitions: boolean;
   onOpen: (competition: MyCompetition) => void;
+  onDelete: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   onJoinByCode: (code: string) => void;
   /** Joins whatever the in-app QR scanner found — may be the other kind of invite. */
   onScanned: (invite: ScannedInvite) => void;
@@ -31,7 +32,7 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es", { day: "numeric", month: "short" });
 }
 
-export default function CompetitionHomeView({ setView, session, authLoading, myCompetitions, loadingCompetitions, onOpen, onJoinByCode, onScanned }: Props) {
+export default function CompetitionHomeView({ setView, session, authLoading, myCompetitions, loadingCompetitions, onOpen, onDelete, onJoinByCode, onScanned }: Props) {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [code, setCode] = useState("");
 
@@ -131,7 +132,7 @@ export default function CompetitionHomeView({ setView, session, authLoading, myC
           )}
 
           <div className="mt-2">
-            {myCompetitions.map((c) => <CompetitionRow key={c.id} competition={c} onOpen={onOpen} />)}
+            {myCompetitions.map((c) => <CompetitionRow key={c.id} competition={c} onOpen={onOpen} onDelete={onDelete} />)}
           </div>
         </>
       )}
@@ -145,7 +146,17 @@ function statusChip(c: MyCompetition): { label: string; bg: string; color: strin
   return { label: "Tu turno", bg: PURPLE, color: "#fff" };
 }
 
-function CompetitionRow({ competition, onOpen }: { competition: MyCompetition; onOpen: (c: MyCompetition) => void }) {
+function CompetitionRow({ competition, onOpen, onDelete }: { competition: MyCompetition; onOpen: (c: MyCompetition) => void; onDelete: Props["onDelete"] }) {
+  const [deleting, setDeleting] = useState(false);
+  async function handleDelete() {
+    if (!window.confirm("¿Eliminar este reto? Desaparecerá para todos los jugadores.")) return;
+    setDeleting(true);
+    const result = await onDelete(competition.id);
+    if (!result.ok) {
+      setDeleting(false);
+      window.alert(result.error);
+    }
+  }
   const chip = statusChip(competition);
   const module = competition.quiz_config.module;
   const iconMeta = module === "hiragana"
@@ -154,10 +165,10 @@ function CompetitionRow({ competition, onOpen }: { competition: MyCompetition; o
     ? { bg: "#FBE7E4", color: CORAL, glyph: "本" }
     : { bg: "#F1F5F9", color: SLATE_DARK, glyph: "🕐" };
   return (
+    <div className="flex items-center border-b" style={{ borderColor: BORDER, opacity: deleting ? 0.6 : 1 }}>
     <button
       onClick={() => onOpen(competition)}
-      className="w-full flex items-center gap-3 py-3 border-b text-left"
-      style={{ borderColor: BORDER }}
+      className="flex-1 min-w-0 flex items-center gap-3 py-3 text-left"
     >
       <span
         className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-lg font-semibold"
@@ -182,5 +193,17 @@ function CompetitionRow({ competition, onOpen }: { competition: MyCompetition; o
         </span>
       </div>
     </button>
+    {competition.isCreator && (
+      <button
+        onClick={handleDelete}
+        disabled={deleting}
+        aria-label="Eliminar reto"
+        className="shrink-0 p-2.5 rounded-xl hover:opacity-70 disabled:opacity-40"
+        style={{ color: CORAL }}
+      >
+        <Trash2 size={16} />
+      </button>
+    )}
+    </div>
   );
 }

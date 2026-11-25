@@ -38,6 +38,7 @@ interface Props {
   submitResult: (competitionId: string, correct: number, total: number) => Promise<{ ok: true } | { ok: false; error: string }>;
   leaderboard: (competitionId: string) => Promise<LeaderboardEntry[]>;
   rivalHistories: () => Promise<Map<string, RivalHistory>>;
+  deleteCompetition: (competitionId: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   startSession: (pool: CharWithRow[], length: number, mode?: SessionMode, onSessionComplete?: (correct: number, total: number) => void) => void;
   progress: ProgressItems;
   onProgressUpdate: (updates: ProgressItems) => void;
@@ -48,7 +49,7 @@ export default function CompetitionModuleViews({
   view, setView, onScannedInvite, session, authLoading, myCompetitions, loadingCompetitions,
   pendingInviteCode, stashInviteCode, activeCompetitionId, setActiveCompetitionId,
   createCompetition, previewCompetition, joinCompetition, consumeInviteCode,
-  submitResult, leaderboard, rivalHistories, startSession,
+  submitResult, leaderboard, rivalHistories, deleteCompetition, startSession,
   progress, onProgressUpdate,
 }: Props) {
   function handleJoinByCode(code: string) {
@@ -116,6 +117,7 @@ export default function CompetitionModuleViews({
           myCompetitions={myCompetitions}
           loadingCompetitions={loadingCompetitions}
           onOpen={handleOpenCompetition}
+          onDelete={deleteCompetition}
           onJoinByCode={handleJoinByCode}
           onScanned={onScannedInvite}
         />
