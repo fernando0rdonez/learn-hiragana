@@ -104,12 +104,12 @@ export default function HiraganaTrainer() {
     stashInviteCode, consumeInviteCode,
     activeCompetitionId, setActiveCompetitionId,
     createCompetition, previewCompetition, joinCompetition,
-    submitResult, leaderboard, rivalHistories,
+    submitResult, leaderboard, rivalHistories, deleteCompetition,
   } = useCompetition({ session });
   const {
     myGoals, loadingGoals, loadBoard, pendingGoalCode, stashGoalCode, consumeGoalCode,
     activeGoalId, setActiveGoalId, createGoal, previewGoal, joinGoal,
-    recordStudyEvent, goalNotice, dismissGoalNotice,
+    recordStudyEvent, goalNotice, dismissGoalNotice, deleteGoal,
   } = useGoals({ session });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectedDakutenRows, setSelectedDakutenRows] = useState<Set<string>>(new Set());
@@ -820,6 +820,7 @@ export default function HiraganaTrainer() {
             submitResult={submitResult}
             leaderboard={leaderboard}
             rivalHistories={rivalHistories}
+            deleteCompetition={deleteCompetition}
             startSession={startSession}
             progress={progress}
             onProgressUpdate={onProgressUpdate}
@@ -845,6 +846,7 @@ export default function HiraganaTrainer() {
             previewGoal={previewGoal}
             joinGoal={joinGoal}
             loadBoard={loadBoard}
+            deleteGoal={deleteGoal}
             onPractice={practiceGoalTask}
           />
         )}

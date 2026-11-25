@@ -326,8 +326,18 @@ export function useGoals({ session }: Params) {
     return { goal: goal as GoalRow, members, checkins: (checkins ?? []) as CheckinRow[] };
   }, [session]);
 
+  /** Soft delete, creator-only (enforced in the RPC); the goal disappears for every participant. */
+  const deleteGoal = useCallback(async (goalId: string): Promise<GoalActionResult> => {
+    if (!isSupabaseConfigured || !session) return { ok: false, error: "Inicia sesión para eliminar la meta." };
+    const { data, error } = await supabase.rpc("delete_goal", { p_id: goalId });
+    if (error || !data) return { ok: false, error: "No pudimos eliminar la meta. Intenta de nuevo." };
+    setMyGoals((prev) => prev.filter((g) => g.id !== goalId));
+    setActiveGoalId((prev) => (prev === goalId ? null : prev));
+    return { ok: true };
+  }, [session]);
+
   return {
-    myGoals, loadingGoals, refreshGoals, loadBoard,
+    myGoals, loadingGoals, refreshGoals, loadBoard, deleteGoal,
     pendingGoalCode, stashGoalCode, consumeGoalCode,
     activeGoalId, setActiveGoalId,
     createGoal, previewGoal, joinGoal,

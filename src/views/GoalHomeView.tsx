@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ArrowLeft, Plus, Target, ArrowRight, ScanLine } from "lucide-react";
+import { ArrowLeft, Plus, Target, ArrowRight, ScanLine, Trash2 } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { ViewName } from "../data";
 import type { ScannedInvite } from "../qrInvite";
@@ -22,6 +22,7 @@ interface Props {
   myGoals: MyGoal[];
   loadingGoals: boolean;
   onOpen: (goal: MyGoal) => void;
+  onDelete: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   onJoinByCode: (code: string) => void;
   /** Joins whatever the in-app QR scanner found — may be the other kind of invite. */
   onScanned: (invite: ScannedInvite) => void;
@@ -32,7 +33,7 @@ function formatDate(isoDate: string): string {
   return new Date(y, m - 1, d).toLocaleDateString("es", { day: "numeric", month: "short" });
 }
 
-export default function GoalHomeView({ setView, session, authLoading, myGoals, loadingGoals, onOpen, onJoinByCode, onScanned }: Props) {
+export default function GoalHomeView({ setView, session, authLoading, myGoals, loadingGoals, onOpen, onDelete, onJoinByCode, onScanned }: Props) {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [code, setCode] = useState("");
   const active = myGoals.filter((g) => g.phase !== "finished");
@@ -134,14 +135,14 @@ export default function GoalHomeView({ setView, session, authLoading, myGoals, l
           {active.length > 0 && (
             <>
               <div className="mt-8 text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Activas</div>
-              <div className="mt-2">{active.map((g) => <GoalListRow key={g.id} goal={g} onOpen={onOpen} />)}</div>
+              <div className="mt-2">{active.map((g) => <GoalListRow key={g.id} goal={g} onOpen={onOpen} onDelete={onDelete} />)}</div>
             </>
           )}
 
           {finished.length > 0 && (
             <>
               <div className="mt-8 text-xs font-semibold tracking-wide uppercase" style={{ color: TEXT_SECOND }}>Terminadas</div>
-              <div className="mt-2">{finished.map((g) => <GoalListRow key={g.id} goal={g} onOpen={onOpen} />)}</div>
+              <div className="mt-2">{finished.map((g) => <GoalListRow key={g.id} goal={g} onOpen={onOpen} onDelete={onDelete} />)}</div>
             </>
           )}
         </>
@@ -150,24 +151,43 @@ export default function GoalHomeView({ setView, session, authLoading, myGoals, l
   );
 }
 
-function GoalListRow({ goal, onOpen }: { goal: MyGoal; onOpen: (g: MyGoal) => void }) {
+function GoalListRow({ goal, onOpen, onDelete }: { goal: MyGoal; onOpen: (g: MyGoal) => void; onDelete: Props["onDelete"] }) {
+  const [deleting, setDeleting] = useState(false);
+  async function handleDelete() {
+    if (!window.confirm(`¿Eliminar la meta "${goal.title}"? Desaparecerá para todas las personas que participan.`)) return;
+    setDeleting(true);
+    const result = await onDelete(goal.id);
+    if (!result.ok) {
+      setDeleting(false);
+      window.alert(result.error);
+    }
+  }
   const people = `${goal.participantCount} ${goal.participantCount === 1 ? "persona" : "personas"}`;
   const progress = goal.phase === "finished"
     ? `Terminó el ${formatDate(goalEndDate(goal))}`
     : `Día ${goalDayNumber(goal, toISODate())} de ${goal.duration_days}`;
   return (
-    <button
-      onClick={() => onOpen(goal)}
-      className="w-full flex items-center gap-3 py-3 border-b text-left"
-      style={{ borderColor: BORDER, opacity: goal.phase === "finished" ? 0.7 : 1 }}
-    >
-      <span className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "#EFE7FB", color: PURPLE }}>
-        <Target size={18} />
-      </span>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-bold truncate" style={{ color: TEXT_MAIN }}>{goal.title}</div>
-        <div className="text-xs mt-0.5" style={{ color: TEXT_SECOND }}>{progress} · {people}</div>
-      </div>
-    </button>
+    <div className="flex items-center border-b" style={{ borderColor: BORDER, opacity: goal.phase === "finished" || deleting ? 0.7 : 1 }}>
+      <button onClick={() => onOpen(goal)} className="flex-1 min-w-0 flex items-center gap-3 py-3 text-left">
+        <span className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "#EFE7FB", color: PURPLE }}>
+          <Target size={18} />
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-bold truncate" style={{ color: TEXT_MAIN }}>{goal.title}</div>
+          <div className="text-xs mt-0.5" style={{ color: TEXT_SECOND }}>{progress} · {people}</div>
+        </div>
+      </button>
+      {goal.isCreator && (
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          aria-label={`Eliminar la meta ${goal.title}`}
+          className="shrink-0 p-2.5 rounded-xl hover:opacity-70 disabled:opacity-40"
+          style={{ color: "#E2503F" }}
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
+    </div>
   );
 }
